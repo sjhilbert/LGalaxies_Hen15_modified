@@ -129,6 +129,10 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 #endif /* defined OUTPUT_REST_MAGS */
 #endif /* not defined POST_PROCESS_MAGS */
 #endif /* not defined LIGHT_OUTPUT */
+
+#ifdef COMPUTE_SPECPHOT_PROPERTIES
+  int filter_number_;
+#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */ 
  
   int j_;
 
@@ -157,8 +161,8 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 #ifndef POST_PROCESS_MAGS
 #ifdef OUTPUT_REST_MAGS 
   /* Luminosities are converted into Mags in various bands */
-  for(j_ = 0; j_ < NMAG; j_++)
-  { output_galaxy_->Mag[j_] = lum_to_lum_or_mag(galaxy_->Lum[j_][output_number_]); }
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+  { output_galaxy_->Mag[filter_number_] = lum_to_lum_or_mag(galaxy_->Lum[output_number_][filter_number_]); }
 #endif /* defined OUTPUT_REST_MAGS */
 #endif /* not defined POST_PROCESS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */ 
@@ -368,13 +372,13 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 
 #ifdef OUTPUT_REST_MAGS
   // Luminosities are converted into Mags in various bands
-  for(j_ = 0; j_ < NMAG; j_++)
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
   {
-    // output_galaxy_->Mag                 [j_] = lum_to_lum_or_mag(galaxy_->Lum                 [j_][output_number_]); -> DONE ON TOP FOR LIGHT_OUTPUT AS WELL
-    output_galaxy_->MagBulge            [j_] = lum_to_lum_or_mag(galaxy_->LumBulge            [j_][output_number_]);
-    output_galaxy_->MagDust             [j_] = lum_to_lum_or_mag(galaxy_->LumDust             [j_][output_number_]);
+    // output_galaxy_->Mag                 [filter_number_] = lum_to_lum_or_mag(galaxy_->Lum                 [output_number_][filter_number_]); -> DONE ON TOP FOR LIGHT_OUTPUT AS WELL
+    output_galaxy_->MagBulge            [filter_number_] = lum_to_lum_or_mag(galaxy_->LumBulge            [output_number_][filter_number_]);
+    output_galaxy_->MagDust             [filter_number_] = lum_to_lum_or_mag(galaxy_->LumDust             [output_number_][filter_number_]);
 #ifdef ICL
-    output_galaxy_->MagICL              [j_] = lum_to_lum_or_mag(galaxy_->ICLLum              [j_][output_number_]);
+    output_galaxy_->MagICL              [filter_number_] = lum_to_lum_or_mag(galaxy_->ICLLum              [output_number_][filter_number_]);
 #endif /* defined ICL */
   }
 
@@ -382,29 +386,29 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 #ifdef OUTPUT_OBS_MAGS
 #ifdef COMPUTE_OBS_MAGS
   // Luminosities in various bands
-  for(j_ = 0; j_ < NMAG; j_++)
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
   {
-    output_galaxy_->ObsMag              [j_] = lum_to_lum_or_mag(galaxy_->ObsLum              [j_][output_number_]);
-    output_galaxy_->ObsMagBulge         [j_] = lum_to_lum_or_mag(galaxy_->ObsLumBulge         [j_][output_number_]);
-    output_galaxy_->ObsMagDust          [j_] = lum_to_lum_or_mag(galaxy_->ObsLumDust          [j_][output_number_]);
+    output_galaxy_->ObsMag              [filter_number_] = lum_to_lum_or_mag(galaxy_->ObsLum              [output_number_][filter_number_]);
+    output_galaxy_->ObsMagBulge         [filter_number_] = lum_to_lum_or_mag(galaxy_->ObsLumBulge         [output_number_][filter_number_]);
+    output_galaxy_->ObsMagDust          [filter_number_] = lum_to_lum_or_mag(galaxy_->ObsLumDust          [output_number_][filter_number_]);
 #ifdef ICL
-    output_galaxy_->ObsMagICL           [j_] = lum_to_lum_or_mag(galaxy_->ObsICL              [j_][output_number_]);
+    output_galaxy_->ObsMagICL           [filter_number_] = lum_to_lum_or_mag(galaxy_->ObsICL              [output_number_][filter_number_]);
 #endif /* defined ICL */
 
 #ifdef OUTPUT_MOMAF_INPUTS
-    output_galaxy_->dObsMag             [j_] = lum_to_lum_or_mag(galaxy_->dObsLum             [j_][output_number_]);
-    output_galaxy_->dObsMagBulge        [j_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge        [j_][output_number_]);
-    output_galaxy_->dObsMagDust         [j_] = lum_to_lum_or_mag(galaxy_->dObsLumDust         [j_][output_number_]);
+    output_galaxy_->dObsMag             [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLum             [output_number_][filter_number_]);
+    output_galaxy_->dObsMagBulge        [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge        [output_number_][filter_number_]);
+    output_galaxy_->dObsMagDust         [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumDust         [output_number_][filter_number_]);
 #ifdef ICL
-    output_galaxy_->dObsMagICL          [j_] = lum_to_lum_or_mag(galaxy_->dObsICL             [j_][output_number_]);
+    output_galaxy_->dObsMagICL          [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsICL             [output_number_][filter_number_]);
 #endif /* defined ICL */
 
 #ifdef KITZBICHLER
-    output_galaxy_->dObsMag_forward     [j_] = lum_to_lum_or_mag(galaxy_->dObsLum_forward     [j_][output_number_]);
-    output_galaxy_->dObsMagBulge_forward[j_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge_forward[j_][output_number_]);
-    output_galaxy_->dObsMagDust_forward [j_] = lum_to_lum_or_mag(galaxy_->dObsLumDust_forward [j_][output_number_]);
+    output_galaxy_->dObsMag_forward     [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLum_forward     [output_number_][filter_number_]);
+    output_galaxy_->dObsMagBulge_forward[filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge_forward[output_number_][filter_number_]);
+    output_galaxy_->dObsMagDust_forward [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumDust_forward [output_number_][filter_number_]);
 #ifdef ICL
-    output_galaxy_->dObsMagICL_forward  [j_] = lum_to_lum_or_mag(galaxy_->dObsICL_forward     [j_][output_number_]);
+    output_galaxy_->dObsMagICL_forward  [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsICL_forward     [output_number_][filter_number_]);
 #endif /* defined ICL */
 
 #endif /* defined KITZBICHLER */
@@ -421,7 +425,7 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
     output_galaxy_->MassWeightAge *= UnitTime_in_Gigayears * inv_Hubble_h;        //Age in Gyr
 #ifndef POST_PROCESS_MAGS
 #ifdef OUTPUT_REST_MAGS
-    output_galaxy_->rbandWeightAge = galaxy_->rbandWeightAge[output_number_] / (galaxy_->Lum[r_band_filter_number_][output_number_]);
+    output_galaxy_->rbandWeightAge = galaxy_->rbandWeightAge[output_number_] / (galaxy_->Lum[output_number_][r_band_filter_number_]);
     output_galaxy_->rbandWeightAge *= UnitTime_in_Gigayears * inv_Hubble_h;        //Age in Gyr
 #else  /* not defined OUTPUT_REST_MAGS */ 
     output_galaxy_->rbandWeightAge = 0.; 

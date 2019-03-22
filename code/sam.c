@@ -234,7 +234,7 @@ double SAM(const int tree_file_number_)
   *         join_galaxies_of_progenitors and evolve_galaxies. */
 void construct_galaxies(const int tree_number_, const int halo_number_)
 {
-  int progenitor_halo_number_, same_fof_halo_number_, n_galaxies_in_fof_group_, merger_center_;
+  int progenitor_halo_number_, same_fof_halo_number_, n_galaxies_in_fof_group_, fof_merger_center_;
   
 #ifdef LIGHTCONE_OUTPUT_ONLY
 #ifdef LIGHTCONE_MAY_SKIP_CONSTRUCT_GALAXY
@@ -300,12 +300,12 @@ void construct_galaxies(const int tree_number_, const int halo_number_)
     /*For all the halos in the current FOF join all the progenitor galaxies together
       * n_galaxies_in_fof_group_ will be the total number of galaxies in the current FOF*/
     n_galaxies_in_fof_group_ = 0;
-    merger_center_ = get_merger_center(first_in_fof_halo_number_);     //Find type 0 for type 1 to merge into
+    fof_merger_center_ = get_merger_center(first_in_fof_halo_number_);     //Find type 0 for type 1 to merge into
     for(same_fof_halo_number_ = first_in_fof_halo_number_ ; same_fof_halo_number_ >= 0; same_fof_halo_number_ = Halo[same_fof_halo_number_].NextHaloInFOFgroup) 
-    { join_galaxies_of_progenitors(same_fof_halo_number_, &n_galaxies_in_fof_group_, &merger_center_); }
+    { join_galaxies_of_progenitors(same_fof_halo_number_, &n_galaxies_in_fof_group_, &fof_merger_center_); }
 
     /*Evolve the Galaxies -> SAM! */
-    evolve_galaxies(first_in_fof_halo_number_, n_galaxies_in_fof_group_, tree_number_, merger_center_);
+    evolve_galaxies(first_in_fof_halo_number_, n_galaxies_in_fof_group_, tree_number_, fof_merger_center_);
 
 #ifdef MASS_CHECKS
     {
@@ -325,7 +325,7 @@ void construct_galaxies(const int tree_number_, const int halo_number_)
   *         and evolve_galaxies). */
 void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_halo_number_)
 {
-  int same_fof_halo_number_, n_galaxies_in_fof_group_, merger_center_;
+  int same_fof_halo_number_, n_galaxies_in_fof_group_, fof_merger_center_;
 //   int progenitor_halo_number_;
   
 //   if(Halo[first_in_fof_halo_number_].FirstHaloInFOFgroup != first_in_fof_halo_number_) /* halo not first in fof group */
@@ -400,12 +400,12 @@ void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_ha
   /*For all the halos in the current FOF join all the progenitor galaxies together
     * n_galaxies_in_fof_group_ will be the total number of galaxies in the current FOF*/
   n_galaxies_in_fof_group_ = 0;
-  merger_center_ = get_merger_center(first_in_fof_halo_number_);     //Find type 0 for type 1 to merge into
+  fof_merger_center_ = get_merger_center(first_in_fof_halo_number_);     //Find type 0 for type 1 to merge into
   for(same_fof_halo_number_ = first_in_fof_halo_number_; same_fof_halo_number_ >= 0; same_fof_halo_number_ = Halo[same_fof_halo_number_].NextHaloInFOFgroup)
-  { join_galaxies_of_progenitors(same_fof_halo_number_, &n_galaxies_in_fof_group_, &merger_center_); }
+  { join_galaxies_of_progenitors(same_fof_halo_number_, &n_galaxies_in_fof_group_, &fof_merger_center_); }
 
   /*Evolve the Galaxies -> SAM! */
-  evolve_galaxies(first_in_fof_halo_number_, n_galaxies_in_fof_group_, tree_number_, merger_center_);
+  evolve_galaxies(first_in_fof_halo_number_, n_galaxies_in_fof_group_, tree_number_, fof_merger_center_);
 
 #ifdef MASS_CHECKS
   {
@@ -435,13 +435,13 @@ void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_ha
  * */
 void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof_group_, int *merger_center_)
 {
-  int i_, j_, progenitor_halo_number_, first_occupied_halo_number_, central_galaxy_number_, most_massive_halo_number_, most_massive_halo_length_, current_galaxy_number_;
+  int i_, j_, progenitor_halo_number_, first_occupied_halo_number_, central_galaxy_number_, most_massive_halo_number_, most_massive_halo_length_, galaxy_number_;
   
   const int galaxy_number_beg_ = *n_galaxies_in_fof_group_;
         int galaxy_number_end_ = *n_galaxies_in_fof_group_;
 
   /* If there is no galaxy in the Halo of FirstProgenitor,
-   * but there are other progenitors with galaxies,
+   * but there are other progenitors with galaxies of type 0 or 1,
    * the first_occupied_halo_number_ pointer is changed 
    * to a subhalo which has the maximum mass.
    * This should only happen in the case that
@@ -454,11 +454,13 @@ void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof
     most_massive_halo_length_ = 0;
     for(;progenitor_halo_number_ >= 0; progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor)
     {
-      if((HaloAux[progenitor_halo_number_].NGalaxies > 0) && (Halo[progenitor_halo_number_].Len > most_massive_halo_length_))
-      {
-        most_massive_halo_length_ = Halo[progenitor_halo_number_].Len;
-        first_occupied_halo_number_ = progenitor_halo_number_;  //define the new first_occupied_halo_number_
-      }
+      for(i_ = 0, galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; ++i_, galaxy_number_ = HaloGal[galaxy_number_].NextGalaxy)
+        if((HaloGal[galaxy_number_].Type == 0 || HaloGal[galaxy_number_].Type == 1) && (Halo[progenitor_halo_number_].Len > most_massive_halo_length_))
+        {
+          most_massive_halo_length_ = Halo[progenitor_halo_number_].Len;
+          first_occupied_halo_number_ = progenitor_halo_number_;  //define the new first_occupied_halo_number_
+          break;
+        }
     }
   }
 
@@ -476,21 +478,21 @@ void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof
 
   for(progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor; progenitor_halo_number_ >= 0;  progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor)
   {
-    for(i_ = 0, current_galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; ++i_, current_galaxy_number_ = HaloGal[current_galaxy_number_].NextGalaxy, ++galaxy_number_end_)
+    for(i_ = 0, galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; ++i_, galaxy_number_ = HaloGal[galaxy_number_].NextGalaxy, ++galaxy_number_end_)
     {
       if(galaxy_number_end_ >= MaxGal)
       {
         AllocValue_MaxGal *= ALLOC_INCREASE_FACTOR;
         MaxGal = AllocValue_MaxGal;
-        if(MaxGal<galaxy_number_end_+1) MaxGal=galaxy_number_end_+1;
+        if(MaxGal < galaxy_number_end_ + 1) { MaxGal = galaxy_number_end_ + 1; }
         Gal = myrealloc_movable(Gal, sizeof(struct GALAXY) * MaxGal);
       }
-      if(*merger_center_ == current_galaxy_number_)
+      if(*merger_center_ == galaxy_number_)
       {  *merger_center_ =  galaxy_number_end_; }
 
       /* Copy galaxy properties from progenitor,
         * except for those that need initialising */
-      Gal[galaxy_number_end_]                         = HaloGal[current_galaxy_number_];
+      Gal[galaxy_number_end_]                         = HaloGal[galaxy_number_];
       Gal[galaxy_number_end_].HaloNr                  = halo_number_;
       Gal[galaxy_number_end_].CoolingRadius           = 0.0;
       Gal[galaxy_number_end_].CoolingGas              = 0.0;
@@ -502,7 +504,7 @@ void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof
       Gal[galaxy_number_end_].QuasarAccretionRate     = 0.0;
       Gal[galaxy_number_end_].RadioAccretionRate      = 0.0;
 #ifdef GALAXYTREE
-      Gal[galaxy_number_end_].FirstProgGal            = HaloGal[current_galaxy_number_].GalTreeIndex;    /* CHECK */
+      Gal[galaxy_number_end_].FirstProgGal            = HaloGal[galaxy_number_].GalTreeIndex;    /* CHECK */
 #endif /* defined GALAXYTREE */
       // To fail this check means that we copy in a failed galaxy
       mass_checks("Middle of join_galaxies_of_progenitors", galaxy_number_end_);
@@ -625,11 +627,11 @@ void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof
   *        All these calculations are done in time steps of 1/STEPS the time
   *        between each snapshot (STEPS=20).
   * 
-  * @note  halo_number_ is here the FOF-background subhalo (i_.e. main halo) 
+  * @note  halo_number_ is here the FOF-background subhalo (i.e. main halo) 
   */
-void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int cenngal)
+void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int galaxy_number_for_merger_center_of_type_1_galaxies_)
 {
-  int p_, q_, step_number_, merger_centralgal, current_halo_number_, progenitor_halo_number_, central_galaxy_number_, previous_galaxy_number_, i_;
+  int galaxy_number_, other_galaxy_number_, step_number_, merger_centralgal_, current_halo_number_, progenitor_halo_number_, fof_central_galaxy_number_, previous_galaxy_number_, i_;
   double current_time_;
 
 #ifdef STAR_FORMATION_HISTORY
@@ -640,48 +642,47 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     return;
 
   //previous_time_         = NumToTime(Gal[0].SnapNum);
-  const double previous_time_         = NumToTime(Halo[halo_number_].SnapNum-1);
-  const double new_time_              = NumToTime(Halo[halo_number_].SnapNum  );
-  const double deltaT_                = previous_time_ - new_time_; /* Time between snapshots */
-  const double dt_                    = (previous_time_ - new_time_) / STEPS; 
-
+  const double previous_time_ = NumToTime(Halo[halo_number_].SnapNum-1);
+  const double new_time_      = NumToTime(Halo[halo_number_].SnapNum  );
+  const double deltaT_        = previous_time_ - new_time_; /* Time between snapshots */
+  const double dt_            = (previous_time_ - new_time_) / STEPS; 
 
 #ifdef MASS_CHECKS
-  for (p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
-  { mass_checks("Evolve_galaxies #0", p_); }
+  for (galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
+  { mass_checks("Evolve_galaxies #0", galaxy_number_); }
 #endif /* defined MASS_CHECKS */
 
-  central_galaxy_number_ = Gal[0].CentralGal;
-  //print_galaxy("\n\ncheck1", central_galaxy_number_, halo_number_);
-  if(Gal[central_galaxy_number_].Type != 0 || Gal[central_galaxy_number_].HaloNr != halo_number_)
+  fof_central_galaxy_number_ = Gal[0].CentralGal;
+  //print_galaxy("\n\ncheck1", fof_central_galaxy_number_, halo_number_);
+  if(Gal[fof_central_galaxy_number_].Type != 0 || Gal[fof_central_galaxy_number_].HaloNr != halo_number_)
   { terminate("Something wrong here ..... \n"); }
 
   /* Update all galaxies to same star-formation history time-bins.
    * Needed in case some galaxy has skipped a snapshot. */
 #ifdef STAR_FORMATION_HISTORY
-  age_in_years_=(Age[0]-previous_time_)*UnitTime_in_years * inv_Hubble_h; //ROB: age_in_years_ is in units of "real years"!
-  step_number_ = 0;
-  for (p_=0; p_<n_galaxies_in_fof_group_; p_++)
-  { sfh_update_bins(p_,Halo[halo_number_].SnapNum-1,step_number_,age_in_years_); }
+  age_in_years_ = (Age[0] - previous_time_) * UnitTime_in_years * inv_Hubble_h; //ROB: age_in_years_ is in units of "real years"!
+  step_number_  = 0;
+  for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
+  { sfh_update_bins(galaxy_number_, Halo[halo_number_].SnapNum - 1, step_number_, age_in_years_); }
 #endif /* defined STAR_FORMATION_HISTORY */
 
   /* Handle the transfer of mass between satellites and central galaxies */
-  deal_with_satellites(central_galaxy_number_, n_galaxies_in_fof_group_);
+  deal_with_satellites(fof_central_galaxy_number_, n_galaxies_in_fof_group_);
 
   /* Delete inconsequential galaxies */
-  for (p_ =0; p_< n_galaxies_in_fof_group_; p_++)
+  for (galaxy_number_ =0; galaxy_number_< n_galaxies_in_fof_group_; galaxy_number_++)
   {
-    if (Gal[p_].Type == 2 && Gal[p_].ColdGas+Gal[p_].DiskMass+Gal[p_].BulgeMass < 1.e-8)
-    { Gal[p_].Type = 3; }
+    if (Gal[galaxy_number_].Type == 2 && Gal[galaxy_number_].ColdGas+Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass < 1.e-8)
+    { Gal[galaxy_number_].Type = 3; }
     else
-    { mass_checks("Evolve_galaxies #0.1",p_); }
+    { mass_checks("Evolve_galaxies #0.1",galaxy_number_); }
   }
    
   /* Calculate how much hot gas needs to be accreted to give the correct baryon fraction
    * in the main halo. This is the universal fraction, less any reduction due to reionization. */
    
-  const double infalling_gas_per_step_ = infall_recipe(central_galaxy_number_, n_galaxies_in_fof_group_, ZZ[Halo[halo_number_].SnapNum]) / STEPS;
-  Gal[central_galaxy_number_].PrimordialAccretionRate = infalling_gas_per_step_ / dt_;
+  const double infalling_gas_per_step_ = infall_recipe(fof_central_galaxy_number_, n_galaxies_in_fof_group_, ZZ[Halo[halo_number_].SnapNum]) / STEPS;
+  Gal[fof_central_galaxy_number_].PrimordialAccretionRate = infalling_gas_per_step_ / dt_;
   
   /* All the physics are computed in a number of intervals between snapshots
    * equal to STEPS */
@@ -693,8 +694,8 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     /* Update all galaxies to the star-formation history time-bins of current step*/
 #ifdef STAR_FORMATION_HISTORY
     age_in_years_=(Age[0]-current_time_)*UnitTime_in_years * inv_Hubble_h;
-    for (p_=0; p_<n_galaxies_in_fof_group_; p_++)
-    { sfh_update_bins(p_,Halo[halo_number_].SnapNum-1,step_number_,age_in_years_); }
+    for (galaxy_number_=0; galaxy_number_<n_galaxies_in_fof_group_; galaxy_number_++)
+    { sfh_update_bins(galaxy_number_,Halo[halo_number_].SnapNum - 1, step_number_, age_in_years_); }
 
 #endif /* defined STAR_FORMATION_HISTORY */
 
@@ -704,24 +705,24 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     if (infalling_gas_per_step_ > 0.)
 #endif /* not defined GUO13 */
 #endif /* not defined GUO10 */
-    { add_infall_to_hot(central_galaxy_number_, infalling_gas_per_step_); }
+    { add_infall_to_hot(fof_central_galaxy_number_, infalling_gas_per_step_); }
 
-    mass_checks("Evolve_galaxies #0.5",central_galaxy_number_);
+    mass_checks("Evolve_galaxies #0.5",fof_central_galaxy_number_);
 
-    for(p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
+    for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
     {
       /* don't treat galaxies that have already merged */
-      if(Gal[p_].Type == 3)
+      if(Gal[galaxy_number_].Type == 3)
       { continue; }
       
-      mass_checks("Evolve_galaxies #1",p_);
+      mass_checks("Evolve_galaxies #1",galaxy_number_);
 
-      if (Gal[p_].Type == 0 || Gal[p_].Type == 1)
+      if (Gal[galaxy_number_].Type == 0 || Gal[galaxy_number_].Type == 1)
       {
-        reincorporate_gas(p_, dt_);
+        reincorporate_gas(galaxy_number_, dt_);
         /* determine cooling gas given halo properties and add it to the cold phase*/
-        mass_checks("Evolve_galaxies #1.5",p_);
-        compute_cooling(p_, dt_);
+        mass_checks("Evolve_galaxies #1.5",galaxy_number_);
+        compute_cooling(galaxy_number_, dt_);
       }
     }
 
@@ -731,83 +732,83 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     if(AGNRadioModeModel != 5)
     { do_AGN_heating(dt_, n_galaxies_in_fof_group_); }
 
-    for (p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
+    for (galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
     {
-      cool_gas_onto_galaxy(p_, dt_);
-      mass_checks("Evolve_galaxies #2",p_);
-      starformation(p_, central_galaxy_number_, current_time_, dt_);
-      mass_checks("Evolve_galaxies #3",p_);
-      //print_galaxy("check3", central_galaxy_number_, halo_number_);
+      cool_gas_onto_galaxy(galaxy_number_, dt_);
+      mass_checks("Evolve_galaxies #2",galaxy_number_);
+      starformation(galaxy_number_, fof_central_galaxy_number_, current_time_, dt_);
+      mass_checks("Evolve_galaxies #3",galaxy_number_);
+      //print_galaxy("check3", fof_central_galaxy_number_, halo_number_);
     }
 
     /* Check for merger events */
-    for(p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
+    for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
     {
-      if(Gal[p_].Type == 2 || (Gal[p_].Type == 1 && Gal[p_].MergeOn == 1))             /* satellite galaxy */
+      if(Gal[galaxy_number_].Type == 2 || (Gal[galaxy_number_].Type == 1 && Gal[galaxy_number_].MergeOn == 1))             /* satellite galaxy */
       {
-        Gal[p_].MergTime -= dt_;
-        if(Gal[p_].MergTime < 0.0)
+        Gal[galaxy_number_].MergTime -= dt_;
+        if(Gal[galaxy_number_].MergTime < 0.0)
         {
           NumMergers++;
 
-          if(Gal[p_].Type == 1)
-            for(q_ = 0; q_ < n_galaxies_in_fof_group_; q_++)
-              if(Gal[q_].Type == 2 && Gal[p_].CentralGal == p_)
-              { Gal[q_].CentralGal = cenngal; }
+          if(Gal[galaxy_number_].Type == 1)
+            for(other_galaxy_number_ = 0; other_galaxy_number_ < n_galaxies_in_fof_group_; other_galaxy_number_++)
+              if(Gal[other_galaxy_number_].Type == 2 && Gal[galaxy_number_].CentralGal == galaxy_number_)
+              { Gal[other_galaxy_number_].CentralGal = galaxy_number_for_merger_center_of_type_1_galaxies_; }
 
-          if(Gal[p_].Type == 2)
-          { merger_centralgal = Gal[p_].CentralGal; }
+          if(Gal[galaxy_number_].Type == 2)
+          { merger_centralgal_ = Gal[galaxy_number_].CentralGal; }
           else
-          { merger_centralgal = cenngal; }
-          mass_checks("Evolve_galaxies #4",p_);
-          mass_checks("Evolve_galaxies #4",merger_centralgal);
-          mass_checks("Evolve_galaxies #4",central_galaxy_number_);
+          { merger_centralgal_ = galaxy_number_for_merger_center_of_type_1_galaxies_; }
+          mass_checks("Evolve_galaxies #4",galaxy_number_);
+          mass_checks("Evolve_galaxies #4",merger_centralgal_);
+          mass_checks("Evolve_galaxies #4",fof_central_galaxy_number_);
            /* note: call to deal_with_galaxy_merger uses deltaT_ as parameter, and internally divides by STEPS where needed */
-          deal_with_galaxy_merger(p_, merger_centralgal, central_galaxy_number_, current_time_, deltaT_);
-          mass_checks("Evolve_galaxies #5",p_);
-          mass_checks("Evolve_galaxies #5",merger_centralgal);
-          mass_checks("Evolve_galaxies #5",central_galaxy_number_);
+          deal_with_galaxy_merger(galaxy_number_, merger_centralgal_, fof_central_galaxy_number_, current_time_, deltaT_);
+          mass_checks("Evolve_galaxies #5",galaxy_number_);
+          mass_checks("Evolve_galaxies #5",merger_centralgal_);
+          mass_checks("Evolve_galaxies #5",fof_central_galaxy_number_);
         }
       }
     }//loop on all galaxies to detect mergers
 
 #ifdef DETAILED_METALS_AND_MASS_RETURN
     //DELAYED ENRICHMENT AND MASS RETURN + FEEDBACK: No fixed yield or recycling fraction anymore. FB synced with enrichment
-    for (p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
-    { update_yields_and_return_mass(p_, central_galaxy_number_, dt_, step_number_); }
+    for (galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
+    { update_yields_and_return_mass(galaxy_number_, fof_central_galaxy_number_, dt_, step_number_); }
 #endif /* defined DETAILED_METALS_AND_MASS_RETURN */
 
   }/* end move forward in interval STEPS */
 
-  for(p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
+  for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
   {
-    if(Gal[p_].Type == 2)
+    if(Gal[galaxy_number_].Type == 2)
     {
 #ifndef UPDATETYPETWO
       int jj;
       float tmppos;
       for(jj = 0; jj < 3; jj++)
       {
-        tmppos = wrap(Gal[p_].DistanceToCentralGal[jj],BoxSize);
-        tmppos *=  2.*sqrt(Gal[p_].MergTime/Gal[p_].OriMergTime);
-        Gal[p_].Pos[jj] = Gal[p_].MergCentralPos[jj] + tmppos;
+        tmppos = wrap(Gal[galaxy_number_].DistanceToCentralGal[jj],BoxSize);
+        tmppos *=  2.*sqrt(Gal[galaxy_number_].MergTime/Gal[galaxy_number_].OriMergTime);
+        Gal[galaxy_number_].Pos[jj] = Gal[galaxy_number_].MergCentralPos[jj] + tmppos;
 
-        if(Gal[p_].Pos[jj] < 0)
-                  Gal[p_].Pos[jj] = BoxSize + Gal[p_].Pos[jj];
-        if(Gal[p_].Pos[jj] > BoxSize)
-                  Gal[p_].Pos[jj] = Gal[p_].Pos[jj] - BoxSize;
+        if(Gal[galaxy_number_].Pos[jj] < 0)
+                  Gal[galaxy_number_].Pos[jj] = BoxSize + Gal[galaxy_number_].Pos[jj];
+        if(Gal[galaxy_number_].Pos[jj] > BoxSize)
+                  Gal[galaxy_number_].Pos[jj] = Gal[galaxy_number_].Pos[jj] - BoxSize;
       }
 #endif /* not defined UPDATETYPETWO */
       /* Disruption of type 2 galaxies. Type 1 galaxies are not disrupted since usually
         * bayonic component is more compact than dark matter.*/
 
       if(DisruptionModel==0)
-      { disrupt(p_); }
+      { disrupt(galaxy_number_); }
     }
   }
     
-  for (p_ =0;p_<n_galaxies_in_fof_group_;p_++)
-  { mass_checks("Evolve_galaxies #6",p_); }
+  for (galaxy_number_ =0;galaxy_number_<n_galaxies_in_fof_group_;galaxy_number_++)
+  { mass_checks("Evolve_galaxies #6",galaxy_number_); }
 
   
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
@@ -818,8 +819,8 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     {
       if(Halo[halo_number_].SnapNum == ListOutputSnaps[output_number_])
       {
-        for(p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
-        { dust_model(p_, output_number_); }
+        for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
+        { dust_model(galaxy_number_, output_number_); }
         break;
       }
     }
@@ -829,29 +830,28 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
   /* now save the galaxies of all the progenitors (and free the associated storage) */
   for(progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor; progenitor_halo_number_ >= 0;  progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor)
   {
-    int current_galaxy_number_;
-    for(i_ = 0, current_galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; i_++)
+    for(i_ = 0, galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; i_++)
     {
-      int next_galaxy_number_ = HaloGal[current_galaxy_number_].NextGalaxy;
+      int next_galaxy_number_ = HaloGal[galaxy_number_].NextGalaxy;
       /* this will write this galaxy to an output file and free the storage associate with it */
-      output_galaxy(tree_number_, HaloGal[current_galaxy_number_].HeapIndex);
-      current_galaxy_number_ = next_galaxy_number_;
+      output_galaxy(tree_number_, HaloGal[galaxy_number_].HeapIndex);
+      galaxy_number_ = next_galaxy_number_;
     }
   }
     
   const int evolved_galaxies_begin_ = NGalTree;
-  for(p_ = 0, previous_galaxy_number_ = -1, current_halo_number_ = -1, central_galaxy_number_ = -1; p_ < n_galaxies_in_fof_group_; p_++)
+  for(galaxy_number_ = 0, previous_galaxy_number_ = -1, current_halo_number_ = -1, fof_central_galaxy_number_ = -1; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
   {
-    if(Gal[p_].HaloNr != current_halo_number_)
+    if(Gal[galaxy_number_].HaloNr != current_halo_number_)
     {
-      current_halo_number_ = Gal[p_].HaloNr;
+      current_halo_number_ = Gal[galaxy_number_].HaloNr;
       HaloAux[current_halo_number_].FirstGalaxy = -1;
       HaloAux[current_halo_number_].NGalaxies = 0;
     }
 
-    mass_checks("Evolve_galaxies #7",p_);
+    mass_checks("Evolve_galaxies #7",galaxy_number_);
 
-    if(Gal[p_].Type != 3)
+    if(Gal[galaxy_number_].Type != 3)
     {
       if(NHaloGal >= MaxHaloGal)
       {
@@ -866,18 +866,18 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
         { HaloGalHeap[i_] = i_; }
       }
 
-      Gal[p_].SnapNum = Halo[current_halo_number_].SnapNum;
+      Gal[galaxy_number_].SnapNum = Halo[current_halo_number_].SnapNum;
 
 #ifndef GUO10
 #ifdef UPDATETYPETWO
-      update_type_two_coordinate_and_velocity(tree_number_, p_, Gal[0].CentralGal);
+      update_type_two_coordinate_and_velocity(tree_number_, galaxy_number_, Gal[0].CentralGal);
 #endif /* defined UPDATETYPETWO */
 #endif /* not defined GUO10 */
 
       /* when galaxies are outputed, the slot is filled with the
         * last galaxy in the heap. New galaxies always take the last spot */
       int next_galaxy_number_ = HaloGalHeap[NHaloGal];
-      HaloGal[next_galaxy_number_] = Gal[p_];
+      HaloGal[next_galaxy_number_] = Gal[galaxy_number_];
       HaloGal[next_galaxy_number_].HeapIndex = NHaloGal;
 
       if(HaloAux[current_halo_number_].FirstGalaxy < 0)
@@ -906,20 +906,20 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
       GalTree[NGalTree].NextProgGal = -1;
       GalTree[NGalTree].DescendantGal = -1;
 
-      GalTree[NGalTree].FirstProgGal = Gal[p_].FirstProgGal;
-      if(Gal[p_].Type == 0)
-      { central_galaxy_number_ = NGalTree; }
+      GalTree[NGalTree].FirstProgGal = Gal[galaxy_number_].FirstProgGal;
+      if(Gal[galaxy_number_].Type == 0)
+      { fof_central_galaxy_number_ = NGalTree; }
       NGalTree++;
 #endif /* defined GALAXYTREE */
     }
   }
 
 #ifdef GALAXYTREE
-  if(central_galaxy_number_ < 0)
-  { terminate("central_galaxy_number_ < 0, i_.e. did not find central galaxy"); }
+  if(fof_central_galaxy_number_ < 0)
+  { terminate("fof_central_galaxy_number_ < 0, i_.e. did not find central galaxy"); }
 
-  for(p_ = evolved_galaxies_begin_; p_ < NGalTree; p_++)
-  { GalTree[p_].FOFCentralGal = central_galaxy_number_; }
+  for(galaxy_number_ = evolved_galaxies_begin_; galaxy_number_ < NGalTree; galaxy_number_++)
+  { GalTree[galaxy_number_].FOFCentralGal = fof_central_galaxy_number_; }
 #endif /* defined GALAXYTREE */
 
   report_memory_usage(&HighMark, "evolve_galaxies");

@@ -67,13 +67,13 @@
 
 
 /** @brief MPI Bcast large data  */
-#define MPI_Bcast_large_data(ptr_, count_, size_of_value_type_, rank_of_master_task_, MPI_communicator_)              \
-do{                                                                                                                   \
-  unsigned long long ptr_##idx_;                                                                                      \
-  for(ptr_##idx_ = 0; ptr_##idx_ < count_; ptr_##idx_ += MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_)     \
-  { MPI_Bcast(&(ptr_[ptr_##idx_]), (count_ - ptr_##idx_ < MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_ ?   \
-                                    count_ - ptr_##idx_ : MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_) *  \
-                                   size_of_value_type_, MPI_BYTE, rank_of_master_task_, MPI_communicator_); }         \
+#define MPI_Bcast_large_data(ptr_, count_, size_of_value_type_, rank_of_master_task_, MPI_communicator_)    \
+do{                                                                                                         \
+  unsigned long long curr_;                                                                                 \
+  for(curr_ = 0; curr_ < count_; curr_ += MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_)          \
+  { MPI_Bcast(&(ptr_[curr_]), (count_ - curr_ < MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_ ?   \
+                               count_ - curr_ : MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_) *  \
+                               size_of_value_type_, MPI_BYTE, rank_of_master_task_, MPI_communicator_); }   \
 } while(0)
 
 #endif /* defined PARALLEL */
@@ -102,7 +102,7 @@ do{                                                                             
  * @param [in]    count_ number of elements to be set
  */
 #define set_mem_to(ptr_, value_, count_) \
-do { size_t ptr_##idx_; for(ptr_##idx_ = 0; ptr_##idx_ < count_; ++ptr_##idx_) { ptr_[ptr_##idx_] = value_; } } while(0)
+do { size_t idx_; for(idx_ = 0; idx_ < count_; ++idx_) { ptr_[idx_] = value_; } } while(0)
   
 
 /** @brief sets all entries in array to given value
@@ -122,16 +122,67 @@ do { size_t ptr_##idx_; for(ptr_##idx_ = 0; ptr_##idx_ < count_; ++ptr_##idx_) {
  *
  * @warning untested. don't know if works 
  */
-#define set_2d_array_to(arr_, value_)                                                      \
-do {                                                                                       \
-size_t arr_##idx_0_;                                                                       \
-size_t arr_##idx_1_;                                                                       \
-for(arr_##idx_0_ = 0; arr_##idx_0_ < (sizeof arr_    / sizeof arr_[0]   ); ++arr_##idx_0_) \
-for(arr_##idx_1_ = 0; arr_##idx_1_ < (sizeof arr_[0] / sizeof arr_[0][0]); ++arr_##idx_1_) \
-{ arr_[arr_##idx_0_][arr_##idx_1_] = value_; }                                             \
+#define set_array_2d_to(arr_, value_)                                                    \
+do {                                                                                     \
+size_t arr_idx_0_;                                                                       \
+size_t arr_idx_1_;                                                                       \
+for(arr_idx_0_ = 0; arr_idx_0_ < (sizeof arr_    / sizeof arr_[0]   ); ++arr_idx_0_)     \
+for(arr_idx_1_ = 0; arr_idx_1_ < (sizeof arr_[0] / sizeof arr_[0][0]); ++arr_idx_1_)     \
+{ arr_[arr_idx_0_][arr_idx_1_] = value_; }                                               \
 } while(0)
 
 
+#define array_op_array(arr_a_, arr_b_, op_)                                              \
+do {                                                                                     \
+size_t arr_idx_0_;                                                                       \
+for(arr_idx_0_ = 0; arr_idx_0_ < (sizeof arr_a_    / sizeof arr_a_[0]   ); ++arr_idx_0_) \
+{ (arr_a_[arr_idx_0_]) op_ (arr_b_[arr_idx_0_]); }                                       \
+} while(0)  
+  
+
+#define array_op_array_v3(arr_a_, arr_b_, op_)                                           \
+do {                                                                                     \
+size_t arr_idx_0_;                                                                       \
+__auto_type base_a_ = (&((arr_a_)[0][0]));                                               \
+__auto_type base_b_ = (&((arr_b_)[0][0]));                                               \
+for(arr_idx_0_ = 0; arr_idx_0_ < (sizeof arr_a_    / sizeof arr_a_[0]   ); ++arr_idx_0_) \
+{ (base_a_[arr_idx_0_]) op_ (base_b_[arr_idx_0_]); }                                     \
+} while(0)  
+  
+
+#define array_2d_op_array_2d(arr_a_, arr_b_, op_)                                        \
+do {                                                                                     \
+size_t arr_idx_0_;                                                                       \
+size_t arr_idx_1_;                                                                       \
+for(arr_idx_0_ = 0; arr_idx_0_ < (sizeof arr_a_    / sizeof arr_a_[0]   ); ++arr_idx_0_) \
+for(arr_idx_1_ = 0; arr_idx_1_ < (sizeof arr_a_[0] / sizeof arr_a_[0][0]); ++arr_idx_1_) \
+{ (arr_a_[arr_idx_0_][arr_idx_1_]) op_ (arr_b_[arr_idx_0_][arr_idx_1_]); }               \
+} while(0)
+
+  
+#define array_2d_op_array_2d_v2(arr_a_, arr_b_, op_)                                     \
+do {                                                                                     \
+size_t arr_idx_;                                                                         \
+for(arr_idx_ = 0; arr_idx_ < (sizeof arr_a_    / sizeof arr_a_[0]   ) *                  \
+                             (sizeof arr_a_[0] / sizeof arr_a_[0][0]); ++arr_idx_)       \
+{ ((&(arr_a_[0][0]))[arr_idx_]) op_ ((&(arr_b_[0][0])[arr_idx_]); }                      \
+} while(0)                                                                               
+                                                                                         
+                                                                                         
+#define array_2d_op_array_2d_v3(arr_a_, arr_b_, op_)                                     \
+do {                                                                                     \
+__auto_type base_a_ = (&((arr_a_)[0][0]));                                               \
+__auto_type base_b_ = (&((arr_b_)[0][0]));                                               \
+size_t arr_idx_;                                                                         \
+for(arr_idx_ = 0; arr_idx_ < (sizeof arr_a_    / sizeof arr_a_[0]   ) *                  \
+                             (sizeof arr_a_[0] / sizeof arr_a_[0][0]); ++arr_idx_)       \
+{ (base_a_[arr_idx_]) op_ (base_b_[arr_idx_]); }                                         \
+} while(0)
+
+
+  
+
+  
 /** @brief compute interpolation tables */ 
 #define set_interpolation_tables(i_, i_beg_, i_end_, arg_beg_, arg_step_, f_, arg_arr_, res_arr_) \
 do{                                                                                               \

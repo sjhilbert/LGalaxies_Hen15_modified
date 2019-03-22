@@ -84,21 +84,21 @@ get_bulge_mass_for_radius(const double x)
 /** @brief Calculates the distance of the satellite to the pericentre of the
   *        main dark matter halo. */
 static inline double
-get_peri_radius_for_galaxy(const int p, const int centralgal)
+get_peri_radius_for_galaxy(const int galaxy_number_, const int central_galaxy_number_)
 {
   int i;
   double a, b, v[3], r[3], x, x0;
   for(i = 0; i < 3; i++)
     {
-      r[i] = wrap(Gal[p].Pos[i]-Gal[centralgal].Pos[i],BoxSize);
-      r[i] /= (1 + ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
-      v[i] = Gal[p].Vel[i] - Gal[centralgal].Vel[i];
+      r[i] = wrap(Gal[galaxy_number_].Pos[i]-Gal[central_galaxy_number_].Pos[i],BoxSize);
+      r[i] /= (1 + ZZ[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]);
+      v[i] = Gal[galaxy_number_].Vel[i] - Gal[central_galaxy_number_].Vel[i];
     }
 
-  b = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / pow2(Gal[centralgal].Vvir);
+  b = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / pow2(Gal[central_galaxy_number_].Vvir);
   a = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2] -
                 pow2(r[0] * v[0] + r[1] * v[1] + r[2] * v[2])/
-                    (r[0] * r[0] + r[1] * r[1] + r[2] * r[2])) / pow2(Gal[centralgal].Vvir);
+                    (r[0] * r[0] + r[1] * r[1] + r[2] * r[2])) / pow2(Gal[central_galaxy_number_].Vvir);
 
   x = sqrt(b / a);
   x0 = 1000;
@@ -118,7 +118,7 @@ get_peri_radius_for_galaxy(const int p, const int centralgal)
 
 /** @brief Calculates the half mass radius of satellite galaxies */
 static inline double 
-get_sat_radius_for_galaxy(const int p)
+get_sat_radius_for_galaxy(const int galaxy_number_)
 {
   double r, rd, rb, Mdisk, rmax, M;
   double Mgas, Mbulge, rgd, dr, totmass;
@@ -127,12 +127,12 @@ get_sat_radius_for_galaxy(const int p)
   #define SAT_RADIUS_N 100
 
   r=0.;
-  rgd = Gal[p].GasDiskRadius/3.;
-  rd=Gal[p].StellarDiskRadius/3.;
-  rb=Gal[p].BulgeSize;
-  Mgas = Gal[p].ColdGas;
-  Mdisk=Gal[p].DiskMass;
-  Mbulge = Gal[p].BulgeMass;
+  rgd = Gal[galaxy_number_].GasDiskRadius/3.;
+  rd=Gal[galaxy_number_].StellarDiskRadius/3.;
+  rb=Gal[galaxy_number_].BulgeSize;
+  Mgas = Gal[galaxy_number_].ColdGas;
+  Mdisk=Gal[galaxy_number_].DiskMass;
+  Mbulge = Gal[galaxy_number_].BulgeMass;
   totmass = Mgas+Mdisk+Mbulge;
 
   rmax=max(rb,1.68*max(rd,rgd));
@@ -168,11 +168,11 @@ get_sat_radius_for_galaxy(const int p)
 
 /**  @brief checks if a type 2 satellite galaxy should be disrupted
  *   due to tidal forces */
-void disrupt(const int p)
+void disrupt(const int galaxy_number_)
 {
   double rho_sat, rho_cen;
   double cen_mass, r_sat, radius;
-  int centralgal;
+  int central_galaxy_number_;
 
   /* If the main halo density at the pericentre (closest point in the orbit
    * to the central galaxy)is larger than the satellite's density at the
@@ -180,13 +180,13 @@ void disrupt(const int p)
    * the satellite is a type 2 the only mass components remaining and
    * contributing to the density are the cold gas and stellar mass. */
 
-  centralgal=Gal[p].CentralGal;
+  central_galaxy_number_=Gal[galaxy_number_].CentralGal;
  
-  mass_checks("Top of disrupt",centralgal);
-  mass_checks("Top of disrupt",p);
+  mass_checks("Top of disrupt",central_galaxy_number_);
+  mass_checks("Top of disrupt",galaxy_number_);
 
   /* Radius calculated at the peri-point */
-  radius = get_peri_radius_for_galaxy(p, centralgal);
+  radius = get_peri_radius_for_galaxy(galaxy_number_, central_galaxy_number_);
   if (radius < 0) {
    terminate("must be wrong \n");
   }
@@ -194,15 +194,15 @@ void disrupt(const int p)
   /* Calculate the density of the main central halo at radius (the peri-centre).
    * The tidal forces are caused by the dark matter of the main halo, hence Mvir
    * is used. Assume isothermal. */
-  cen_mass=Gal[centralgal].Mvir*radius/Gal[centralgal].Rvir;
+  cen_mass=Gal[central_galaxy_number_].Mvir*radius/Gal[central_galaxy_number_].Rvir;
   rho_cen=cen_mass/pow3(radius);
 
   /* Calculate the density of the satellite's baryonic material */
-  if (Gal[p].DiskMass+Gal[p].BulgeMass>0)
+  if (Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass>0)
   {
     /* Calculate the rho according to the real geometry */
-    r_sat = get_sat_radius_for_galaxy(p);
-    rho_sat=(Gal[p].DiskMass+Gal[p].BulgeMass+Gal[p].ColdGas)/pow3(r_sat);
+    r_sat = get_sat_radius_for_galaxy(galaxy_number_);
+    rho_sat=(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ColdGas)/pow3(r_sat);
   }
   else
     rho_sat=0.0;
@@ -212,22 +212,22 @@ void disrupt(const int p)
    * a type 3 and all its material is transferred to the central galaxy. */
   if (rho_cen > rho_sat)
   {
-    Gal[p].Type = 3;
+    Gal[galaxy_number_].Type = 3;
 #ifdef GALAXYTREE
     int q;
-    q = Gal[Gal[p].CentralGal].FirstProgGal;
+    q = Gal[Gal[galaxy_number_].CentralGal].FirstProgGal;
     if (q >= 0)
     {
-      // add progenitors of Gal[p] to the list of progentitors of Gal[p].CentralGal
+      // add progenitors of Gal[galaxy_number_] to the list of progentitors of Gal[galaxy_number_].CentralGal
       while (GalTree[q].NextProgGal >= 0)
       	q = GalTree[q].NextProgGal;
 	
-      GalTree[q].NextProgGal = Gal[p].FirstProgGal;
+      GalTree[q].NextProgGal = Gal[galaxy_number_].FirstProgGal;
       
       if(GalTree[q].NextProgGal >= NGalTree)
 	{
-	  printf("q=%d p=%d GalTree[q].NextProgGal=%d NGalTree=%d\n",
-		 q, p, GalTree[q].NextProgGal, NGalTree);
+	  printf("q=%d galaxy_number_=%d GalTree[q].NextProgGal=%d NGalTree=%d\n",
+		 q, galaxy_number_, GalTree[q].NextProgGal, NGalTree);
 	  terminate("problem");
 	}
     }
@@ -248,40 +248,43 @@ void disrupt(const int p)
     /* Put gas component to the central galaxy hot gas and stellar material into the ICM.
      * Note that the satellite should have no extended components. */
 
-    transfer_gas(centralgal,HotGasComponent,p,ColdGasComponent,1.);
-    transfer_gas(centralgal,HotGasComponent,p,HotGasComponent,1.);
+    transfer_gas(central_galaxy_number_,HotGasComponent,galaxy_number_,ColdGasComponent,1.);
+    transfer_gas(central_galaxy_number_,HotGasComponent,galaxy_number_,HotGasComponent,1.);
 #ifdef TRACK_BURST
     /* Transfer burst component first */
-    transfer_stars(centralgal,BurstComponent,p,BurstComponent,
-		   (Gal[p].DiskMass+Gal[p].BulgeMass)/(Gal[p].DiskMass+Gal[p].BulgeMass+Gal[p].ICM));
+    transfer_stars(central_galaxy_number_,BurstComponent,galaxy_number_,BurstComponent,
+		   (Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass)/(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ICM));
 #endif
-    transfer_stars(centralgal,ICMComponent,p,DiskComponent,1.);
-    transfer_stars(centralgal,ICMComponent,p,BulgeComponent,1.);
+    transfer_stars(central_galaxy_number_,ICMComponent,galaxy_number_,DiskComponent,1.);
+    transfer_stars(central_galaxy_number_,ICMComponent,galaxy_number_,BulgeComponent,1.);
+    
     /* Add satellite's luminosity into the luminosity of the ICL
      * component of the central galaxy. */
-
 #ifndef POST_PROCESS_MAGS
 #ifdef ICL
-    int outputbin, j;
-    for(outputbin = 0; outputbin < NOUT; outputbin++)
+    int output_number_, filter_number_;
+    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
     {
-      for(j = 0; j < NMAG; j++)
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
 #ifdef OUTPUT_REST_MAGS 
-      	Gal[centralgal].ICLLum[j][outputbin] += Gal[p].Lum[j][outputbin];
-#endif
-#ifdef COMPUTE_OBS_MAGS
-      	Gal[centralgal].ObsICL[j][outputbin] += Gal[p].ObsLum[j][outputbin];
-#ifdef OUTPUT_MOMAF_INPUTS
-      	Gal[centralgal].dObsICL[j][outputbin] += Gal[p].dObsLum[j][outputbin];
-#endif
-#endif
+      	Gal[central_galaxy_number_].ICLLum [output_number_][filter_number_] += Gal[galaxy_number_].Lum    [output_number_][filter_number_];
+#endif                                                                                           
+#ifdef COMPUTE_OBS_MAGS                                                                          
+      	Gal[central_galaxy_number_].ObsICL [output_number_][filter_number_] += Gal[galaxy_number_].ObsLum [output_number_][filter_number_];
+#ifdef OUTPUT_MOMAF_INPUTS                                                                       
+      	Gal[central_galaxy_number_].dObsICL[output_number_][filter_number_] += Gal[galaxy_number_].dObsLum[output_number_][filter_number_];
+#ifdef KITZBICHLER                                                                       
+      	Gal[central_galaxy_number_].dObsICL_forward[output_number_][filter_number_] += Gal[galaxy_number_].dObsLum_forward[output_number_][filter_number_];
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined COMPUTE_OBS_MAGS */
       }  
     }
-#endif //ICL
-#endif //POST_PROCESS_MAGS
+#endif /* defined ICL */
+#endif /* not defined POST_PROCESS_MAGS */
 
   } //if (rho_cen > rho_sat)
-  mass_checks("Bottom of disrupt",centralgal);
-  mass_checks("Bottom of disrupt",p);
+  mass_checks("Bottom of disrupt",central_galaxy_number_);
+  mass_checks("Bottom of disrupt",galaxy_number_);
 }

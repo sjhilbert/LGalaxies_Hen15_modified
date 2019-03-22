@@ -211,8 +211,6 @@ double hot_retain_sat(const int i, const int centralgal);
 
 double get_initial_disk_radius(const int halonr, const int p);
 void update_bulge_from_disk(const int p, const double stars);
-double bulge_from_disk(const double frac);
-double func_size(const double x, const double a);
 void bulgesize_from_merger(const double mass_ratio, const int merger_centralgal, const int p, const double Mcstar, const double Mcbulge, const double Mcgas, const  double Mpstar, const double Mpbulge, const double Mpgas, double frac);
 
 void update_type_2(const int ngal, const int halonr, const int prog, int mostmassive);

@@ -179,6 +179,28 @@ void init(void)
 #ifdef LIGHTCONE_OUTPUT
   init_lightcone();
 #endif /* defined LIGHTCONE_OUTPUT */
+
+
+// #define dim_0_ 5
+// #define dim_1_ 7
+// 
+//  int x_[dim_0_][dim_1_];
+//  int y_[dim_0_][dim_1_];
+//  
+//  set_array_2d_to(x_, 12);
+//  
+//  set_array_2d_to(y_, 2);
+//  
+//  array_2d_op_array_2d_v3(x_, y_, +=);
+//  
+//  
+//  int i_0_, i_1_;
+//  for(i_0_ = 0; i_0_ < dim_0_; ++i_0_)
+//  for(i_1_ = 0; i_1_ < dim_1_; ++i_1_)
+//  printf("  x_[%d][%d] = %d\n",  i_0_, i_1_, x_[i_0_][i_1_]);
+// 
+
+
 }
 
 

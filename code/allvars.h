@@ -547,43 +547,43 @@ extern struct GALAXY
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef POST_PROCESS_MAGS
 #ifdef OUTPUT_REST_MAGS
-  float Lum[NMAG][NOUT];
-  float YLum[NMAG][NOUT];
-  float LumBulge[NMAG][NOUT];
-  float YLumBulge[NMAG][NOUT];
-  float LumDust[NMAG][NOUT];
-#ifdef ICL
-  float ICLLum[NMAG][NOUT];
+  float Lum      [NOUT][NMAG];
+  float YLum     [NOUT][NMAG];
+  float LumBulge [NOUT][NMAG];
+  float YLumBulge[NOUT][NMAG];
+  float LumDust  [NOUT][NMAG];
+#ifdef ICL             
+  float ICLLum   [NOUT][NMAG];
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef COMPUTE_OBS_MAGS
-  float ObsLum[NMAG][NOUT];
-  float ObsYLum[NMAG][NOUT];
-  float ObsLumBulge[NMAG][NOUT];
-  float ObsYLumBulge[NMAG][NOUT];
-  float ObsLumDust[NMAG][NOUT];
-#ifdef ICL
-  float ObsICL[NMAG][NOUT];
+  float ObsLum      [NOUT][NMAG];
+  float ObsYLum     [NOUT][NMAG];
+  float ObsLumBulge [NOUT][NMAG];
+  float ObsYLumBulge[NOUT][NMAG];
+  float ObsLumDust  [NOUT][NMAG];
+#ifdef ICL                
+  float ObsICL      [NOUT][NMAG];
 #endif /* defined ICL */
 
 #ifdef OUTPUT_MOMAF_INPUTS
-  float dObsLum[NMAG][NOUT];
-  float dObsYLum[NMAG][NOUT];
-  float dObsLumBulge[NMAG][NOUT];
-  float dObsYLumBulge[NMAG][NOUT];
-  float dObsLumDust[NMAG][NOUT];
-#ifdef ICL
-  float dObsICL[NMAG][NOUT];
+  float dObsLum      [NOUT][NMAG];
+  float dObsYLum     [NOUT][NMAG];
+  float dObsLumBulge [NOUT][NMAG];
+  float dObsYLumBulge[NOUT][NMAG];
+  float dObsLumDust  [NOUT][NMAG];
+#ifdef ICL                 
+  float dObsICL      [NOUT][NMAG];
 #endif /* defined ICL */
 #ifdef KITZBICHLER
-  float dObsLum_forward[NMAG][NOUT];
-  float dObsYLum_forward[NMAG][NOUT];
-  float dObsLumBulge_forward[NMAG][NOUT];
-  float dObsYLumBulge_forward[NMAG][NOUT];
-  float dObsLumDust_forward[NMAG][NOUT];
-#ifdef ICL
-  float dObsICL_forward[NMAG][NOUT];
+  float dObsLum_forward      [NOUT][NMAG];
+  float dObsYLum_forward     [NOUT][NMAG];
+  float dObsLumBulge_forward [NOUT][NMAG];
+  float dObsYLumBulge_forward[NOUT][NMAG];
+  float dObsLumDust_forward  [NOUT][NMAG];
+#ifdef ICL                         
+  float dObsICL_forward      [NOUT][NMAG];
 #endif /* defined ICL */
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */

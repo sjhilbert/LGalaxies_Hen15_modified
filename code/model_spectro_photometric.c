@@ -253,7 +253,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
   const int r_band_filter_number_ = 17;
 #endif /* defined OUTPUT_REST_MAGS */         
 
-  int output_bin_, filter_number_;
+  int output_number_, filter_number_;
   double luminosity_to_add_;
    
   int age_index_;  double f_age_1_, f_age_2_; 
@@ -283,7 +283,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
    * since we know the output times, the current time_ and the metallicity.
    * find_interpolated_lum() finds the 2 closest points in the SPS table
    * in terms of age and metallicity. Time gives the time_to_present for
-   * the current step while NumToTime(ListOutputSnaps[output_bin_]) gives
+   * the current step while NumToTime(ListOutputSnaps[output_number_]) gives
    * the time_ of the output snapshot_number_ - units Mpc/Km/s/h */
   
   if(MetallicityOption == 0) // reset met index to use only solar metallicity
@@ -313,9 +313,9 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
     const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[galaxy_number_].SnapNum] + 1;
 #endif /* not defined GALAXYTREE */
 
-    for(output_bin_ = output_bin_beg_; output_bin_ < output_bin_end_; output_bin_++)
+    for(output_number_ = output_bin_beg_; output_number_ < output_bin_end_; output_number_++)
     {
-      const double age_                        = time_ - NumToTime(ListOutputSnaps[output_bin_]);
+      const double age_                        = time_ - NumToTime(ListOutputSnaps[output_number_]);
       
       if(age_ <= 0) continue;
       
@@ -334,19 +334,19 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
                                               f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][0][filter_number_]  +
                                                           f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][0][filter_number_]));
                                          
-        Gal[galaxy_number_].Lum[filter_number_][output_bin_] += luminosity_to_add_;
+        Gal[galaxy_number_].Lum[output_number_][filter_number_] += luminosity_to_add_;
 
         /*luminosity used for extinction due to young birth clouds */
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].YLum[filter_number_][output_bin_] += luminosity_to_add_;
+          Gal[galaxy_number_].YLum[output_number_][filter_number_] += luminosity_to_add_;
         
         if(filter_number_ == r_band_filter_number_)
-          Gal[galaxy_number_].rbandWeightAge[output_bin_] += age_ * luminosity_to_add_;
+          Gal[galaxy_number_].rbandWeightAge[output_number_] += age_ * luminosity_to_add_;
       }
 #endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef COMPUTE_OBS_MAGS
-      redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_bin_];
+      redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_number_];
 
       /* Note the zindex in LumTables[][][][] meaning the magnitudes are now
         * "inversely k-corrected to get observed frame at output bins" */
@@ -357,14 +357,14 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
                                               f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
                                                           f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[galaxy_number_].ObsLum[filter_number_][output_bin_] += luminosity_to_add_;
+        Gal[galaxy_number_].ObsLum[output_number_][filter_number_] += luminosity_to_add_;
   
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].ObsYLum[filter_number_][output_bin_] += luminosity_to_add_;
+          Gal[galaxy_number_].ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
       }
       
 #ifdef OUTPUT_MOMAF_INPUTS
-      redshift_index_ = (ListOutputSnaps[output_bin_] > 0 ? LastDarkMatterSnapShot - ListOutputSnaps[output_bin_] - 1 : LastDarkMatterSnapShot);
+      redshift_index_ = (ListOutputSnaps[output_number_] > 0 ? LastDarkMatterSnapShot - ListOutputSnaps[output_number_] - 1 : LastDarkMatterSnapShot);
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         luminosity_to_add_ = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
@@ -372,14 +372,14 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
                                               f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
                                                           f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[galaxy_number_].dObsLum[filter_number_][output_bin_] += luminosity_to_add_;
+        Gal[galaxy_number_].dObsLum[output_number_][filter_number_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].dObsYLum[filter_number_][output_bin_] += luminosity_to_add_;
+          Gal[galaxy_number_].dObsYLum[output_number_][filter_number_] += luminosity_to_add_;
       }
       
 #ifdef KITZBICHLER
-      redshift_index_ = (ListOutputSnaps[output_bin_] < LastDarkMatterSnapShot ? LastDarkMatterSnapShot - ListOutputSnaps[output_bin_] + 1 : 0);
+      redshift_index_ = (ListOutputSnaps[output_number_] < LastDarkMatterSnapShot ? LastDarkMatterSnapShot - ListOutputSnaps[output_number_] + 1 : 0);
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         luminosity_to_add_ = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
@@ -387,10 +387,10 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
                                               f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
                                                           f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[galaxy_number_].dObsLum_forward[filter_number_][output_bin_] += luminosity_to_add_;
+        Gal[galaxy_number_].dObsLum_forward[output_number_][filter_number_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].dObsYLum_forward[filter_number_][output_bin_] += luminosity_to_add_;
+          Gal[galaxy_number_].dObsYLum_forward[output_number_][filter_number_] += luminosity_to_add_;
       }
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */

@@ -100,7 +100,7 @@ struct metals metals_add_fraction(const struct metals m1,
 
 static inline
 void metals_add_to(struct *metals m,
-                  const struct metals m2)
+                   const struct metals m2)
 {
   m->type1a += m2.type1a;
   m->type2  += m2.type2;
