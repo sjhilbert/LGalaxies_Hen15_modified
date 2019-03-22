@@ -13,7 +13,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/** @file allvars.h
+/** @file allvars.h declares all globally defined structs and variables 
+  *                 and some constants.
+  *                
+  * Declares all globally defined structs and variables and some MACRO constants.
+  *
+  * Common mathematical constants (M_PI etc.) are provided by "mathematical_constants.h"
+  * (unless already provided by the compliler).
+  *
+  * Phyical constants and units are provided by "physical_constants_and_units.h".
   */
 #ifndef ALLVARS_H
 #define ALLVARS_H
@@ -760,7 +768,7 @@ extern double ScaleMass;
 
 #ifdef SPECIFYFILENR
 extern char   FileNrDir[512];
-extern int    ListInputFilrNr[111];
+extern int    ListInputFileNr[111];
 #endif /* defined SPECIFYFILENR */
 
 extern int TotHalos;

@@ -70,7 +70,7 @@ double ScalePos, ScaleMass;
 
 #ifdef SPECIFYFILENR
 char FileNrDir[512];
-int ListInputFilrNr[111];
+int ListInputFileNr[111];
 #endif
 
 

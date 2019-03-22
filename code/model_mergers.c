@@ -659,8 +659,7 @@ void make_bulge_from_burst(const int galaxy_number_)
 
 /** @brief Merger burst recipe from Somerville 2001 (used after Croton2006) */
 
-double collisional_starburst_recipe(const double mass_ratio_, const int merger_centralgal_, const int centralgal_,
-                                    const double time_, const double deltaT_)
+double collisional_starburst_recipe(const double mass_ratio_, const int merger_centralgal_, const int centralgal_,  const double time_, const double deltaT_)
 {
   /** @brief If StarBurstModel = 0 (since Croton2006), the Somerville 2001
    *         model of bursts is used. The burst can happen for both major

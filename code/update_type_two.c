@@ -32,26 +32,26 @@
 
 #ifdef UPDATETYPETWO
 
-void update_type_two_coordinate_and_velocity(const int tree, const int i, const int centralgal)
+void update_type_two_coordinate_and_velocity(const int tree_number_, const int galaxy_number_, const int central_galaxy_number_)
 {
-  int j, p;
-  float tmppos;
-  double Scale_V, dv;
-  p=i;
-//printf("updating type 2 treenr =%d\n",tree);
+  int j_;
+  float tmp_pos_;
+  double Scale_V_, dv_;
+  const int p = galaxy_number_;
+//printf("updating type 2 treenr =%d\n",tree_number_);
 #ifdef GUO10
-  if(HaloGal[i].Type == 2)  /* Update positions of type 2's */
+  if(HaloGal[galaxy_number_].Type == 2)  /* Update positions of type 2's */
 #else
-  if(Gal[i].Type == 2)  /* Update positions of type 2's */
+  if(Gal[galaxy_number_].Type == 2)  /* Update positions of type 2's */
 #endif
   {
 #ifdef GUO10
-    int snapnum = HaloGal[i].SnapNum;
+    int snapshot_number_ = HaloGal[galaxy_number_].SnapNum;
 #else
-    int snapnum = Gal[i].SnapNum;
+    int snapshot_number_ = Gal[galaxy_number_].SnapNum;
 #endif
-    Nids = CountIDs_snaptree[snapnum * Ntrees + tree];
-    OffsetIDs = OffsetIDs_snaptree[snapnum * Ntrees + tree];
+    Nids = CountIDs_snaptree[snapshot_number_ * Ntrees + tree_number_];
+    OffsetIDs = OffsetIDs_snaptree[snapshot_number_ * Ntrees + tree_number_];
 
     size_t header_offset = 4 * sizeof(int) + 2 * TotSnaps * sizeof(int) + 2 * TotSnaps * Ntrees * sizeof(int) + 2 * sizeof(int) * NtotHalos;
 
@@ -63,132 +63,132 @@ void update_type_two_coordinate_and_velocity(const int tree, const int i, const 
     PosList += 3 * OffsetIDs;
     VelList += 3 * OffsetIDs;
 #ifdef GUO10
-    get_coordinates(HaloGal[i].Pos, HaloGal[i].Vel, HaloGal[i].MostBoundID, tree, HaloGal[i].HaloNr, HaloGal[i].SnapNum);
+    get_coordinates(HaloGal[galaxy_number_].Pos, HaloGal[galaxy_number_].Vel, HaloGal[galaxy_number_].MostBoundID, tree_number_, HaloGal[galaxy_number_].HaloNr, HaloGal[galaxy_number_].SnapNum);
 #else
-    get_coordinates(Gal[i].Pos, Gal[i].Vel, Gal[i].MostBoundID, tree, Gal[i].HaloNr, Gal[i].SnapNum);
+    get_coordinates(Gal[galaxy_number_].Pos, Gal[galaxy_number_].Vel, Gal[galaxy_number_].MostBoundID, tree_number_, Gal[galaxy_number_].HaloNr, Gal[galaxy_number_].SnapNum);
 #endif
 
 //#ifdef SCALE_COSMOLOGY
 #ifdef GUO10
-    for(j = 0; j < 3; j++)
-      HaloGal[i].Pos[j] *= ScalePos;
+    for(j_ = 0; j_ < 3; j_++)
+      HaloGal[galaxy_number_].Pos[j_] *= ScalePos;
 #else
-    for(j = 0; j < 3; j++)
-      Gal[i].Pos[j] *= ScalePos;
+    for(j_ = 0; j_ < 3; j_++)
+      Gal[galaxy_number_].Pos[j_] *= ScalePos;
 #endif
 //#endif
 
 #ifdef GUO10
-    for(j = 0; j < 3; j++)
+    for(j_ = 0; j_ < 3; j_++)
     {
-      tmppos = wrap(-HaloGal[p].MergCentralPos[j] + HaloGal[p].Pos[j],BoxSize);
-      tmppos *=  sqrt(HaloGal[p].MergTime/HaloGal[p].OriMergTime);
+      tmp_pos_ = wrap(-HaloGal[p].MergCentralPos[j_] + HaloGal[p].Pos[j_],BoxSize);
+      tmp_pos_ *=  sqrt(HaloGal[p].MergTime/HaloGal[p].OriMergTime);
 
-      HaloGal[p].Pos[j]=HaloGal[p].MergCentralPos[j] + tmppos;
+      HaloGal[p].Pos[j_]=HaloGal[p].MergCentralPos[j_] + tmp_pos_;
 
-      if(HaloGal[p].Pos[j] < 0)
-        HaloGal[p].Pos[j] = BoxSize + HaloGal[p].Pos[j];
-      if(HaloGal[p].Pos[j] > BoxSize)
-        HaloGal[p].Pos[j] = HaloGal[p].Pos[j] - BoxSize;
+      if(HaloGal[p].Pos[j_] < 0)
+        HaloGal[p].Pos[j_] = BoxSize + HaloGal[p].Pos[j_];
+      if(HaloGal[p].Pos[j_] > BoxSize)
+        HaloGal[p].Pos[j_] = HaloGal[p].Pos[j_] - BoxSize;
     }
 #else
-    for(j = 0; j < 3; j++)
+    for(j_ = 0; j_ < 3; j_++)
     {
-      tmppos = wrap(-Gal[p].MergCentralPos[j] + Gal[p].Pos[j],BoxSize);
+      tmp_pos_ = wrap(-Gal[p].MergCentralPos[j_] + Gal[p].Pos[j_],BoxSize);
 #ifdef GUO13
-      tmppos *=  sqrt(Gal[p].MergTime/Gal[p].OriMergTime);
+      tmp_pos_ *=  sqrt(Gal[p].MergTime/Gal[p].OriMergTime);
 #else
-      tmppos *=  (Gal[p].MergTime/Gal[p].OriMergTime);
+      tmp_pos_ *=  (Gal[p].MergTime/Gal[p].OriMergTime);
 #endif
-      Gal[p].Pos[j]=Gal[p].MergCentralPos[j] + tmppos;
+      Gal[p].Pos[j_]=Gal[p].MergCentralPos[j_] + tmp_pos_;
 
-      if(Gal[p].Pos[j] < 0)
-        Gal[p].Pos[j] = BoxSize + Gal[p].Pos[j];
-      if(Gal[p].Pos[j] > BoxSize)
-        Gal[p].Pos[j] = Gal[p].Pos[j] - BoxSize;
+      if(Gal[p].Pos[j_] < 0)
+        Gal[p].Pos[j_] = BoxSize + Gal[p].Pos[j_];
+      if(Gal[p].Pos[j_] > BoxSize)
+        Gal[p].Pos[j_] = Gal[p].Pos[j_] - BoxSize;
     }
 #endif
 
 #ifdef GUO10
     //#ifdef SCALE_COSMOLOGY
     //add by Qi. 06/04/2012 to account for the scale of velocity field
-    Scale_V = scale_v_cen(Halo[HaloGal[centralgal].HaloNr].SnapNum);
+    Scale_V_ = scale_v_cen(Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum);
 
-    for (j = 0; j < 3 ; j++)
+    for (j_ = 0; j_ < 3 ; j_++)
     {
-      dv = HaloGal[p].Vel[j] - HaloGal[centralgal].Vel[j]/Scale_V;
-      dv *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[HaloGal[centralgal].HaloNr].SnapNum]/AA[Halo[HaloGal[centralgal].HaloNr].SnapNum]);
-      HaloGal[p].Vel[j] = HaloGal[centralgal].Vel[j] + dv;
+      dv_ = HaloGal[p].Vel[j_] - HaloGal[central_galaxy_number_].Vel[j_]/Scale_V_;
+      dv_ *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum]/AA[Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum]);
+      HaloGal[p].Vel[j_] = HaloGal[central_galaxy_number_].Vel[j_] + dv_;
     }
 //#endif
 
 #else
-    Scale_V = scale_v_cen(Halo[Gal[centralgal].HaloNr].SnapNum);
+    Scale_V_ = scale_v_cen(Halo[Gal[central_galaxy_number_].HaloNr].SnapNum);
 
-    for (j = 0; j < 3 ; j++)
+    for (j_ = 0; j_ < 3 ; j_++)
     {
-      dv = Gal[p].Vel[j] - Gal[centralgal].Vel[j]/Scale_V;
-      dv *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[Gal[centralgal].HaloNr].SnapNum]/AA[Halo[Gal[centralgal].HaloNr].SnapNum]);
-      Gal[p].Vel[j] = Gal[centralgal].Vel[j] + dv;
+      dv_ = Gal[p].Vel[j_] - Gal[central_galaxy_number_].Vel[j_]/Scale_V_;
+      dv_ *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]/AA[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]);
+      Gal[p].Vel[j_] = Gal[central_galaxy_number_].Vel[j_] + dv_;
     }
 #endif
   }
 }
 
 
-void get_coordinates(float *pos, float *vel, const long long ID, const int tree, const int halonr, const int snapnum)
+void get_coordinates(float *pos_, float *vel_, const long long ID_, const int tree_number_, const int halo_number_, const int snapshot_number_)
 {
-  int m, k, start, nids;
+  int m_, k_, start_, n_ids_;
 
-  start = OffsetIDs_halo[TreeFirstHalo[tree] + halonr] - OffsetIDs;
-  nids = CountIDs_halo[TreeFirstHalo[tree] + halonr];
+  start_ = OffsetIDs_halo[TreeFirstHalo[tree_number_] + halo_number_] - OffsetIDs;
+  n_ids_ = CountIDs_halo[TreeFirstHalo[tree_number_] + halo_number_];
 
-  while(nids > 0)
+  while(n_ids_ > 0)
+  {
+    m_ = n_ids_ / 2;
+    if(IdList[start_ + m_] == ID_)
     {
-      m = nids / 2;
-      if(IdList[start + m] == ID)
-        {
-          for(k = 0; k < 3; k++)
-            {
-              pos[k] = PosList[3 * (start + m) + k];
-              vel[k] = sqrt(AA[snapnum]) * VelList[3 * (start + m) + k];        /* to convert to peculiar velocity */
-            }
+      for(k_ = 0; k_ < 3; k_++)
+      {
+        pos_[k_] = PosList[3 * (start_ + m_) + k_];
+        vel_[k_] = sqrt(AA[snapshot_number_]) * VelList[3 * (start_ + m_) + k_];        /* to convert to peculiar velocity */
+      }
 
-          if(pos[0] == 0 && pos[1] == 0 && pos[2] == 0)
-            {
-              terminate        ("This treeaux-files does not (yet) contain the coordinates\n for the desired output time!\n");
-            }
+      if(pos_[0] == 0 && pos_[1] == 0 && pos_[2] == 0)
+      {
+        terminate("This treeaux-files does not (yet) contain the coordinates\n for the desired output time!\n");
+      }
 
-          return;
-        }
+      return;
+    }
 
-      if(IdList[start + m] < ID)
-        {
-          nids -= m;
-          start += m;
-        }
-      else
-          {
-          nids = m;
-          }
+    if(IdList[start_ + m_] < ID_)
+    {
+      n_ids_ -= m_;
+      start_ += m_;
+    }
+    else
+    {
+      n_ids_ = m_;
+    }
   }
 
-  terminate("ID not found! - What's going on?");
+  terminate("ID_ not found! - What's going on?");
   return;
 }
 
 
 /**@brief If USE_MEMORY_TO_MINIMIZE_IO ON - Routine to read in all
  *        the tree_aux data for one file into a pointer (ptr_auxdata) -
- *        later myfread() will pass the data onto each tree structure*/
+ *        later myfread() will pass the data onto each tree_number_ structure*/
 
-void load_all_auxdata(const int filenr)
+void load_all_auxdata(const int file_number_)
 {
-  char buf[1000];
-  FILE *fd;
-  struct stat filestatus;
-  int SnapShotInFileName;
-  size_t bytes;
+  char file_name_[1000];
+  FILE *file_;
+  struct stat file_status_;
+  int SnapShotInFileName_;
+  size_t bytes_;
 
   //if def MCMC and PARALLEL only task 0 reads the representative treefile, then broadcasts
 #ifdef PARALLEL
@@ -198,41 +198,41 @@ void load_all_auxdata(const int filenr)
           printf("Task 0 reading aux data\n");
 #endif
 #endif
-  SnapShotInFileName=LastDarkMatterSnapShot;
+  SnapShotInFileName_=LastDarkMatterSnapShot;
 
 #ifdef MCMC
 #ifdef MR_PLUS_MRII
-  SnapShotInFileName=LastDarkMatterSnapShot_MRII;
+  SnapShotInFileName_=LastDarkMatterSnapShot_MRII;
 #endif
 #endif
 
 #ifndef MRII
-  sprintf(buf, "%s/treedata/treeaux_%03d.%d", SimulationDir, SnapShotInFileName, filenr);
+  sprintf(file_name_, "%s/treedata/treeaux_%03d.%d", SimulationDir, SnapShotInFileName_, file_number_);
 #else
-  sprintf(buf, "%s/treedata/treeaux_sf1_%03d.%d", SimulationDir, SnapShotInFileName, filenr);
+  sprintf(file_name_, "%s/treedata/treeaux_sf1_%03d.%d", SimulationDir, SnapShotInFileName_, file_number_);
 #endif
 
 
-  if(stat(buf, &filestatus) != 0)                  /* seems not to exist */
+  if(stat(file_name_, &file_status_) != 0)                  /* seems not to exist */
     {
-      char sbuf[1000];
-      sprintf(sbuf, "Can't open file `%s'\n", buf);
-      terminate(sbuf);
+      char error_message_[1000];
+      sprintf(error_message_, "Can't open file `%s'\n", file_name_);
+      terminate(error_message_);
     }
 
-  if(!(fd = fopen(buf, "r")))
+  if(!(file_ = fopen(file_name_, "r")))
     {
-      char sbuf[1000];
-      sprintf(sbuf, "Can't open file `%s'\n", buf);
-      terminate(sbuf);
+      char error_message_[1000];
+      sprintf(error_message_, "Can't open file `%s'\n", file_name_);
+      terminate(error_message_);
     }
 
-  bytes = filestatus.st_size;
-  TreeAuxData = mymalloc("TreeAuxData", bytes);
+  bytes_ = file_status_.st_size;
+  TreeAuxData = mymalloc("TreeAuxData", bytes_);
 
-  myfread(TreeAuxData, 1, bytes, fd);
+  myfread(TreeAuxData, 1, bytes_, file_);
 
-  fclose(fd);
+  fclose(file_);
 
 #ifdef PARALLEL
 #ifdef MCMC
@@ -243,9 +243,9 @@ void load_all_auxdata(const int filenr)
 
   MPI_Barrier(MPI_COMM_WORLD);
 
-  MPI_Bcast(&bytes, sizeof(size_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&bytes_, sizeof(size_t), MPI_BYTE, 0, MPI_COMM_WORLD);
   if(ThisTask>0)
-          TreeAuxData = mymalloc("TreeAuxData", bytes);
+          TreeAuxData = mymalloc("TreeAuxData", bytes_);
 
   if(ThisTask==0)
           printf("broadcasting aux data\n", ThisTask);
@@ -256,9 +256,9 @@ void load_all_auxdata(const int filenr)
   for(ii=0;ii<Nmessages;ii++)
     {
       //if next chunk is outside of array size, just pass whats left and then exit the loop
-      if((ii+1)*MsgSizeInBytes>bytes)
+      if((ii+1)*MsgSizeInBytes>bytes_)
         {
-          MPI_Bcast(&TreeAuxData[ii*MsgSizeInBytes],bytes-ii*MsgSizeInBytes, MPI_BYTE, 0, MPI_COMM_WORLD);
+          MPI_Bcast(&TreeAuxData[ii*MsgSizeInBytes],bytes_-ii*MsgSizeInBytes, MPI_BYTE, 0, MPI_COMM_WORLD);
           break;
         }
       else

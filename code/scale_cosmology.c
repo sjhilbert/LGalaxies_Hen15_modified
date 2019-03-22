@@ -10,12 +10,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have received a_ copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
- /** @file scale_cosmology.c
+ /** @file scale_cosmology.c_
   * 
-  *  @brief functions used to scale to a different cosmology
+  *  @brief functions used to scale to a_ different cosmology
   * 
   *  @date  2010+
   *
@@ -38,53 +38,55 @@
 /** When we have tables for the scaling parameter in any cosmology only the
  * cosmological parameters will be inputs. Then this function will read the
  * scaling parameters from the tables. */
-void read_scaling_parameters()
+void read_scaling_parameters(void)
 {
-  double om_min=0.1, om_max=0.6, s8_min=0.5, s8_max=1.0;
-  double om_binsize, s8_binsize;
-  int om_Nbin, s8_Nbin;
-  double dummy_growth, dummy_snap63;
-  char buf[1000], buf1[1000];
-  FILE *fd;
+  const double om_min_=0.1;
+  const double om_max_=0.6;
+  const double s8_min_=0.5;
+  const double s8_max_=1.0;
 
-  om_binsize=(om_max-om_min)/50;
-  s8_binsize=(s8_max-s8_min)/50;
+  const double om_binsize_=(om_max_-om_min_)/50;
+  const double s8_binsize_=(s8_max_-s8_min_)/50;
 //0.369798725 0.589
 
   Omega=0.370;
-  om_Nbin=(int)((0.370-om_min)/om_binsize);
-  s8_Nbin=(int)((0.589-s8_min)/s8_binsize);
+  const int om_n_bins_=(int)((0.370-om_min_)/om_binsize_);
+  const int s8_n_bins_=(int)((0.589-s8_min_)/s8_binsize_);  
 
-  sprintf(FileWithZList, "/galformod/scratch/bmh20/Workspace/CosmologyTables/zlist_%04d_%04d.txt", om_Nbin, s8_Nbin);
+  double dummy_growth_, dummy_snap63_;
+  char file_name_[1000], buf_1_[1000];
+  FILE *file_;
+
+  sprintf(FileWithZList, "/galformod/scratch/bmh20/Workspace/CosmologyTables/zlist_%04d_%04d.txt", om_n_bins_, s8_n_bins_);
 
   read_zlist_new();
   read_output_snaps();
 
-  sprintf(buf, "/galformod/scratch/bmh20/Workspace/CosmologyTables/fit_%04d_%04d.txt", om_Nbin, s8_Nbin);
-  if(!(fd = fopen(buf, "r")))
+  sprintf(file_name_, "/galformod/scratch/bmh20/Workspace/CosmologyTables/fit_%04d_%04d.txt", om_n_bins_, s8_n_bins_);
+  if(!(file_ = fopen(file_name_, "r")))
     {
-      char sbuf[1000];
-      sprintf(sbuf, "file `%s' not found.\n", buf);
-      terminate(sbuf);
+      char error_message_[1000];
+      sprintf(error_message_, "file `%s' not found.\n", file_name_);
+      terminate(error_message_);
     }
 
-  fgets(buf1, 300, fd);
-  fgets(buf1, 300, fd);
-  fgets(buf1, 300, fd);
+  fgets(buf_1_, 300, file_);
+  fgets(buf_1_, 300, file_);
+  fgets(buf_1_, 300, file_);
 
-  if(fscanf(fd, "%lf %lf %lf %lf", &ScaleMass, &dummy_growth, &ScalePos, &dummy_snap63)!=4)
+  if(fscanf(file_, "%lf %lf %lf %lf", &ScaleMass, &dummy_growth_, &ScalePos, &dummy_snap63_)!=4)
     {
-      char sbuf[1000];
-      sprintf(sbuf, "Wrong format of values in %s.\n", buf);
-      terminate(sbuf);
+      char error_message_[1000];
+      sprintf(error_message_, "Wrong format of values in %s.\n", file_name_);
+      terminate(error_message_);
     }
 
-  fclose(fd);
+  fclose(file_);
 
   ScaleMass=1./ScaleMass;
   ScalePos=1./ScalePos;
 
-  PartMass =         PartMass_OriginalCosm * ScaleMass;
+  PartMass = PartMass_OriginalCosm * ScaleMass;
   BoxSize  =  BoxSize_OriginalCosm * ScalePos;
 
   printf("Boxsize=%f\n",BoxSize);
@@ -92,58 +94,58 @@ void read_scaling_parameters()
 
 
  /** @brief scales all halos to new cosmology */
-void scale_cosmology(const int nhalos)
+void scale_cosmology(const int n_halos_)
 {
-  int i, j;
-  double Scale_V,CenVel[3],dv;
+  int halo_number_, j_;
+  double Scale_V_, Cen_Vel_[3], dv_;
 
 #ifdef ALLOW_UNSCALE_COSMOLOGY
   //Save unscaled properties
-  for(i = 0; i < nhalos ; i++)
+  for(halo_number_ = 0; halo_number_ < n_halos_ ; halo_number_++)
   {
     //will make sure haloes in the future are not scaled/un_scaled
-    if(Halo[i].SnapNum<=LastSnapShotNr)
+    if(Halo[halo_number_].SnapNum<=LastSnapShotNr)
     {
-      HaloAux[i].M_Crit200_Unscaled = Halo[i].M_Crit200;
-      HaloAux[i].M_Mean200_Unscaled = Halo[i].M_Mean200;
-      HaloAux[i].Vmax_Unscaled = Halo[i].Vmax;
-      for (j = 0; j < 3 ; j++)
+      HaloAux[halo_number_].M_Crit200_Unscaled = Halo[halo_number_].M_Crit200;
+      HaloAux[halo_number_].M_Mean200_Unscaled = Halo[halo_number_].M_Mean200;
+      HaloAux[halo_number_].Vmax_Unscaled = Halo[halo_number_].Vmax;
+      for (j_ = 0; j_ < 3 ; j_++)
       {
-        HaloAux[i].Pos_Unscaled[j] = Halo[i].Pos[j];
-        HaloAux[i].Vel_Unscaled[j] = Halo[i].Vel[j];
-        HaloAux[i].Spin_Unscaled[j] = Halo[i].Spin[j];
+        HaloAux[halo_number_].Pos_Unscaled[j_] = Halo[halo_number_].Pos[j_];
+        HaloAux[halo_number_].Vel_Unscaled[j_] = Halo[halo_number_].Vel[j_];
+        HaloAux[halo_number_].Spin_Unscaled[j_] = Halo[halo_number_].Spin[j_];
       }
     }
   }
 #endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 
-  for (i = 0; i < nhalos ; i++)
+  for (halo_number_ = 0; halo_number_ < n_halos_ ; halo_number_++)
   {
-    Scale_V = scale_v_cen(Halo[Halo[i].FirstHaloInFOFgroup].SnapNum);
+    Scale_V_ = scale_v_cen(Halo[Halo[halo_number_].FirstHaloInFOFgroup].SnapNum);
 
     //will make sure haloes in the future are not scaled/un_scaled
-    if(Halo[i].SnapNum<=LastSnapShotNr)
+    if(Halo[halo_number_].SnapNum<=LastSnapShotNr)
     {
-      if(Halo[i].M_Crit200 > 1.e-8)
-        Halo[i].M_Crit200 = Halo[i].M_Crit200 * ScaleMass * c_correction(Halo[i].M_Crit200,Halo[i].SnapNum);
-      if(Halo[i].M_Mean200 > 1.e-8)
-        Halo[i].M_Mean200 = Halo[i].M_Mean200 * ScaleMass * c_correction(Halo[i].M_Mean200,Halo[i].SnapNum);
-      Halo[i].Vmax = Halo[i].Vmax * sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[i].SnapNum]/AA[Halo[i].SnapNum]);
+      if(Halo[halo_number_].M_Crit200 > 1.e-8)
+        Halo[halo_number_].M_Crit200 = Halo[halo_number_].M_Crit200 * ScaleMass * c_correction(Halo[halo_number_].M_Crit200,Halo[halo_number_].SnapNum);
+      if(Halo[halo_number_].M_Mean200 > 1.e-8)
+        Halo[halo_number_].M_Mean200 = Halo[halo_number_].M_Mean200 * ScaleMass * c_correction(Halo[halo_number_].M_Mean200,Halo[halo_number_].SnapNum);
+      Halo[halo_number_].Vmax = Halo[halo_number_].Vmax * sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[halo_number_].SnapNum]/AA[Halo[halo_number_].SnapNum]);
 
-      for (j = 0; j < 3 ; j++)
+      for (j_ = 0; j_ < 3 ; j_++)
       {
-        Halo[i].Pos[j] = Halo[i].Pos[j] * ScalePos;
-        Halo[i].Spin[j] *= ScalePos * sqrt(ScaleMass/ScalePos) * sqrt(AA[Halo[i].SnapNum]/AA_OriginalCosm[Halo[i].SnapNum]);
+        Halo[halo_number_].Pos[j_] = Halo[halo_number_].Pos[j_] * ScalePos;
+        Halo[halo_number_].Spin[j_] *= ScalePos * sqrt(ScaleMass/ScalePos) * sqrt(AA[Halo[halo_number_].SnapNum]/AA_OriginalCosm[Halo[halo_number_].SnapNum]);
 
-        CenVel[j] = Halo[Halo[i].FirstHaloInFOFgroup].Vel[j] * Scale_V ;
-        if(i !=  Halo[i].FirstHaloInFOFgroup) // subhalos
+        Cen_Vel_[j_] = Halo[Halo[halo_number_].FirstHaloInFOFgroup].Vel[j_] * Scale_V_ ;
+        if(halo_number_ !=  Halo[halo_number_].FirstHaloInFOFgroup) // subhalos
         {
-          dv = Halo[i].Vel[j] - Halo[Halo[i].FirstHaloInFOFgroup].Vel[j];
-          dv *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[i].SnapNum]/AA[Halo[i].SnapNum]);
-          Halo[i].Vel[j] = CenVel[j] + dv;
+          dv_ = Halo[halo_number_].Vel[j_] - Halo[Halo[halo_number_].FirstHaloInFOFgroup].Vel[j_];
+          dv_ *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[halo_number_].SnapNum]/AA[Halo[halo_number_].SnapNum]);
+          Halo[halo_number_].Vel[j_] = Cen_Vel_[j_] + dv_;
         }
         else //central halos
-          Halo[i].Vel[j] = Halo[i].Vel[j] * Scale_V  ;
+          Halo[halo_number_].Vel[j_] = Halo[halo_number_].Vel[j_] * Scale_V_  ;
       }
     }
   }
@@ -151,24 +153,24 @@ void scale_cosmology(const int nhalos)
 
 #ifdef ALLOW_UNSCALE_COSMOLOGY
 /** @brief scales all halos back to old cosmology */
-void un_scale_cosmology(const int nhalos)
+void un_scale_cosmology(const int n_halos_)
 {
-  int i, j;
+  int halo_number_, j_;
 
-  for(i = 0; i < nhalos ; i++)
+  for(halo_number_ = 0; halo_number_ < n_halos_ ; halo_number_++)
   {
     //will make sure haloes in the future are not scaled/un_scaled
-    if(Halo[i].SnapNum<=LastSnapShotNr)
+    if(Halo[halo_number_].SnapNum<=LastSnapShotNr)
     {
-      Halo[i].M_Crit200 = HaloAux[i].M_Crit200_Unscaled;
-      Halo[i].M_Mean200 = HaloAux[i].M_Mean200_Unscaled;
-      Halo[i].Vmax = HaloAux[i].Vmax_Unscaled;
+      Halo[halo_number_].M_Crit200 = HaloAux[halo_number_].M_Crit200_Unscaled;
+      Halo[halo_number_].M_Mean200 = HaloAux[halo_number_].M_Mean200_Unscaled;
+      Halo[halo_number_].Vmax = HaloAux[halo_number_].Vmax_Unscaled;
 
-      for (j = 0; j < 3 ; j++)
+      for (j_ = 0; j_ < 3 ; j_++)
       {
-        Halo[i].Pos[j] = HaloAux[i].Pos_Unscaled[j];
-        Halo[i].Vel[j] = HaloAux[i].Vel_Unscaled[j];
-        Halo[i].Spin[j] = HaloAux[i].Spin_Unscaled[j];
+        Halo[halo_number_].Pos[j_] = HaloAux[halo_number_].Pos_Unscaled[j_];
+        Halo[halo_number_].Vel[j_] = HaloAux[halo_number_].Vel_Unscaled[j_];
+        Halo[halo_number_].Spin[j_] = HaloAux[halo_number_].Spin_Unscaled[j_];
       }
     }
   }
@@ -176,38 +178,26 @@ void un_scale_cosmology(const int nhalos)
 #endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 
 
-/** @brief computes c correction */
-double c_correction(const float mass, const int snapnum)
-{
-  double c_original, c_new, Omega_new, Omega_original, ratio;
+static inline double 
+func_c(const double c_)
+{ return log(1 + c_) - c_ / (1 + c_); }
 
-  c_original = 5 * pow(0.0001 * mass, -0.1);
-  
-  Omega_new = Omega * 1./pow3(AA[snapnum]) / 
-             (Omega * 1./pow3(AA[snapnum]) + OmegaLambda);
-  
-  Omega_original = Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapnum]) /
-                  (Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapnum]) + OmegaLambda_OriginalCosm);
-                  
-  ratio = Omega_original/ Omega_new;
-  
-  c_new = find_c(c_original, ratio);
+static inline double 
+func_c_p(const double c_)
+{ return (log(1 + c_) - c_ / (1 + c_)) / (c_ * c_ * c_); }
 
-  return func_c(c_new) / func_c(c_original);
-}
-
-
-/** @brief finds c
+/** @brief finds c_
  * 
- * finds c using bisection
+ * finds c_ using bisection
  * 
  * since the original version of this function showed up
- * surprisingly high on profile, a more optimized bisection
+ * surprisingly high on profile, a_ more optimized bisection
  * version was implemented
  * 
  * @warning assumes that initial values bracket the result 
  */
-double find_c(const double c_ori_, const double ratio_)
+static inline double
+find_c(const double c_ori_, const double ratio_)
 {
   const double constant_ = ratio_ * func_c_p(c_ori_);
   
@@ -234,76 +224,81 @@ double find_c(const double c_ori_, const double ratio_)
 }
 
 
-double func_c(const double c)
+/** @brief computes c_ correction */
+double c_correction(const float halo_mass_, const int snapshot_number_)
 {
-  return log(1 + c) - c / (1 + c);
+  double c_original_, c_new_, Omega_new_, Omega_original_, ratio_;
+
+  c_original_ = 5 * pow(0.0001 * halo_mass_, -0.1);
+  
+  Omega_new_ = Omega * 1./pow3(AA[snapshot_number_]) / 
+             (Omega * 1./pow3(AA[snapshot_number_]) + OmegaLambda);
+  
+  Omega_original_ = Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapshot_number_]) /
+                  (Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapshot_number_]) + OmegaLambda_OriginalCosm);
+                  
+  ratio_ = Omega_original_/ Omega_new_;
+  
+  c_new_ = find_c(c_original_, ratio_);
+
+  return func_c(c_new_) / func_c(c_original_);
 }
 
 
-double func_c_p(const double c)
+double dgrowth_factor_dt(const double a_, const double omega_m_, const double omega_l_)
 {
-  return (log(1 + c) - c / (1 + c)) / (c * c * c);
+  // const double g0 = 2.5 * omega_m_ / (pow(omega_m_, 4./7.) - omega_l_ + (1.0 + 0.5 * omega_m_) * (1.0 + (1./70.) *omega_l_));
+  const double inv_g0_ = (pow(omega_m_, 4./7.) - omega_l_ + (1.0 + 0.5 * omega_m_) * (1.0 + (1./70.) *omega_l_)) / (2.5 * omega_m_);
+  
+  // const double o_m_ = omega_m_ * 1./pow3(a_)/(omega_m_ * 1./pow3(a_) + omega_l_);
+  // const double o_l_ = omega_l_ / (omega_m_ * 1./pow3(a_) + omega_l_);
+  // const double do_m = -3 * omega_m_ * omega_l_ / (a_ * a_ * a_ * a_) / (omega_m_ / (a_ * a_ * a_) + omega_l_) / (omega_m_ / (a_ * a_ * a_) + omega_l_);
+  // const double do_l = -do_m;
+
+  // const double o_m_ =                         omega_m_ * 1. /     (omega_m_ + pow3(a_) * omega_l_);
+  // const double o_l_ =               pow3(a_) * omega_l_ * 1. /     (omega_m_ + pow3(a_) * omega_l_);
+  // const double do_m = -3 * a_ * a_ * omega_m_ * omega_l_ * 1. / pow2(omega_m_ + pow3(a_) * omega_l_);
+  // const double do_l = -do_m;
+
+  const double inv_omega_m_plus_a_a_a_omega_l_ = 1. / (omega_m_ + pow3(a_) * omega_l_);
+  const double o_m_ =           omega_m_ * inv_omega_m_plus_a_a_a_omega_l_;
+  const double o_l_ = pow3(a_) * omega_l_ * inv_omega_m_plus_a_a_a_omega_l_;
+  // const double do_m = -3 * o_m_ * o_l_ / a_;
+  // const double do_l = -do_m;
+
+  // const double hubble_a = sqrt(omega_m_ / pow3(a_) + omega_l_);
+
+  //da_dtau = sqrt(1 + o_m_ * (1 / a_ - 1) + o_l_ * (a_ * a_ - 1));   //tau = H0*t
+  // const double extra_fac = - ( 4/7.* pow(o_m_, -3./7) * do_m - do_l
+  //                 +(do_m /2. *(1 + (1./70.) * o_l_) - (1 + o_m_ / 2.) * do_l / 70)
+  //                   /(1 + (1./70.) * o_l_)/(1 + o_l_ / 70))/(pow(o_m_, 4./7.) - o_l_ + (1.0 + 0.5*o_m_)*(1.0 + (1./70.) * o_l_))/(pow(o_m_, 4./7.) - o_l_ + (1.0 + 0.5*o_m_)*(1.0 + (1./70.) * o_l_));
+  
+  // const double extra_fac = -((4./7.)* pow(o_m_, -3./7.) * do_m - do_l  + (0.5 * do_m * (1.0 + (1./70.) * o_l_) - (1.0 + 0.5 * o_m_) * (1./70.) * do_l) / pow2(1.0 + (1./70.) * o_l_))
+  //                              * 1. / pow2(pow(o_m_, 4./7.) - o_l_ + (1.0 + 0.5 * o_m_) * (1.0 + (1./70.) * o_l_));
+  // const double g_  = 2.5 *  o_m_ * 1. /     (pow(o_m_, 4./7.) - o_l_ + (1.0 + 0.5 * o_m_) * (1.0 + (1./70.) * o_l_));
+  // const double dg = 2.5 * do_m * 1. /     (pow(o_m_, 4./7.) - o_l_ + (1.0 + 0.5 * o_m_) * (1.0 + (1./70.) * o_l_)) + 2.5 * o_m_ * extra_fac;
+  
+  // const double pow_o_m_4_7_ = pow(o_m_, 4./7.);
+  // const double den_         = 1. / (pow_o_m_4_7_ - o_l_ + (1.0 + 0.5 * o_m_) * (1.0 + (1./70.) * o_l_));
+  // const double extra_fac = -((4./7.) * pow_o_m_4_7_ / o_m_ * do_m - do_l  + (0.5 * do_m * (1.0 + (1./70.) * o_l_) - (1.0 + 0.5 * o_m_) * (1./70.) * do_l) / pow2(1.0 + (1./70.) * o_l_)) * pow2(den_);
+  // const double g_  = 2.5 *  o_m_ * den_ ;
+  // const double dg = 2.5 * do_m * den_ + 2.5 * o_m_ * extra_fac;
+  
+  const double pow_o_m_4_7_ = pow(o_m_, 4./7.);
+  const double den_         = 1. / (pow_o_m_4_7_ - o_l_ + (1.0 + 0.5 * o_m_) * (1.0 + (1./70.) * o_l_));
+  const double g_            =  2.5 * o_m_ * den_ ;
+  const double dg_a_         = -7.5 * o_m_ * den_ * o_l_ * ( 1. - den_ * ((4./7.) * pow_o_m_4_7_ + o_m_ +  ((0.5 + (1./70.)) + (0.5/70.) * (o_l_ + o_m_)) * o_m_ / pow2(1.0 + (1./70.) * o_l_)));
+  
+  //  const double dD_dt_ = hubble_a * a_ * (dg * a_ +  g_ ) / g0;
+  const double dD_dt_ = sqrt(omega_m_ / pow3(a_) + omega_l_) * a_ * inv_g0_ * (dg_a_ + g_);
+  return dD_dt_;
 }
 
 
-double dgrowth_factor_dt(const double a, const double omega_m, const double omega_l)
+double scale_v_cen(const int snapshot_number_)
 {
-  // const double g0 = 2.5 * omega_m / (pow(omega_m, 4./7.) - omega_l + (1.0 + 0.5 * omega_m) * (1.0 + (1./70.) *omega_l));
-  const double inv_g0 = (pow(omega_m, 4./7.) - omega_l + (1.0 + 0.5 * omega_m) * (1.0 + (1./70.) *omega_l)) / (2.5 * omega_m);
-  
-  // const double o_m = omega_m * 1./pow3(a)/(omega_m * 1./pow3(a) + omega_l);
-  // const double o_l = omega_l / (omega_m * 1./pow3(a) + omega_l);
-  // const double do_m = -3 * omega_m * omega_l / (a * a * a * a) / (omega_m / (a * a * a) + omega_l) / (omega_m / (a * a * a) + omega_l);
-  // const double do_l = -do_m;
-
-  // const double o_m =                         omega_m * 1. /     (omega_m + pow3(a) * omega_l);
-  // const double o_l =               pow3(a) * omega_l * 1. /     (omega_m + pow3(a) * omega_l);
-  // const double do_m = -3 * a * a * omega_m * omega_l * 1. / pow2(omega_m + pow3(a) * omega_l);
-  // const double do_l = -do_m;
-
-  const double inv_omega_m_plus_a_a_a_omega_l_ = 1. / (omega_m + pow3(a) * omega_l);
-  const double o_m =           omega_m * inv_omega_m_plus_a_a_a_omega_l_;
-  const double o_l = pow3(a) * omega_l * inv_omega_m_plus_a_a_a_omega_l_;
-  // const double do_m = -3 * o_m * o_l / a;
-  // const double do_l = -do_m;
-
-  // const double hubble_a = sqrt(omega_m / pow3(a) + omega_l);
-
-  //da_dtau = sqrt(1 + o_m * (1 / a - 1) + o_l * (a * a - 1));   //tau = H0*t
-  // const double extra_fac = - ( 4/7.* pow(o_m, -3./7) * do_m - do_l
-  //                 +(do_m /2. *(1 + (1./70.) * o_l) - (1 + o_m / 2.) * do_l / 70)
-  //                   /(1 + (1./70.) * o_l)/(1 + o_l / 70))/(pow(o_m, 4./7.) - o_l + (1.0 + 0.5*o_m)*(1.0 + (1./70.) * o_l))/(pow(o_m, 4./7.) - o_l + (1.0 + 0.5*o_m)*(1.0 + (1./70.) * o_l));
-  
-  // const double extra_fac = -((4./7.)* pow(o_m, -3./7.) * do_m - do_l  + (0.5 * do_m * (1.0 + (1./70.) * o_l) - (1.0 + 0.5 * o_m) * (1./70.) * do_l) / pow2(1.0 + (1./70.) * o_l))
-  //                              * 1. / pow2(pow(o_m, 4./7.) - o_l + (1.0 + 0.5 * o_m) * (1.0 + (1./70.) * o_l));
-  // const double g  = 2.5 *  o_m * 1. /     (pow(o_m, 4./7.) - o_l + (1.0 + 0.5 * o_m) * (1.0 + (1./70.) * o_l));
-  // const double dg = 2.5 * do_m * 1. /     (pow(o_m, 4./7.) - o_l + (1.0 + 0.5 * o_m) * (1.0 + (1./70.) * o_l)) + 2.5 * o_m * extra_fac;
-  
-  // const double pow_o_m_4_7_ = pow(o_m, 4./7.);
-  // const double den_         = 1. / (pow_o_m_4_7_ - o_l + (1.0 + 0.5 * o_m) * (1.0 + (1./70.) * o_l));
-  // const double extra_fac = -((4./7.) * pow_o_m_4_7_ / o_m * do_m - do_l  + (0.5 * do_m * (1.0 + (1./70.) * o_l) - (1.0 + 0.5 * o_m) * (1./70.) * do_l) / pow2(1.0 + (1./70.) * o_l)) * pow2(den_);
-  // const double g  = 2.5 *  o_m * den_ ;
-  // const double dg = 2.5 * do_m * den_ + 2.5 * o_m * extra_fac;
-  
-  const double pow_o_m_4_7_ = pow(o_m, 4./7.);
-  const double den_         = 1. / (pow_o_m_4_7_ - o_l + (1.0 + 0.5 * o_m) * (1.0 + (1./70.) * o_l));
-  const double g            =  2.5 * o_m * den_ ;
-  const double dg_a         = -7.5 * o_m * den_ * o_l * ( 1. - den_ * ((4./7.) * pow_o_m_4_7_ + o_m +  ((0.5 + (1./70.)) + (0.5/70.) * (o_l + o_m)) * o_m / pow2(1.0 + (1./70.) * o_l)));
-  
-  //  const double dDdt = hubble_a * a * (dg * a +  g ) / g0;
-  const double dDdt = sqrt(omega_m / pow3(a) + omega_l) * a * inv_g0 * (dg_a + g);
-  return dDdt;
-}
-
-
-double scale_v_cen(const int snapnum)
-{
-  double Scale_V;
-
-  Scale_V= ScalePos * dgrowth_factor_dt(AA[snapnum],Omega, OmegaLambda) /
-                        dgrowth_factor_dt(AA_OriginalCosm[snapnum],Omega_OriginalCosm,OmegaLambda_OriginalCosm) *
-                         AA[snapnum]/AA_OriginalCosm[snapnum] * Hubble_h / Hubble_h_OriginalCosm;
-  return Scale_V;
-
+  return ScalePos * dgrowth_factor_dt(AA[snapshot_number_],Omega, OmegaLambda) /
+                        dgrowth_factor_dt(AA_OriginalCosm[snapshot_number_],Omega_OriginalCosm,OmegaLambda_OriginalCosm) *
+                         AA[snapshot_number_]/AA_OriginalCosm[snapshot_number_] * Hubble_h / Hubble_h_OriginalCosm;
 }
 

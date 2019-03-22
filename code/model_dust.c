@@ -205,5 +205,4 @@ void dust_model(const int galaxy_number_, const int output_number_)
   }
 }
 #endif /* not defined POST_PROCESS_MAGS */
-
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */

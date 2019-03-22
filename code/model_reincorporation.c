@@ -39,47 +39,47 @@
  **/
 /** @brief reincorporates ejected gas back into the central galaxy hot halo */
 
-void reincorporate_gas(const int p, const double dt)
+void reincorporate_gas(const int galaxy_number_, const double dt_)
 {
   double reincorporated = 0.;
 
-  mass_checks("reincorporate_gas #1",p);
+  mass_checks("reincorporate_gas #1",galaxy_number_);
 
   if(FeedbackEjectionModel == 0)
   {
     if(ReIncorporationModel == 0)
     {
-      // const double reinc_time     = (Hubble_h * ReIncorporationFactor) / ( Gal[p].Mvir * UnitTime_in_years);
-     // reincorporated = Gal[p].EjectedMass / reinc_time * dt;
-      reincorporated = Gal[p].EjectedMass * Gal[p].Mvir * UnitTime_in_years * dt / (Hubble_h * ReIncorporationFactor);
+      // const double reinc_time     = (Hubble_h * ReIncorporationFactor) / ( Gal[galaxy_number_].Mvir * UnitTime_in_years);
+     // reincorporated = Gal[galaxy_number_].EjectedMass / reinc_time * dt_;
+      reincorporated = Gal[galaxy_number_].EjectedMass * Gal[galaxy_number_].Mvir * UnitTime_in_years * dt_ / (Hubble_h * ReIncorporationFactor);
       /* Henriques2013 Mdot_eject=-gama_ej*M_ejected*M_vir Mvir should be in units of 1e12, but inside the
         * code Mvir is already in units of 1.e10*/
     }
     else if(ReIncorporationModel == 1)
-    { reincorporated = ReIncorporationFactor * Gal[p].EjectedMass / (Gal[p].Rvir / Gal[p].Vvir) * Gal[p].Vvir/220. *dt; }
+    { reincorporated = ReIncorporationFactor * Gal[galaxy_number_].EjectedMass / (Gal[galaxy_number_].Rvir / Gal[galaxy_number_].Vvir) * Gal[galaxy_number_].Vvir/220. *dt_; }
     /* Guo2010 -> Mdot_eject=-gama_ej * M_ejected/tdyn * Vvir/220 */
     else if(ReIncorporationModel == 2)
-    { reincorporated = ReIncorporationFactor * Gal[p].EjectedMass / (Gal[p].Rvir / Gal[p].Vvir) * dt; }
+    { reincorporated = ReIncorporationFactor * Gal[galaxy_number_].EjectedMass / (Gal[galaxy_number_].Rvir / Gal[galaxy_number_].Vvir) * dt_; }
   }
   else if(FeedbackEjectionModel == 1)
   {
-    reincorporated = ReIncorporationFactor * Gal[p].EjectedMass /
-        (Gal[p].Rvir * min(FeedbackEjectionEfficiency,1.)*sqrt(EtaSNcode * EnergySNcode)/(Gal[p].Vvir*Gal[p].Vvir))
-        * Gal[p].Vvir/220. * 1.e-6* dt ;
+    reincorporated = ReIncorporationFactor * Gal[galaxy_number_].EjectedMass /
+        (Gal[galaxy_number_].Rvir * min(FeedbackEjectionEfficiency,1.)*sqrt(EtaSNcode * EnergySNcode)/(Gal[galaxy_number_].Vvir*Gal[galaxy_number_].Vvir))
+        * Gal[galaxy_number_].Vvir/220. * 1.e-6* dt_ ;
   }
 
-  if (reincorporated > Gal[p].EjectedMass)
-  { reincorporated = Gal[p].EjectedMass; }
+  if (reincorporated > Gal[galaxy_number_].EjectedMass)
+  { reincorporated = Gal[galaxy_number_].EjectedMass; }
         
-  mass_checks("reincorporate_gas #1.5",p);
+  mass_checks("reincorporate_gas #1.5",galaxy_number_);
 
   /*Update ejected and hot gas contents*/
-  if (Gal[p].EjectedMass > 0.)
+  if (Gal[galaxy_number_].EjectedMass > 0.)
   {
-    const double fraction=((float)reincorporated)/Gal[p].EjectedMass;
-    transfer_gas(p,HotGasComponent,p,EjectedGasComponent,fraction);
+    const double fraction=((float)reincorporated)/Gal[galaxy_number_].EjectedMass;
+    transfer_gas(galaxy_number_,HotGasComponent,galaxy_number_,EjectedGasComponent,fraction);
   }
 
-  mass_checks("reincorporate_gas #2",p);
+  mass_checks("reincorporate_gas #2",galaxy_number_);
 }
 

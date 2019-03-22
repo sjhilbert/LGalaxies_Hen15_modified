@@ -26,25 +26,28 @@
 #include "mcmc_proto.h"
 #endif
 
-#define PARAMETER_TYPE_IS_DOUBLE 1
+#define PARAMETER_TYPE_IS_INT 1
 #define PARAMETER_TYPE_IS_FLOAT 2
-#define PARAMETER_TYPE_IS_STRING 3
-#define PARAMETER_TYPE_IS_INT 4
+#define PARAMETER_TYPE_IS_DOUBLE 3
+#define PARAMETER_TYPE_IS_STRING 4
+
+
 #define MAX_N_TAGS 300
+
 
 /** @file read_parameters.c reads all the parameters in input.par into global variables
  *       that can be used by the code. */
 
-void read_parameter_file(char *file_name)
+void read_parameter_file(char *file_name_)
 {
-  FILE *fd;
-  char buf[400], buf1[400], buf2[400], buf3[400];
-  int i, j, nt = 0;
-  int parameter_type[MAX_N_TAGS];
-  void *parameter_address[MAX_N_TAGS];
-  char parameter_tag[MAX_N_TAGS][50];
-  int warningFlag = 0;
-  int errorFlag = 0;
+  FILE *file_;
+  char buf_0_[400], buf_1_[400], buf_2_[400], buf_3_[400];
+  int i_, j_, n_parameters_ = 0;
+  int parameter_type_[MAX_N_TAGS];
+  void *parameter_address_[MAX_N_TAGS];
+  char parameter_tag_[MAX_N_TAGS][50];
+  int warning_flag_ = 0;
+  int error_flag_ = 0;
 
 #ifdef PARALLEL
   if(ThisTask == 0)
@@ -53,595 +56,595 @@ void read_parameter_file(char *file_name)
   printf("\nreading parameter file:\n\n");
 #endif
 
-  strcpy(parameter_tag[nt], "OutputDir");
-  parameter_address[nt] = OutputDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "OutputDir");
+  parameter_address_[n_parameters_] = OutputDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "FileNameGalaxies");
-  parameter_address[nt] = FileNameGalaxies;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileNameGalaxies");
+  parameter_address_[n_parameters_] = FileNameGalaxies;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "McFile");
-  parameter_address[nt] = McFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "McFile");
+  parameter_address_[n_parameters_] = McFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "SimulationDir");
-  parameter_address[nt] = SimulationDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "SimulationDir");
+  parameter_address_[n_parameters_] = SimulationDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "FileWithOutputRedshifts");
-  parameter_address[nt] = FileWithOutputRedshifts;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithOutputRedshifts");
+  parameter_address_[n_parameters_] = FileWithOutputRedshifts;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
 #ifdef SPECIFYFILENR
-  strcpy(parameter_tag[nt], "FileNrDir");
-  parameter_address[nt] = FileNrDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileNrDir");
+  parameter_address_[n_parameters_] = FileNrDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 #endif
 
-  strcpy(parameter_tag[nt], "SpecPhotDir");
-  parameter_address[nt] = SpecPhotDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "SpecPhotDir");
+  parameter_address_[n_parameters_] = SpecPhotDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "PhotPrefix");
-  parameter_address[nt] = PhotPrefix;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "PhotPrefix");
+  parameter_address_[n_parameters_] = PhotPrefix;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "SpecPhotIMF");
-  parameter_address[nt] = SpecPhotIMF;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "SpecPhotIMF");
+  parameter_address_[n_parameters_] = SpecPhotIMF;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "FileWithFilterNames");
-  parameter_address[nt] = FileWithFilterNames;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithFilterNames");
+  parameter_address_[n_parameters_] = FileWithFilterNames;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
 
-  strcpy(parameter_tag[nt], "CoolFunctionsDir");
-  parameter_address[nt] = CoolFunctionsDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "CoolFunctionsDir");
+  parameter_address_[n_parameters_] = CoolFunctionsDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MaxMemSize");
-  parameter_address[nt] = &MaxMemSize;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "MaxMemSize");
+  parameter_address_[n_parameters_] = &MaxMemSize;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Hashbits");
-  parameter_address[nt] = &Hashbits;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "Hashbits");
+  parameter_address_[n_parameters_] = &Hashbits;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
 //Variables used in the MCMC
 #ifdef MCMC
-  strcpy(parameter_tag[nt], "MCMCStartingParFile");
-  parameter_address[nt] = MCMCStartingParFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCStartingParFile");
+  parameter_address_[n_parameters_] = MCMCStartingParFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCParPriorsAndSwitchesFile");
-  parameter_address[nt] = MCMCParPriorsAndSwitchesFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCParPriorsAndSwitchesFile");
+  parameter_address_[n_parameters_] = MCMCParPriorsAndSwitchesFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCObsConstraints");
-  parameter_address[nt] = MCMCObsConstraints;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCObsConstraints");
+  parameter_address_[n_parameters_] = MCMCObsConstraints;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCWeightsObsConstraints");
-  parameter_address[nt] = MCMCWeightsObsConstraints;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCWeightsObsConstraints");
+  parameter_address_[n_parameters_] = MCMCWeightsObsConstraints;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "ObsConstraintsDir");
-  parameter_address[nt] = ObsConstraintsDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "ObsConstraintsDir");
+  parameter_address_[n_parameters_] = ObsConstraintsDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCSampleDir");
-  parameter_address[nt] = MCMCSampleDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleDir");
+  parameter_address_[n_parameters_] = MCMCSampleDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
 #ifdef MR_PLUS_MRII
-  strcpy(parameter_tag[nt], "MCMCSampleFilePrefix_MR");
-  parameter_address[nt] = MCMCSampleFilePrefix_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleFilePrefix_MR");
+  parameter_address_[n_parameters_] = MCMCSampleFilePrefix_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCSampleFilePrefix_MRII");
-  parameter_address[nt] = MCMCSampleFilePrefix_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleFilePrefix_MRII");
+  parameter_address_[n_parameters_] = MCMCSampleFilePrefix_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCSampleFile_MR");
-  parameter_address[nt] = &MCMCSampleFile_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleFile_MR");
+  parameter_address_[n_parameters_] = &MCMCSampleFile_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "MCMCSampleFile_MRII");
-  parameter_address[nt] = &MCMCSampleFile_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleFile_MRII");
+  parameter_address_[n_parameters_] = &MCMCSampleFile_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 #else
-  strcpy(parameter_tag[nt], "MCMCSampleFilePrefix");
-  parameter_address[nt] = MCMCSampleFilePrefix;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleFilePrefix");
+  parameter_address_[n_parameters_] = MCMCSampleFilePrefix;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "MCMCSampleFile");
-  parameter_address[nt] = &MCMCSampleFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "MCMCSampleFile");
+  parameter_address_[n_parameters_] = &MCMCSampleFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 #endif
 
 #ifdef HALOMODEL
-  strcpy(parameter_tag[nt], "MCMCHaloModelDir");
-  parameter_address[nt] = MCMCHaloModelDir;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "MCMCHaloModelDir");
+  parameter_address_[n_parameters_] = MCMCHaloModelDir;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 #endif
 
-  strcpy(parameter_tag[nt], "MCMCTreeSampleFile");
-  parameter_address[nt] = &MCMCTreeSampleFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "MCMCTreeSampleFile");
+  parameter_address_[n_parameters_] = &MCMCTreeSampleFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "ChainLength");
-  parameter_address[nt] = &ChainLength;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "ChainLength");
+  parameter_address_[n_parameters_] = &ChainLength;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "Time_Dependent_PhysPar");
-  parameter_address[nt] = &Time_Dependent_PhysPar;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "Time_Dependent_PhysPar");
+  parameter_address_[n_parameters_] = &Time_Dependent_PhysPar;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "MCMCMode");
-  parameter_address[nt] = &MCMCMode;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "MCMCMode");
+  parameter_address_[n_parameters_] = &MCMCMode;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "MCMC_LogStep_Size");
-  parameter_address[nt] = &MCMC_LogStep_Size;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "MCMC_LogStep_Size");
+  parameter_address_[n_parameters_] = &MCMC_LogStep_Size;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "MCMC_Initial_Par_Displacement");
-  parameter_address[nt] = &MCMC_Initial_Par_Displacement;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "MCMC_Initial_Par_Displacement");
+  parameter_address_[n_parameters_] = &MCMC_Initial_Par_Displacement;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "MCMC_Minimum_Obs_Error");
-  parameter_address[nt] = &MCMC_Minimum_Obs_Error;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "MCMC_Minimum_Obs_Error");
+  parameter_address_[n_parameters_] = &MCMC_Minimum_Obs_Error;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "AddedErrOnMass");
-  parameter_address[nt] = &AddedErrOnMass;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "AddedErrOnMass");
+  parameter_address_[n_parameters_] = &AddedErrOnMass;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "MachineTimeOut");
-  parameter_address[nt] = &MachineTimeOut;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "MachineTimeOut");
+  parameter_address_[n_parameters_] = &MachineTimeOut;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "JobSubmitCommand");
-  parameter_address[nt] = JobSubmitCommand;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "JobSubmitCommand");
+  parameter_address_[n_parameters_] = JobSubmitCommand;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "JobSubmitFile");
-  parameter_address[nt] = JobSubmitFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "JobSubmitFile");
+  parameter_address_[n_parameters_] = JobSubmitFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "JobSubmitPipe");
-  parameter_address[nt] = JobSubmitPipe;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "JobSubmitPipe");
+  parameter_address_[n_parameters_] = JobSubmitPipe;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 #endif
  
   //Variables for the Scaling & Cosmological Parameters
 
-  strcpy(parameter_tag[nt], "ScalePos");
-  parameter_address[nt] = &ScalePos;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "ScalePos");
+  parameter_address_[n_parameters_] = &ScalePos;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "ScaleMass");
-  parameter_address[nt] = &ScaleMass;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "ScaleMass");
+  parameter_address_[n_parameters_] = &ScaleMass;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BaryonFrac");
-  parameter_address[nt] = &BaryonFrac;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BaryonFrac");
+  parameter_address_[n_parameters_] = &BaryonFrac;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Sigma8");
-  parameter_address[nt] = &Sigma8;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Sigma8");
+  parameter_address_[n_parameters_] = &Sigma8;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Omega");
-  parameter_address[nt] = &Omega;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Omega");
+  parameter_address_[n_parameters_] = &Omega;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "OmegaLambda");
-  parameter_address[nt] = &OmegaLambda;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "OmegaLambda");
+  parameter_address_[n_parameters_] = &OmegaLambda;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Hubble_h");
-  parameter_address[nt] = &Hubble_h;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Hubble_h");
+  parameter_address_[n_parameters_] = &Hubble_h;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Omega_OriginalCosm");
-  parameter_address[nt] = &Omega_OriginalCosm;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Omega_OriginalCosm");
+  parameter_address_[n_parameters_] = &Omega_OriginalCosm;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "OmegaLambda_OriginalCosm");
-  parameter_address[nt] = &OmegaLambda_OriginalCosm;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "OmegaLambda_OriginalCosm");
+  parameter_address_[n_parameters_] = &OmegaLambda_OriginalCosm;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Hubble_h_OriginalCosm");
-  parameter_address[nt] = &Hubble_h_OriginalCosm;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Hubble_h_OriginalCosm");
+  parameter_address_[n_parameters_] = &Hubble_h_OriginalCosm;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
 #ifdef MR_PLUS_MRII  //OPTION for MCMC
   //MR
-  strcpy(parameter_tag[nt], "FileWithZList_MR");
-  parameter_address[nt] = FileWithZList_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithZList_MR");
+  parameter_address_[n_parameters_] = FileWithZList_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "PartMass_MR");
-  parameter_address[nt] = &PartMass_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "PartMass_MR");
+  parameter_address_[n_parameters_] = &PartMass_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BoxSize_MR");
-  parameter_address[nt] = &BoxSize_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BoxSize_MR");
+  parameter_address_[n_parameters_] = &BoxSize_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "FileWithZList_OriginalCosm_MR");
-  parameter_address[nt] = FileWithZList_OriginalCosm_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithZList_OriginalCosm_MR");
+  parameter_address_[n_parameters_] = FileWithZList_OriginalCosm_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "PartMass_OriginalCosm_MR");
-  parameter_address[nt] = &PartMass_OriginalCosm_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "PartMass_OriginalCosm_MR");
+  parameter_address_[n_parameters_] = &PartMass_OriginalCosm_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BoxSize_OriginalCosm_MR");
-  parameter_address[nt] = &BoxSize_OriginalCosm_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BoxSize_OriginalCosm_MR");
+  parameter_address_[n_parameters_] = &BoxSize_OriginalCosm_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
   //MRII
-  strcpy(parameter_tag[nt], "FileWithZList_MRII");
-  parameter_address[nt] = FileWithZList_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithZList_MRII");
+  parameter_address_[n_parameters_] = FileWithZList_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "PartMass_MRII");
-  parameter_address[nt] = &PartMass_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "PartMass_MRII");
+  parameter_address_[n_parameters_] = &PartMass_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BoxSize_MRII");
-  parameter_address[nt] = &BoxSize_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BoxSize_MRII");
+  parameter_address_[n_parameters_] = &BoxSize_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "FileWithZList_OriginalCosm_MRII");
-  parameter_address[nt] = FileWithZList_OriginalCosm_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithZList_OriginalCosm_MRII");
+  parameter_address_[n_parameters_] = FileWithZList_OriginalCosm_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "PartMass_OriginalCosm_MRII");
-  parameter_address[nt] = &PartMass_OriginalCosm_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "PartMass_OriginalCosm_MRII");
+  parameter_address_[n_parameters_] = &PartMass_OriginalCosm_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BoxSize_OriginalCosm_MRII");
-  parameter_address[nt] = &BoxSize_OriginalCosm_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BoxSize_OriginalCosm_MRII");
+  parameter_address_[n_parameters_] = &BoxSize_OriginalCosm_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 #else
-  strcpy(parameter_tag[nt], "FileWithZList");
-  parameter_address[nt] = FileWithZList;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithZList");
+  parameter_address_[n_parameters_] = FileWithZList;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 
-  strcpy(parameter_tag[nt], "PartMass");
-  parameter_address[nt] = &PartMass;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "PartMass");
+  parameter_address_[n_parameters_] = &PartMass;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BoxSize");
-  parameter_address[nt] = &BoxSize;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BoxSize");
+  parameter_address_[n_parameters_] = &BoxSize;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "PartMass_OriginalCosm");
-  parameter_address[nt] = &PartMass_OriginalCosm;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "PartMass_OriginalCosm");
+  parameter_address_[n_parameters_] = &PartMass_OriginalCosm;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BoxSize_OriginalCosm");
-  parameter_address[nt] = &BoxSize_OriginalCosm;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BoxSize_OriginalCosm");
+  parameter_address_[n_parameters_] = &BoxSize_OriginalCosm;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "FileWithZList_OriginalCosm");
-  parameter_address[nt] = FileWithZList_OriginalCosm;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_STRING;
+  strcpy(parameter_tag_[n_parameters_], "FileWithZList_OriginalCosm");
+  parameter_address_[n_parameters_] = FileWithZList_OriginalCosm;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_STRING;
 #endif
 
 
 #ifdef MR_PLUS_MRII  //OPTION for MCMC
-  strcpy(parameter_tag[nt], "LastDarkMatterSnapShot_MR");
-  parameter_address[nt] = &LastDarkMatterSnapShot_MR;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "LastDarkMatterSnapShot_MR");
+  parameter_address_[n_parameters_] = &LastDarkMatterSnapShot_MR;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "LastDarkMatterSnapShot_MRII");
-  parameter_address[nt] = &LastDarkMatterSnapShot_MRII;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "LastDarkMatterSnapShot_MRII");
+  parameter_address_[n_parameters_] = &LastDarkMatterSnapShot_MRII;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 #else
-  strcpy(parameter_tag[nt], "LastDarkMatterSnapShot");
-  parameter_address[nt] = &LastDarkMatterSnapShot;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "LastDarkMatterSnapShot");
+  parameter_address_[n_parameters_] = &LastDarkMatterSnapShot;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 #endif
 
 #ifndef MCMC
-  strcpy(parameter_tag[nt], "FirstFile");
-  parameter_address[nt] = &FirstFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "FirstFile");
+  parameter_address_[n_parameters_] = &FirstFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "LastFile");
-  parameter_address[nt] = &LastFile;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "LastFile");
+  parameter_address_[n_parameters_] = &LastFile;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 #endif
 
   //Physical Recipes
-  strcpy(parameter_tag[nt], "ReionizationModel");
-  parameter_address[nt] = &ReionizationModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "ReionizationModel");
+  parameter_address_[n_parameters_] = &ReionizationModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "DiskRadiusModel");
-  parameter_address[nt] = &DiskRadiusModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "DiskRadiusModel");
+  parameter_address_[n_parameters_] = &DiskRadiusModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "StarFormationModel");
-  parameter_address[nt] = &StarFormationModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "StarFormationModel");
+  parameter_address_[n_parameters_] = &StarFormationModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "FeedbackReheatingModel");
-  parameter_address[nt] = &FeedbackReheatingModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "FeedbackReheatingModel");
+  parameter_address_[n_parameters_] = &FeedbackReheatingModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "FeedbackEjectionModel");
-  parameter_address[nt] = &FeedbackEjectionModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "FeedbackEjectionModel");
+  parameter_address_[n_parameters_] = &FeedbackEjectionModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "FateOfSatellitesGas");
-  parameter_address[nt] = &FateOfSatellitesGas;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "FateOfSatellitesGas");
+  parameter_address_[n_parameters_] = &FateOfSatellitesGas;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "ReIncorporationModel");
-  parameter_address[nt] = &ReIncorporationModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "ReIncorporationModel");
+  parameter_address_[n_parameters_] = &ReIncorporationModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "AGNRadioModeModel");
-  parameter_address[nt] = &AGNRadioModeModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "AGNRadioModeModel");
+  parameter_address_[n_parameters_] = &AGNRadioModeModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "DiskInstabilityModel");
-  parameter_address[nt] = &DiskInstabilityModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "DiskInstabilityModel");
+  parameter_address_[n_parameters_] = &DiskInstabilityModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "BHGrowthInDiskInstabilityModel");
-  parameter_address[nt] = &BHGrowthInDiskInstabilityModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "BHGrowthInDiskInstabilityModel");
+  parameter_address_[n_parameters_] = &BHGrowthInDiskInstabilityModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "HotGasStrippingModel");
-  parameter_address[nt] = &HotGasStrippingModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "HotGasStrippingModel");
+  parameter_address_[n_parameters_] = &HotGasStrippingModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "DisruptionModel");
-  parameter_address[nt] = &DisruptionModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "DisruptionModel");
+  parameter_address_[n_parameters_] = &DisruptionModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "StarBurstModel");
-  parameter_address[nt] = &StarBurstModel;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "StarBurstModel");
+  parameter_address_[n_parameters_] = &StarBurstModel;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "BulgeFormationInMinorMergersOn");
-  parameter_address[nt] = &BulgeFormationInMinorMergersOn;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "BulgeFormationInMinorMergersOn");
+  parameter_address_[n_parameters_] = &BulgeFormationInMinorMergersOn;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "MetallicityOption");
-  parameter_address[nt] = &MetallicityOption;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
+  strcpy(parameter_tag_[n_parameters_], "MetallicityOption");
+  parameter_address_[n_parameters_] = &MetallicityOption;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_INT;
 
 #ifdef LIGHTCONE_OUTPUT
-  strcpy(parameter_tag[nt], "lightcone_observer_position_0");
-  parameter_address[nt] = &lightcone_observer_position[0];
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_observer_position_0");
+  parameter_address_[n_parameters_] = &lightcone_observer_position[0];
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_observer_position_1");
-  parameter_address[nt] = &lightcone_observer_position[1];
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_observer_position_1");
+  parameter_address_[n_parameters_] = &lightcone_observer_position[1];
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_observer_position_2");
-  parameter_address[nt] = &lightcone_observer_position[2];
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_observer_position_2");
+  parameter_address_[n_parameters_] = &lightcone_observer_position[2];
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_lower_redshift");
-  parameter_address[nt] = &lightcone_lower_redshift;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_lower_redshift");
+  parameter_address_[n_parameters_] = &lightcone_lower_redshift;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_upper_redshift");
-  parameter_address[nt] = &lightcone_upper_redshift;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_upper_redshift");
+  parameter_address_[n_parameters_] = &lightcone_upper_redshift;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_lower_ra");
-  parameter_address[nt] = &lightcone_lower_ra;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_lower_ra");
+  parameter_address_[n_parameters_] = &lightcone_lower_ra;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_upper_ra");
-  parameter_address[nt] = &lightcone_upper_ra;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_upper_ra");
+  parameter_address_[n_parameters_] = &lightcone_upper_ra;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_lower_dec");
-  parameter_address[nt] = &lightcone_lower_dec;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_lower_dec");
+  parameter_address_[n_parameters_] = &lightcone_lower_dec;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
   
-  strcpy(parameter_tag[nt], "lightcone_upper_dec");
-  parameter_address[nt] = &lightcone_upper_dec;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_upper_dec");
+  parameter_address_[n_parameters_] = &lightcone_upper_dec;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
 
-  strcpy(parameter_tag[nt], "lightcone_lower_stellar_mass");
-  parameter_address[nt] = &lightcone_lower_stellar_mass;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_FLOAT;
+  strcpy(parameter_tag_[n_parameters_], "lightcone_lower_stellar_mass");
+  parameter_address_[n_parameters_] = &lightcone_lower_stellar_mass;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_FLOAT;
 
 #endif /* defined LIGHTCONE_OUTPUT */
 
   //Physical Parameters
 
-  strcpy(parameter_tag[nt], "Reionization_z0");
-  parameter_address[nt] = &Reionization_z0;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Reionization_z0");
+  parameter_address_[n_parameters_] = &Reionization_z0;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Reionization_zr");
-  parameter_address[nt] = &Reionization_zr;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Reionization_zr");
+  parameter_address_[n_parameters_] = &Reionization_zr;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "Yield");
-  parameter_address[nt] = &Yield;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "Yield");
+  parameter_address_[n_parameters_] = &Yield;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "RecycleFraction");
-  parameter_address[nt] = &RecycleFraction;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "RecycleFraction");
+  parameter_address_[n_parameters_] = &RecycleFraction;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "ThreshMajorMerger");
-  parameter_address[nt] = &ThreshMajorMerger;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "ThreshMajorMerger");
+  parameter_address_[n_parameters_] = &ThreshMajorMerger;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "MergerTimeMultiplier");
-  parameter_address[nt] = &MergerTimeMultiplier;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "MergerTimeMultiplier");
+  parameter_address_[n_parameters_] = &MergerTimeMultiplier;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "RamPressureStrip_CutOffMass");
-  parameter_address[nt] = &RamPressureStrip_CutOffMass;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "RamPressureStrip_CutOffMass");
+  parameter_address_[n_parameters_] = &RamPressureStrip_CutOffMass;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "SfrEfficiency");
-  parameter_address[nt] = &SfrEfficiency;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "SfrEfficiency");
+  parameter_address_[n_parameters_] = &SfrEfficiency;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "SfrColdCrit");
-  parameter_address[nt] = &SfrColdCrit;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "SfrColdCrit");
+  parameter_address_[n_parameters_] = &SfrColdCrit;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "SfrBurstEfficiency");
-  parameter_address[nt] = &SfrBurstEfficiency;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "SfrBurstEfficiency");
+  parameter_address_[n_parameters_] = &SfrBurstEfficiency;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "SfrBurstSlope");
-  parameter_address[nt] = &SfrBurstSlope;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "SfrBurstSlope");
+  parameter_address_[n_parameters_] = &SfrBurstSlope;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "AgnEfficiency");
-  parameter_address[nt] = &AgnEfficiency;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "AgnEfficiency");
+  parameter_address_[n_parameters_] = &AgnEfficiency;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BlackHoleGrowthRate");
-  parameter_address[nt] = &BlackHoleGrowthRate;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BlackHoleGrowthRate");
+  parameter_address_[n_parameters_] = &BlackHoleGrowthRate;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BlackHoleSeedMass");
-  parameter_address[nt] = &BlackHoleSeedMass;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BlackHoleSeedMass");
+  parameter_address_[n_parameters_] = &BlackHoleSeedMass;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "BlackHoleCutoffVelocity");
-  parameter_address[nt] = &BlackHoleCutoffVelocity;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "BlackHoleCutoffVelocity");
+  parameter_address_[n_parameters_] = &BlackHoleCutoffVelocity;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "FeedbackReheatingEpsilon");
-  parameter_address[nt] = &FeedbackReheatingEpsilon;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "FeedbackReheatingEpsilon");
+  parameter_address_[n_parameters_] = &FeedbackReheatingEpsilon;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "ReheatPreVelocity");
-  parameter_address[nt] = &ReheatPreVelocity;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "ReheatPreVelocity");
+  parameter_address_[n_parameters_] = &ReheatPreVelocity;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "ReheatSlope");
-  parameter_address[nt] = &ReheatSlope;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "ReheatSlope");
+  parameter_address_[n_parameters_] = &ReheatSlope;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "FeedbackEjectionEfficiency");
-  parameter_address[nt] = &FeedbackEjectionEfficiency;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "FeedbackEjectionEfficiency");
+  parameter_address_[n_parameters_] = &FeedbackEjectionEfficiency;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "EjectPreVelocity");
-  parameter_address[nt] = &EjectPreVelocity;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "EjectPreVelocity");
+  parameter_address_[n_parameters_] = &EjectPreVelocity;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "EjectSlope");
-  parameter_address[nt] = &EjectSlope;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "EjectSlope");
+  parameter_address_[n_parameters_] = &EjectSlope;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "ReIncorporationFactor");
-  parameter_address[nt] = &ReIncorporationFactor;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "ReIncorporationFactor");
+  parameter_address_[n_parameters_] = &ReIncorporationFactor;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "EnergySN");
-  parameter_address[nt] = &EnergySN;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "EnergySN");
+  parameter_address_[n_parameters_] = &EnergySN;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  strcpy(parameter_tag[nt], "EtaSN");
-  parameter_address[nt] = &EtaSN;
-  parameter_type [nt++] = PARAMETER_TYPE_IS_DOUBLE;
+  strcpy(parameter_tag_[n_parameters_], "EtaSN");
+  parameter_address_[n_parameters_] = &EtaSN;
+  parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
-  if((fd = fopen(file_name, "r")))
+  if((file_ = fopen(file_name_, "r")))
     {
-      while(!feof(fd))
+      while(!feof(file_))
         {
-          *buf = 0;
-          fgets(buf, 200, fd);
-          if(sscanf(buf, "%s%s%s", buf1, buf2, buf3) < 2)
+          *buf_0_ = 0;
+          fgets(buf_0_, 200, file_);
+          if(sscanf(buf_0_, "%s%s%s", buf_1_, buf_2_, buf_3_) < 2)
             continue;
 
-          if(buf1[0] == '%')
+          if(buf_1_[0] == '%')
             continue;
 
-          for(i = 0, j = -1; i < nt; i++)
-            if(strcmp(buf1, parameter_tag[i]) == 0)
+          for(i_ = 0, j_ = -1; i_ < n_parameters_; i_++)
+            if(strcmp(buf_1_, parameter_tag_[i_]) == 0)
               {
-                j = i;
-                parameter_tag[i][0] = 0;
+                j_ = i_;
+                parameter_tag_[i_][0] = 0;
                 break;
               }
 
-          if(j >= 0)
+          if(j_ >= 0)
             {
 #ifdef PARALLEL
               if(ThisTask == 0)
-                printf("%35s\t%10s\n", buf1, buf2);
+                printf("%35s\t%10s\n", buf_1_, buf_2_);
 #else
-              printf("%35s\t%10s\n", buf1, buf2);
+              printf("%35s\t%10s\n", buf_1_, buf_2_);
 #endif
-              switch (parameter_type[j])
+              switch (parameter_type_[j_])
                 {
                 case PARAMETER_TYPE_IS_DOUBLE:
-                  *((double *) parameter_address[j]) = atof(buf2);
+                  *((double *) parameter_address_[j_]) = atof(buf_2_);
                   break;
                 case PARAMETER_TYPE_IS_FLOAT:
-                  *((float *) parameter_address[j]) = atof(buf2);
+                  *((float *) parameter_address_[j_]) = atof(buf_2_);
                   break;
                 case PARAMETER_TYPE_IS_STRING:
-                  strcpy(parameter_address[j], buf2);
+                  strcpy(parameter_address_[j_], buf_2_);
                   break;
                 case PARAMETER_TYPE_IS_INT:
-                  *((int *) parameter_address[j]) = atoi(buf2);
+                  *((int *) parameter_address_[j_]) = atoi(buf_2_);
                   break;
                 default:
-                  printf("Error: unrecognized parameter type for parameter %s\n", parameter_tag[i]);
+                  printf("Error: unrecognized parameter type for parameter %s\n", parameter_tag_[i_]);
                   terminate("Error: unrecognized parameter type for parameter\n");
                 }
             }
           else
             {
-              printf("Warning in file %s:   Tag '%s' not recognized or multiply defined.\n", file_name, buf1);
-              warningFlag = 1;
+              printf("Warning in file %s:   Tag '%s' not recognized or multiply defined.\n", file_name_, buf_1_);
+              warning_flag_ = 1;
             }
         }
-      fclose(fd);
+      fclose(file_);
 
-      i = strlen(OutputDir);
-      if(i > 0)
-        if(OutputDir[i - 1] != '/')
+      i_ = strlen(OutputDir);
+      if(i_ > 0)
+        if(OutputDir[i_ - 1] != '/')
           strcat(OutputDir, "/");
     }
   else
     {
-      printf("Parameter file %s not found.\n", file_name);
-      errorFlag = 1;
+      printf("Parameter file %s not found.\n", file_name_);
+      error_flag_ = 1;
     }
 
 
-  for(i = 0; i < nt; i++)
+  for(i_ = 0; i_ < n_parameters_; i_++)
     {
-      if(*parameter_tag[i])
+      if(*parameter_tag_[i_])
         {
-          printf("Error. I miss a value for parameter_tag '%s' in parameter file '%s'.\n", parameter_tag[i], file_name);
-          errorFlag = 1;
+          printf("Error. I miss a value for parameter_tag_ '%s' in parameter file '%s'.\n", parameter_tag_[i_], file_name_);
+          error_flag_ = 1;
         }
     }
 
-  if(warningFlag)
-    printf("Warning: parameter file %s: encountered unrecognized or multiply defined parameter_tags\n", file_name);
+  if(warning_flag_)
+    printf("Warning: parameter file %s: encountered unrecognized or multiply defined parameter_tags\n", file_name_);
 
-  if(errorFlag)
+  if(error_flag_)
   {
-    printf("Error: parameter file \"%s\" missing or missing values for mandatory parameters\n", file_name);
+    printf("Error: parameter file \"%s\" missing or missing values for mandatory parameters\n", file_name_);
     terminate("parameterfile incorrect");
   }
 }
@@ -802,5 +805,8 @@ void check_program_parameters()
 void compute_derived_program_parameters(void)
 {
   inv_Hubble_h = 1. / Hubble_h;
+  
+  EnergySNcode = EnergySN / UnitEnergy_in_cgs * Hubble_h;
+  EtaSNcode    = EtaSN * (UNITMASS_IN_G / SOLAR_MASS) * inv_Hubble_h;
 }
 

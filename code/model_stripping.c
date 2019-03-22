@@ -44,26 +44,26 @@
  *         If satellites are outside Rvir, type 1 keeps all its components and receives
  *         everything from type 2's.
  *
- *         In these routines, centralgal is the type 0 at the centre of the halo;
- *         Gal[i].CentralGal is the galaxy around which each satellite orbits;
+ *         In these routines, central_galaxy_number_ is the type 0 at the centre of the halo;
+ *         Gal[galaxy_number_].CentralGal is the galaxy around which each satellite orbits;
  *         For simplicity of reference in the comments in the code below, the latter
  *         will be called the type 1, even though it may be the same galaxy as the type 0.
  *
  *         */
 
-void deal_with_satellites(const int centralgal, const int ngal)
+void deal_with_satellites(const int central_galaxy_number_, const int n_galaxies_)
 {
-  int i, merger_centre;
-  double dis, gasfraction_intotype1, stripped_fraction;
+  int galaxy_number_, merger_centre_;
+  double distance_, gas_fraction_into_type_1_, stripped_fraction_;
 
-  for(i = 0; i < ngal; i++)    /* Loop over all galaxies in the FoF-halo */
+  for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_; galaxy_number_++)    /* Loop over all galaxies in the FoF-halo */
   {
-    mass_checks("Top of deal_with_satellites a",i);
-    mass_checks("Top of deal_with_satellites b",centralgal);
-    mass_checks("Top of deal_with_satellites c",Gal[i].CentralGal);
+    mass_checks("Top of deal_with_satellites a",galaxy_number_);
+    mass_checks("Top of deal_with_satellites b",central_galaxy_number_);
+    mass_checks("Top of deal_with_satellites c",Gal[galaxy_number_].CentralGal);
 
-    /* dis is the separation of the type 1 from the type 0 */
-    dis=separation_gal(centralgal,Gal[i].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
+    /* distance_ is the separation of the type 1 from the type 0 */
+    distance_=separation_gal(central_galaxy_number_,Gal[galaxy_number_].CentralGal)/(1+ZZ[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]);
 
 
     /* HotGasStrippingModel ==  0=> Guo2010 non instantaneous treatment of gas stripping in type 1's
@@ -72,101 +72,101 @@ void deal_with_satellites(const int centralgal, const int ngal)
      * (meaning that the halo was fully stripped in previous step) and split between type 0 and type 1
      *
      * If type 2 is orbiting a type 1
-     * if the type 2 is inside Rvir of the type 0  (dis < Gal[centralgal].Rvir) the gas is split between 0 and 1
+     * if the type 2 is inside Rvir of the type 0  (distance_ < Gal[central_galaxy_number_].Rvir) the gas is split between 0 and 1
      * if type 2 is outside Rvir of type 0, all the gas goes to type 1
      *
-     * If the type 2 is orbiting a type 0 centralgal and Gal[i].CentralGal both refer to the type 0*/
+     * If the type 2 is orbiting a type 0 central_galaxy_number_ and Gal[galaxy_number_].CentralGal both refer to the type 0*/
 
     if(HotGasStrippingModel == 0)
     {
       /* All gas Stripped from Type 2 galaxies */
-      if (Gal[i].Type ==2)
+      if (Gal[galaxy_number_].Type ==2)
       {
         //if type 2 is inside Rvir of type 0 split between type 0 and type 1
-        if (dis < Gal[centralgal].Rvir)
-          gasfraction_intotype1=Gal[Gal[i].CentralGal].HotRadius / Gal[Gal[i].CentralGal].Rvir;
+        if (distance_ < Gal[central_galaxy_number_].Rvir)
+          gas_fraction_into_type_1_=Gal[Gal[galaxy_number_].CentralGal].HotRadius / Gal[Gal[galaxy_number_].CentralGal].Rvir;
         //if type 2 is outside Rvir of type 0, all goes to type 1
         else
-          gasfraction_intotype1=1.;
+          gas_fraction_into_type_1_=1.;
 
-        Gal[i].HotRadius = 0.0;
-        if(Gal[i].HotGas > 0.0)
-          transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,gasfraction_intotype1);
-        if(Gal[i].EjectedMass > 0.0)
-          transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,gasfraction_intotype1);
+        Gal[galaxy_number_].HotRadius = 0.0;
+        if(Gal[galaxy_number_].HotGas > 0.0)
+          transfer_gas(Gal[galaxy_number_].CentralGal,HotGasComponent,galaxy_number_,HotGasComponent,gas_fraction_into_type_1_);
+        if(Gal[galaxy_number_].EjectedMass > 0.0)
+          transfer_gas(Gal[galaxy_number_].CentralGal,EjectedGasComponent,galaxy_number_,EjectedGasComponent,gas_fraction_into_type_1_);
 
-        mass_checks("deal_with_satellites i #0",i);
-        mass_checks("deal_with_satellites Gal[i].CentraGal #0",Gal[i].CentralGal);
+        mass_checks("deal_with_satellites galaxy_number_ #0",galaxy_number_);
+        mass_checks("deal_with_satellites Gal[galaxy_number_].CentraGal #0",Gal[galaxy_number_].CentralGal);
 #ifdef TRACK_BURST
         /* Transfer burst component first */
-        transfer_stars(Gal[i].CentralGal,BurstComponent,i,BurstComponent,
-                       GasFraction_intotype1*Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
+        transfer_stars(Gal[galaxy_number_].CentralGal,BurstComponent,galaxy_number_,BurstComponent,
+                       GasFraction_intotype1*Gal[galaxy_number_].ICM/(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ICM));
 #endif
-        transfer_stars(Gal[i].CentralGal,ICMComponent,i,ICMComponent,gasfraction_intotype1);
-        mass_checks("deal_with_satellites i #1",i);
-        mass_checks("deal_with_satellites Gal[i].CentraGal #1",Gal[i].CentralGal);
+        transfer_stars(Gal[galaxy_number_].CentralGal,ICMComponent,galaxy_number_,ICMComponent,gas_fraction_into_type_1_);
+        mass_checks("deal_with_satellites galaxy_number_ #1",galaxy_number_);
+        mass_checks("deal_with_satellites Gal[galaxy_number_].CentraGal #1",Gal[galaxy_number_].CentralGal);
 #ifndef POST_PROCESS_MAGS
 #ifdef ICL
-        transfer_ICL(Gal[i].CentralGal,i,gasfraction_intotype1);
+        transfer_ICL(Gal[galaxy_number_].CentralGal,galaxy_number_,gas_fraction_into_type_1_);
 #endif
 #endif
               //All the gas not moved to the type 1 yet goes to the type 0
-        if (gasfraction_intotype1 < 1.)
+        if (gas_fraction_into_type_1_ < 1.)
         {
-          if(Gal[i].HotGas > 0.0)
-            transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.);
-          if(Gal[i].EjectedMass > 0.0)
-            transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.);
+          if(Gal[galaxy_number_].HotGas > 0.0)
+            transfer_gas(central_galaxy_number_,HotGasComponent,galaxy_number_,HotGasComponent,1.);
+          if(Gal[galaxy_number_].EjectedMass > 0.0)
+            transfer_gas(central_galaxy_number_,EjectedGasComponent,galaxy_number_,EjectedGasComponent,1.);
 
 #ifdef TRACK_BURST
           /* Transfer burst component first */
-          transfer_stars(centralgal,BurstComponent,i,BurstComponent,
-                         Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
+          transfer_stars(central_galaxy_number_,BurstComponent,galaxy_number_,BurstComponent,
+                         Gal[galaxy_number_].ICM/(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ICM));
 #endif
-          transfer_stars(centralgal,ICMComponent,i,ICMComponent,1.);
-          mass_checks("deal_with_satellites #2",i);
-          mass_checks("deal_with_satellites #2",centralgal);
+          transfer_stars(central_galaxy_number_,ICMComponent,galaxy_number_,ICMComponent,1.);
+          mass_checks("deal_with_satellites #2",galaxy_number_);
+          mass_checks("deal_with_satellites #2",central_galaxy_number_);
 #ifndef POST_PROCESS_MAGS
 #ifdef ICL
-          transfer_ICL(centralgal,i,1.);
+          transfer_ICL(central_galaxy_number_,galaxy_number_,1.);
 #endif
 #endif
         }
       }
-      //Type 1 galaxies (or type 2's for the modified stripping) - stripping if galaxy inside Rvir of merger_centre
-      else if ( Gal[i].Type == 1 && dis < Gal[centralgal].Rvir && Gal[i].HotGas > 0.0 )
+      //Type 1 galaxies (or type 2's for the modified stripping) - stripping if galaxy inside Rvir of merger_centre_
+      else if ( Gal[galaxy_number_].Type == 1 && distance_ < Gal[central_galaxy_number_].Rvir && Gal[galaxy_number_].HotGas > 0.0 )
       {
-        merger_centre = centralgal;
+        merger_centre_ = central_galaxy_number_;
 
         //hot_retain_sat also re-evaluates HotRadius
-        stripped_fraction=1.-(float)(hot_retain_sat(i,merger_centre))/Gal[i].HotGas;
-        if (stripped_fraction < 0.)
+        stripped_fraction_=1.-(float)(hot_retain_sat(galaxy_number_,merger_centre_))/Gal[galaxy_number_].HotGas;
+        if (stripped_fraction_ < 0.)
           {
             printf("***Error in hot_retain_sat - returns value larger than HotGas***\n");
             exit(1);
           }
 
-        transfer_gas(merger_centre,HotGasComponent,i,HotGasComponent,stripped_fraction);
-        transfer_gas(merger_centre,EjectedGasComponent,i,EjectedGasComponent,stripped_fraction);
-        mass_checks("deal_with_satellites #3",i);
-        mass_checks("deal_with_satellites #3",merger_centre);
+        transfer_gas(merger_centre_,HotGasComponent,galaxy_number_,HotGasComponent,stripped_fraction_);
+        transfer_gas(merger_centre_,EjectedGasComponent,galaxy_number_,EjectedGasComponent,stripped_fraction_);
+        mass_checks("deal_with_satellites #3",galaxy_number_);
+        mass_checks("deal_with_satellites #3",merger_centre_);
 #ifdef TRACK_BURST
         /* Transfer burst component first */
-        transfer_stars(merger_centre,BurstComponent,i,BurstComponent,
-                       stripped_fraction*Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
+        transfer_stars(merger_centre_,BurstComponent,galaxy_number_,BurstComponent,
+                       stripped_fraction_*Gal[galaxy_number_].ICM/(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ICM));
 #endif
-        transfer_stars(merger_centre,ICMComponent,i,ICMComponent,stripped_fraction);
-        mass_checks("deal_with_satellites #4",i);
-        mass_checks("deal_with_satellites #4",merger_centre);
+        transfer_stars(merger_centre_,ICMComponent,galaxy_number_,ICMComponent,stripped_fraction_);
+        mass_checks("deal_with_satellites #4",galaxy_number_);
+        mass_checks("deal_with_satellites #4",merger_centre_);
 #ifndef POST_PROCESS_MAGS
 #ifdef ICL
-        transfer_ICL(merger_centre,i,stripped_fraction);
+        transfer_ICL(merger_centre_,galaxy_number_,stripped_fraction_);
 #endif
 #endif
       }
 
-      mass_checks("deal_with_satellites #5",i);
-      mass_checks("deal_with_satellites #5",centralgal);
+      mass_checks("deal_with_satellites #5",galaxy_number_);
+      mass_checks("deal_with_satellites #5",central_galaxy_number_);
     }
       /* Instantaneous stripping of gas from satellites and no ejection of type 2 into type 1,
        * still there is the condition on Rvir that determines that if a galaxy is a newly
@@ -175,50 +175,50 @@ void deal_with_satellites(const int centralgal, const int ngal)
     else if (HotGasStrippingModel == 1)
     {
     /* If galaxy is a satellite inside Rvir it will lose its hot and
-     * ejected gas into the hot gas component of the centralgal.
+     * ejected gas into the hot gas component of the central_galaxy_number_.
      * Only galaxies within Rvir contribute to the central halo.*/
-      if ( dis < Gal[centralgal].Rvir && i != centralgal)
+      if ( distance_ < Gal[central_galaxy_number_].Rvir && galaxy_number_ != central_galaxy_number_)
       {
-        transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.);
-        transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.);
+        transfer_gas(central_galaxy_number_,HotGasComponent,galaxy_number_,HotGasComponent,1.);
+        transfer_gas(central_galaxy_number_,EjectedGasComponent,galaxy_number_,EjectedGasComponent,1.);
 #ifdef TRACK_BURST
         /* Transfer burst component first */
-        transfer_stars(centralgal,BurstComponent,i,BurstComponent,
-                       Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
+        transfer_stars(central_galaxy_number_,BurstComponent,galaxy_number_,BurstComponent,
+                       Gal[galaxy_number_].ICM/(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ICM));
 #endif
-        transfer_stars(centralgal,ICMComponent,i,ICMComponent,1.);
+        transfer_stars(central_galaxy_number_,ICMComponent,galaxy_number_,ICMComponent,1.);
 #ifndef POST_PROCESS_MAGS
 #ifdef ICL
-        transfer_ICL(centralgal, i, 1.);
+        transfer_ICL(central_galaxy_number_, galaxy_number_, 1.);
 #endif
 #endif
-        Gal[i].HotRadius =0.;
+        Gal[galaxy_number_].HotRadius =0.;
       }
       /* If its a type 1 outside Rvir it retains all its gas components, so do nothing
-       * else if (Gal[i].Type ==1) {}
+       * else if (Gal[galaxy_number_].Type ==1) {}
        * If galaxy is a type 2 outside Rvir of type 0, then all its gas components
        * will be added to the type 1. */
-      else  if (Gal[i].Type == 2)
+      else  if (Gal[galaxy_number_].Type == 2)
       {
-        transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,1.);
-        transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,1.);
+        transfer_gas(Gal[galaxy_number_].CentralGal,HotGasComponent,galaxy_number_,HotGasComponent,1.);
+        transfer_gas(Gal[galaxy_number_].CentralGal,EjectedGasComponent,galaxy_number_,EjectedGasComponent,1.);
 #ifdef TRACK_BURST
         /* Transfer burst component first */
-        transfer_stars(Gal[i].CentralGal,BurstComponent,i,BurstComponent,
-                       Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
+        transfer_stars(Gal[galaxy_number_].CentralGal,BurstComponent,galaxy_number_,BurstComponent,
+                       Gal[galaxy_number_].ICM/(Gal[galaxy_number_].DiskMass+Gal[galaxy_number_].BulgeMass+Gal[galaxy_number_].ICM));
 #endif
-        transfer_stars(Gal[i].CentralGal,ICMComponent,i,ICMComponent,1.);
+        transfer_stars(Gal[galaxy_number_].CentralGal,ICMComponent,galaxy_number_,ICMComponent,1.);
 #ifndef POST_PROCESS_MAGS
 #ifdef ICL
-        transfer_ICL(Gal[i].CentralGal,i,1.);
+        transfer_ICL(Gal[galaxy_number_].CentralGal,galaxy_number_,1.);
 #endif
 #endif
-        Gal[i].HotRadius =0.;
+        Gal[galaxy_number_].HotRadius =0.;
       }
     }//end of HotGasStrippingModel == 1
 
-    mass_checks("Bottom of deal_with_satellites i",i);
-    mass_checks("Bottom of deal_with_satellites centralgal",centralgal);
+    mass_checks("Bottom of deal_with_satellites galaxy_number_",galaxy_number_);
+    mass_checks("Bottom of deal_with_satellites central_galaxy_number_",central_galaxy_number_);
 
   } /* End of HotGasStrippingModel choice */
 
@@ -261,59 +261,59 @@ void deal_with_satellites(const int centralgal, const int ngal)
  *  \f$R_{\rm{strip}}=min(R_{\rm{tidal}},R_{\rm{r.p.}})\f$
  *
  * */
-double hot_retain_sat(const int i, const int centralgal)
+double hot_retain_sat(const int galaxy_number_, const int central_galaxy_number_)
 {
-  double hotremain;
-  double R_Stripping, R_Tidal, R_RamPressure, R_Orbit, TotalMass_sat, Vorbit;
+  double hot_remain_;
+  double R_stripping_, R_tidal_, R_ram_pressure_, R_orbit_, total_mass_sat_, V_orbit_;
 
-  if (Gal[centralgal].Type != 0)
+  if (Gal[central_galaxy_number_].Type != 0)
     exit(0);
 
   /*Calculate tidal stripping radius*/
-   R_Tidal=Gal[i].Len*PartMass/Gal[i].Mvir*Gal[i].Rvir;
+   R_tidal_=Gal[galaxy_number_].Len*PartMass/Gal[galaxy_number_].Mvir*Gal[galaxy_number_].Rvir;
 
   /*Ram pressure stripping radius calculation*/
 
   /*First calculate the orbital radius of the satellite R_orbit*/
-   R_Orbit=separation_gal(centralgal,i)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
+   R_orbit_=separation_gal(central_galaxy_number_,galaxy_number_)/(1+ZZ[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]);
 
 
   /*If the central galaxy has no hot gas, it exerts no ram pressure stripping on the
    * satellite. */
-  if (Gal[centralgal].HotGas<1.e-6 || Gal[centralgal].Mvir<RamPressureStrip_CutOffMass)
-          R_RamPressure=Gal[i].HotRadius;
+  if (Gal[central_galaxy_number_].HotGas<1.e-6 || Gal[central_galaxy_number_].Mvir<RamPressureStrip_CutOffMass)
+          R_ram_pressure_=Gal[galaxy_number_].HotRadius;
   else
   {
-    TotalMass_sat=Gal[i].Mvir;
-    Vorbit=sqrt((Gravity*Gal[centralgal].Mvir)/Gal[centralgal].Rvir);
-    R_RamPressure= sqrt(Gal[i].HotGas/Gal[i].HotRadius) * sqrt(Gravity * TotalMass_sat/Gal[i].Rvir) *
-        sqrt(Gal[centralgal].Rvir/Gal[centralgal].HotGas)*R_Orbit * 1./Vorbit;
+    total_mass_sat_=Gal[galaxy_number_].Mvir;
+    V_orbit_=sqrt((Gravity*Gal[central_galaxy_number_].Mvir)/Gal[central_galaxy_number_].Rvir);
+    R_ram_pressure_= sqrt(Gal[galaxy_number_].HotGas/Gal[galaxy_number_].HotRadius) * sqrt(Gravity * total_mass_sat_/Gal[galaxy_number_].Rvir) *
+        sqrt(Gal[central_galaxy_number_].Rvir/Gal[central_galaxy_number_].HotGas)*R_orbit_ * 1./V_orbit_;
   }
 
   /*Get the smaller of tidal and ram pressure stripping radii.*/
-  R_Stripping=min(R_Tidal, R_RamPressure);
+  R_stripping_=min(R_tidal_, R_ram_pressure_);
 
   /*if the stripping radius is larger then hot radius there is
    * no stripping*/
-  if (R_Stripping>Gal[i].HotRadius || Gal[i].HotGas < 1.e-8)
-    hotremain=Gal[i].HotGas;         
+  if (R_stripping_>Gal[galaxy_number_].HotRadius || Gal[galaxy_number_].HotGas < 1.e-8)
+    hot_remain_=Gal[galaxy_number_].HotGas;         
   // If stripping radius is smaller than the hot radius
   else 
   {
     //Assuming M_hot(r) proportional to r, the remaining hot gas is given by:
-    hotremain=Gal[i].HotGas*R_Stripping/Gal[i].HotRadius;
+    hot_remain_=Gal[galaxy_number_].HotGas*R_stripping_/Gal[galaxy_number_].HotRadius;
     // hot radius is updated to the stripping radius
-    Gal[i].HotRadius=R_Stripping;
+    Gal[galaxy_number_].HotRadius=R_stripping_;
 
     // Check that HotRadius has sensible values
-    if (Gal[i].HotRadius < 1.e-8)
-      Gal[i].HotRadius = Gal[i].Len*PartMass/Gal[i].Mvir*Gal[i].Rvir;
-    if (Gal[i].HotRadius > Gal[i].Rvir)          
-      Gal[i].HotRadius = Gal[i].Rvir;
+    if (Gal[galaxy_number_].HotRadius < 1.e-8)
+      Gal[galaxy_number_].HotRadius = Gal[galaxy_number_].Len*PartMass/Gal[galaxy_number_].Mvir*Gal[galaxy_number_].Rvir;
+    if (Gal[galaxy_number_].HotRadius > Gal[galaxy_number_].Rvir)          
+      Gal[galaxy_number_].HotRadius = Gal[galaxy_number_].Rvir;
   }
 
-if(hotremain>Gal[i].HotGas)
-        hotremain=Gal[i].HotGas;
+  if(hot_remain_>Gal[galaxy_number_].HotGas)
+    hot_remain_=Gal[galaxy_number_].HotGas;
 
-  return hotremain;
+  return hot_remain_;
 }

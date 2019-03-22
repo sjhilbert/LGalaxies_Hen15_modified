@@ -26,30 +26,6 @@
  * @brief Copies the relevant properties in Galaxy structure into
  *        Galaxy_Output structure and saves them into the output
  *        files (SA_z**_**) - redshift/file_number_.
- *
- *        There are two distinct procedures to write the output depending
- *        on whether GALAXY_TREE option is turned on or off. If it is on
- *        the full galaxy tree is written using save_galaxy_tree. If it
- *        is off, the output is only written for the chosen output snapshot_number_
- *        numbers using save_galaxies.
- *
- *        If USE_MEMORY_TO_MINIMIZE_IO ON, these routines copy the galaxy
- *        data from the working structures into pointers until that has
- *        been done for all the tree in a given file.
- *
- *        After all the galaxy trees are written finalize_galaxy_file is
- *        called in main.c to include an header in the output files. If
- *        GALAXY_TREE=1 three numbers are written: 1 (int);
- *        size_of_struct(Galaxy_Output) (int);UnitTime_in_years and TotGalCount(int). If
- *        GALAXY_TREE=0 then the header is: Ntrees (int); total number of
- *        galaxies for the snapshot corresponding to the current file ->
- *        TotGalaxies[output_number_] (int); and the number of galaxies on each tree
- *        on the current snapshot -> TreeNgals[output_number_] (int*Ntrees).
- *
- *        If UPDATETYPE2 is defined, the positions of type 2 galaxies
- *        (satellites without a dark matter halo) will be updated before
- *        output to contain the subsequent positions of the most bound dark
- *        matter particle at disruption time (using get_coordinates).
  *        */
 
  /** @brief create galaxy output files for redshifts */

@@ -53,7 +53,7 @@
  *         <B>read_file_nrs()</B> - Done if SPECIFYFILENR OFF - the dark matter files
  *         to read can be defined in a file, instead of being read sequentially.
  *         These are defined in FileNrDir, in input.par, and read into
- *         ListInputFilrNr[].
+ *         ListInputFileNr[].
  *    
  *         <B>read_reionization()</B> - Reads in Reion_z[] and Reion_Mc[] from
  *         ./input/Mc.txt. These are used if UPDATEREIONIZATION ON to get Okamoto(2008)
@@ -103,11 +103,11 @@
  *        */
 void init(void)
 {
-  struct rlimit rlim;
+  struct rlimit rlim_;
 
-  getrlimit(RLIMIT_CORE, &rlim);
-  rlim.rlim_cur = RLIM_INFINITY;
-  setrlimit(RLIMIT_CORE, &rlim);
+  getrlimit(RLIMIT_CORE, &rlim_);
+  rlim_.rlim_cur = RLIM_INFINITY;
+  setrlimit(RLIMIT_CORE, &rlim_);
 
   random_generator = gsl_rng_alloc(gsl_rng_ranlxd1);
 
@@ -116,9 +116,6 @@ void init(void)
 #ifdef GALAXYTREE
   ScaleFactor = pow(2, Hashbits) / BoxSize;
 #endif
-
-  EnergySNcode = EnergySN / UnitEnergy_in_cgs * Hubble_h;
-  EtaSNcode = EtaSN * (UNITMASS_IN_G / SOLAR_MASS) * inv_Hubble_h;
 
   //reads in the redshifts for the used Cosmology
   read_zlist();
@@ -188,41 +185,41 @@ void init(void)
  */
 void read_zlist(void)
 {
-	int i;
-  FILE *fd;
-  char fname[1000];
-  char sbuf[1000];
-  //double dumb2, dumb;
+	int i_;
+  FILE *file_;
+  char file_name_[1000];
+  char error_message_[1000];
+  //double dumb2_, dumb_;
 
-  sprintf(fname, "%s", FileWithZList);
+  sprintf(file_name_, "%s", FileWithZList);
 
-  if(!(fd = fopen(fname, "r")))
+  if(!(file_ = fopen(file_name_, "r")))
   {
-    sprintf(sbuf,"can't read output list in file '%s'\n", fname);
-    terminate(sbuf);
+    sprintf(error_message_,"can't read output list in file '%s'\n", file_name_);
+    terminate(error_message_);
   }
 
   Zlistlen = 0;
   do
   {
-    //if(fscanf(fd, "%d %lg %lf\n", &dumb, &ZZ[Zlistlen], &dumb2) == 3)
-    if(fscanf(fd, "%lg\n", &AA[Zlistlen]) == 1)
+    //if(fscanf(file_, "%d %lg %lf\n", &dumb_, &ZZ[Zlistlen], &dumb2_) == 3)
+    if(fscanf(file_, "%lg\n", &AA[Zlistlen]) == 1)
       Zlistlen++;
     else
       break;
   }
   while(Zlistlen < LastDarkMatterSnapShot+1);
 
-  fclose(fd);
+  fclose(file_);
 
-  for(i = 0; i < Zlistlen; i++)
+  for(i_ = 0; i_ < Zlistlen; i_++)
   {
     //convert AA[] into A_inv[]
-    /* AA_inv[i] = 1 / AA[i]; */
+    /* AA_inv[i_] = 1 / AA[i_]; */
     //convert AA[] into redshift - ZZ[]
-    ZZ[i] = 1 / AA[i] - 1;
+    ZZ[i_] = 1 / AA[i_] - 1;
     //table with time in internal units (Mpc/Km/s/h)
-    Age[i] = time_to_present(ZZ[i]);
+    Age[i_] = time_to_present(ZZ[i_]);
   }
 
 #ifndef MCMC
@@ -240,41 +237,41 @@ void read_zlist(void)
 /** @brief reads redshifts from file */
 void read_zlist_new(void)
 {
-  int i, dummy_snap;
-  double dummy_a;
-  FILE *fd;
-  char fname[1000];
+  int i_, dummy_snap_;
+  double dummy_a_;
+  FILE *file_;
+  char file_name_[1000];
 
-  sprintf(fname, "%s", FileWithZList);
-  if(!(fd = fopen(fname, "r")))
+  sprintf(file_name_, "%s", FileWithZList);
+  if(!(file_ = fopen(file_name_, "r")))
   {
-  	char sbuf[1000];
-  	sprintf(sbuf, "can't open file `%s'\n", fname);
-  	terminate(sbuf);
+  	char error_message_[1000];
+  	sprintf(error_message_, "can't open file `%s'\n", file_name_);
+  	terminate(error_message_);
   }
 
   Zlistlen = 0;
   do
   {
-    if(fscanf(fd, "%d %lg %lg", &dummy_snap, &ZZ[Zlistlen], &dummy_a) == 3)
+    if(fscanf(file_, "%d %lg %lg", &dummy_snap_, &ZZ[Zlistlen], &dummy_a_) == 3)
       Zlistlen++;
     else
       break;
   }
   while(Zlistlen < LastDarkMatterSnapShot+1);
-  fclose(fd);
+  fclose(file_);
 
-  for(i = 0; i < Zlistlen; i++)
+  for(i_ = 0; i_ < Zlistlen; i_++)
   {
   	//convert redshift - ZZ[] into AA[]
-                /* AA_inv[i] = ZZ[i] + 1; */
-  	AA[i] = 1/(ZZ[i] + 1);
-  	//printf("z[%d]=%f\n",i,ZZ[i]);
+                /* AA_inv[i_] = ZZ[i_] + 1; */
+  	AA[i_] = 1/(ZZ[i_] + 1);
+  	//printf("z[%d]=%f\n",i_,ZZ[i_]);
   	//table with time in internal units (Mpc/Km/s/h)
-  	if(ZZ[i]>=0.0)
-  		Age[i] = time_to_present(ZZ[i]);
+  	if(ZZ[i_]>=0.0)
+  		Age[i_] = time_to_present(ZZ[i_]);
   	else
-  		Age[i] = 0.0;
+  		Age[i_] = 0.0;
   		//break;
   }
 
@@ -292,31 +289,31 @@ void read_zlist_new(void)
 /** @brief reads original cosmology redshifts from file */
 void read_zlist_original_cosm(void)
 {
-  FILE *fd;
-  char fname[1000];
+  FILE *file_;
+  char file_name_[1000];
 
-  sprintf(fname, "%s", FileWithZList_OriginalCosm);
-  if(!(fd = fopen(fname, "r")))
+  sprintf(file_name_, "%s", FileWithZList_OriginalCosm);
+  if(!(file_ = fopen(file_name_, "r")))
   {
-    printf("can't read output list in file '%s'\n", fname);
+    printf("can't read output list in file '%s'\n", file_name_);
     terminate("in read_zlist_original_cosm");
   }
 
   Zlistlen = 0;
   do
   {
-    if(fscanf(fd, " %lg ", &AA_OriginalCosm[Zlistlen]) == 1)
+    if(fscanf(file_, " %lg ", &AA_OriginalCosm[Zlistlen]) == 1)
     {  Zlistlen++;	}
     else
       break;
   }
   while(Zlistlen < LastDarkMatterSnapShot+1);
 
-  fclose(fd);
+  fclose(file_);
   
-/*  int i;
-  for(i = 0; i < Zlistlen; i++)
-  { AA_OriginalCosm_inv[i] = 1 / AA_OriginalCosm[i]; } */
+/*  int i_;
+  for(i_ = 0; i_ < Zlistlen; i_++)
+  { AA_OriginalCosm_inv[i_] = 1 / AA_OriginalCosm[i_]; } */
 
 #ifndef MR_PLUS_MRII //option for MCMC
 #ifdef PARALLEL
@@ -335,38 +332,38 @@ void read_zlist_original_cosm(void)
 void read_output_snaps(void)
 {
 #ifndef GALAXYTREE
-  int i, j;
-  char buf[1000];
-  FILE *fd;
+  int output_number_, snapshot_number_;
+  char file_name_[1000];
+  FILE *file_;
 
   LastSnapShotNr=0;
 
-  sprintf(buf, "%s", FileWithOutputRedshifts);
+  sprintf(file_name_, "%s", FileWithOutputRedshifts);
 
-  if(!(fd = fopen(buf, "r")))
+  if(!(file_ = fopen(file_name_, "r")))
   {
-    char sbuf[1000];
-    sprintf(sbuf, "file `%s' not found.\n", buf);
-    terminate(sbuf);
+    char error_message_[1000];
+    sprintf(error_message_, "file `%s' not found.\n", file_name_);
+    terminate(error_message_);
   }
 
-  for(i = 0; i < NOUT; i++)
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
-    if(fscanf(fd, " %f ", &ListOutputRedshifts[i]) != 1)
+    if(fscanf(file_, " %f ", &ListOutputRedshifts[output_number_]) != 1)
     {
-      char sbuf[1000];
-      sprintf(sbuf, "I/O error in file '%s'\n", buf);
-      terminate(sbuf);
+      char error_message_[1000];
+      sprintf(error_message_, "I/O error in file '%s'\n", file_name_);
+      terminate(error_message_);
     }
 
     //find the snapshot corresponding to the desired output redshift in ListOutputRedshifts[]
-    for(j = 0; j <= LastDarkMatterSnapShot; j++)
-      if(ListOutputRedshifts[i]>=ZZ[j])
+    for(snapshot_number_ = 0; snapshot_number_ <= LastDarkMatterSnapShot; snapshot_number_++)
+      if(ListOutputRedshifts[output_number_]>=ZZ[snapshot_number_])
       {
-        if((j > 0) && ((ZZ[j-1] - ListOutputRedshifts[i]) < (ListOutputRedshifts[i]-ZZ[j]) || (ZZ[j] < 0.)))
-          ListOutputSnaps[i]=j-1;
+        if((snapshot_number_ > 0) && ((ZZ[snapshot_number_-1] - ListOutputRedshifts[output_number_]) < (ListOutputRedshifts[output_number_]-ZZ[snapshot_number_]) || (ZZ[snapshot_number_] < 0.)))
+          ListOutputSnaps[output_number_]=snapshot_number_-1;
         else
-          ListOutputSnaps[i]=j;
+          ListOutputSnaps[output_number_]=snapshot_number_;
         break;
       }
 
@@ -376,18 +373,18 @@ void read_output_snaps(void)
         if (ThisTask == 0)
 #endif /* not defined MCMC */
           printf("output %d: requested z=%0.2f, available snap[%d] z=%f & snap[%d] z=%f, use snap[%d]\n",
-              i, ListOutputRedshifts[i], j-1, ZZ[j-1], j, ZZ[j], ListOutputSnaps[i]);
+              output_number_, ListOutputRedshifts[output_number_], snapshot_number_-1, ZZ[snapshot_number_-1], snapshot_number_, ZZ[snapshot_number_], ListOutputSnaps[output_number_]);
 
     //define the LastSnapShotNr as the highest snapshot need to be computed
-    if(LastSnapShotNr<ListOutputSnaps[i])
-    LastSnapShotNr=ListOutputSnaps[i];
+    if(LastSnapShotNr<ListOutputSnaps[output_number_])
+    LastSnapShotNr=ListOutputSnaps[output_number_];
   }
-  fclose(fd);
+  fclose(file_);
   
-  for(j = 0; j < MAXSNAPS; j++)
+  for(snapshot_number_ = 0; snapshot_number_ < MAXSNAPS; snapshot_number_++)
   {
-    for( i = NOUT; (i > 0) && (i--) && (ListOutputSnaps[i] < j); ) {}
-    ListOutputNumberOfSnapshot[j] = i;
+    for( output_number_ = NOUT; (output_number_ > 0) && (output_number_--) && (ListOutputSnaps[output_number_] < snapshot_number_); ) {}
+    ListOutputNumberOfSnapshot[snapshot_number_] = output_number_;
   }
   
 // #ifdef MCMC
@@ -397,18 +394,21 @@ void read_output_snaps(void)
 // #endif /* not defined MCMC */
 //   {
 //     printf("\n----------------\n");
-//     for(j = 0; j < MAXSNAPS; j++)
-//       printf("ListOutputNumberOfSnapshot[%d] = %d\n", j, ListOutputNumberOfSnapshot[j]);
+//     for(snapshot_number_ = 0; snapshot_number_ < MAXSNAPS; snapshot_number_++)
+//       printf("ListOutputNumberOfSnapshot[%d] = %d\n", snapshot_number_, ListOutputNumberOfSnapshot[snapshot_number_]);
 //     printf("----------------\n\n");
 //   }
   
 
 #else /* defined GALAXYTREE */
-  int i;
-  for(i = 0; i < NOUT; i++)
-    ListOutputSnaps[i] = i;
-  for(i = 0; i < MAXSNAPS; i++)
-    ListOutputNumberOfSnapshot[i] = (i < NOUT) ? i : NOUT - 1;
+  int output_number_, snapshot_number_;
+  
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    ListOutputSnaps[output_number_] = output_number_;
+  
+  for(snapshot_number_ = 0; snapshot_number_ < MAXSNAPS; snapshot_number_++)
+    ListOutputNumberOfSnapshot[snapshot_number_] = (snapshot_number_ < NOUT) ? snapshot_number_ : NOUT - 1;
+  
   LastSnapShotNr=LastDarkMatterSnapShot;
 #endif /* defined GALAXYTREE */
 }
@@ -418,27 +418,27 @@ void read_output_snaps(void)
 /** @brief reads file numbers to process from file */
 void read_file_nrs(void)
 {
-  int i;
-  char buf[1000];
-  FILE *fd;
-  sprintf(buf, "%s", FileNrDir);
-  if(!(fd = fopen(buf, "r")))
+  int i_;
+  char file_name_[1000];
+  FILE *file_;
+  sprintf(file_name_, "%s", FileNrDir);
+  if(!(file_ = fopen(file_name_, "r")))
   {
-    char sbuf[1000];
-    sprintf(sbuf, "file `%s' not found.\n", buf);
-    terminate(sbuf);
+    char error_message_[1000];
+    sprintf(error_message_, "file `%s' not found.\n", file_name_);
+    terminate(error_message_);
   }
 
-  for(i = 0; i < 111; i++) //only 111files in ../input/filenrdir.txt are read in
+  for(i_ = 0; i_ < 111; i_++) //only 111files in ../input/filenrdir.txt are read in
   {
-    if(fscanf(fd, " %d ", &ListInputFilrNr[i]) != 1)
+    if(fscanf(file_, " %d ", &ListInputFileNr[i_]) != 1)
     {
-      char sbuf[1000];
-      sprintf(sbuf, "I/O error in file '%s'\n", buf);
-      terminate(sbuf);
+      char error_message_[1000];
+      sprintf(error_message_, "I/O error in file '%s'\n", file_name_);
+      terminate(error_message_);
     }
   }
-  fclose(fd);
+  fclose(file_);
 }
 #endif
 
@@ -446,26 +446,25 @@ void read_file_nrs(void)
 /** @brief reads reionization parameters from file */
 void read_reionization(void)
 {
-  FILE *fd;
-  int p;
-  float dumb;
+  FILE *file_;
+  int p_;
+  float dumb_;
 
-  if(!(fd = fopen(McFile, "r")))
+  if(!(file_ = fopen(McFile, "r")))
   {
-    char sbuf[1000];
-    sprintf(sbuf, "file `%s' not found.\n", McFile);
-    terminate(sbuf);
+    char error_message_[1000];
+    sprintf(error_message_, "file `%s' not found.\n", McFile);
+    terminate(error_message_);
   }
 
-  for(p = 0; p < N_REION_Z; p++)
+  for(p_ = 0; p_ < N_REION_Z; p_++)
   {
-    fscanf(fd, "%f", &dumb);
-    fscanf(fd, "%f", &Reion_z[p]);
-    fscanf(fd, "%f", &Reion_log10_Mc[p]); 
-    Reion_log10_Mc[p] = log10(Reion_log10_Mc[p]);  /* file should contain reion. Mc, not log10(Mc) */
-
+    fscanf(file_, "%f", &dumb_);
+    fscanf(file_, "%f", &Reion_z[p_]);
+    fscanf(file_, "%f", &Reion_log10_Mc[p_]); 
+    Reion_log10_Mc[p_] = log10(Reion_log10_Mc[p_]);  /* file should contain reion. Mc, not log10(Mc) */
   }
-  fclose(fd);
+  fclose(file_);
 }
 
 
@@ -475,83 +474,83 @@ int get_nr_files_to_process()
 #ifdef OVERWRITE_OUTPUT
   return LastFile - FirstFile + 1;
 #else /* not defined OVERWRITE_OUTPUT */
-  int nfiles = 0;
+  int n_files_ = 0;
   if(ThisTask==0)
   {  
-    int filenr;
-    for(filenr = FirstFile; filenr <= LastFile; filenr++)
+    int file_number_;
+    for(file_number_ = FirstFile; file_number_ <= LastFile; file_number_++)
     {
 #ifdef SPECIFYFILENR
-      const int file = ListInputFilrNr[filenr];
+      const int input_file_number_ = ListInputFileNr[file_number_];
 #else /* not defined SPECIFYFILENR */
-      const int file = filenr;
+      const int input_file_number_ = file_number_;
 #endif /* not defined SPECIFYFILENR */
 
-      char buf[1000];
+      char file_name_[1000];
 #ifdef GALAXYTREE
-      sprintf(buf, "%s/%s_galtree_%d", FinalOutputDir, FileNameGalaxies, file);
+      sprintf(file_name_, "%s/%s_galtree_%d", FinalOutputDir, FileNameGalaxies, input_file_number_);
 #else /* not defined GALAXYTREE */
-      sprintf(buf, "%s/%s_z%1.2f_%d", FinalOutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[0]], file);
+      sprintf(file_name_, "%s/%s_z%1.2f_%d", FinalOutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[0]], input_file_number_);
 #endif /* not defined GALAXYTREE */
-      struct stat filestatus;
-      if(stat(buf, &filestatus) != 0)  // seems not to exist  
-      { ++nfiles; }
+      struct stat file_status_;
+      if(stat(file_name_, &file_status_) != 0)  // seems not to exist  
+      { ++n_files_; }
     }
   }
  #ifdef PARALLEL
-  MPI_Bcast(&nfiles,1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&n_files_,1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif /* defined PARALLEL */
-  return nfiles;
+  return n_files_;
 #endif /* not defined OVERWRITE_OUTPUT */
 }
 
 
 /** @brief distributes tree files over available tasks */
-void assign_files_to_tasks(int *FileToProcess, int *TaskToProcess, int nfiles)
+void assign_files_to_tasks(int *FileToProcess_, int *TaskToProcess_, int n_files_)
 {
-  int i,j, filenr, file;
+  int i_,j_, file_number_, input_file_number_;
 
   if(ThisTask==0)
   {
-    i=0;
-    j=0;
-    for(filenr = FirstFile; filenr <= LastFile; filenr++)
+    i_=0;
+    j_=0;
+    for(file_number_ = FirstFile; file_number_ <= LastFile; file_number_++)
     {
 #ifdef SPECIFYFILENR
-      file = ListInputFilrNr[filenr];
+      input_file_number_ = ListInputFileNr[file_number_];
 #else
-      file=filenr;
+      input_file_number_ = file_number_;
 #endif
 #ifndef OVERWRITE_OUTPUT
-      char buf[1000];
+      char file_name_[1000];
 #ifdef GALAXYTREE
-      sprintf(buf, "%s/%s_galtree_%d", FinalOutputDir, FileNameGalaxies, file);
+      sprintf(file_name_, "%s/%s_galtree_%d", FinalOutputDir, FileNameGalaxies, input_file_number_);
 #else
-      sprintf(buf, "%s/%s_z%1.2f_%d", FinalOutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[0]], file);
+      sprintf(file_name_, "%s/%s_z%1.2f_%d", FinalOutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[0]], input_file_number_);
 #endif
-      struct stat filestatus;
-      if(stat(buf, &filestatus) != 0)        // doesn't exist
+      struct stat file_status_;
+      if(stat(file_name_, &file_status_) != 0)        // doesn't exist
       {
 #endif
-        FileToProcess[i]=file;
+        FileToProcess_[i_]=input_file_number_;
 #ifdef PARALLEL
-        TaskToProcess[i]=j;
+        TaskToProcess_[i_]=j_;
 #else
-        TaskToProcess[i]=0;
+        TaskToProcess_[i_]=0;
 #endif
-        ++i;
-        ++j;
-        if(j==NTask)
-        { j=0; }
+        ++i_;
+        ++j_;
+        if(j_==NTask)
+        { j_=0; }
 #ifndef OVERWRITE_OUTPUT
       }
 #endif
     }
   }
 #ifdef PARALLEL
-  MPI_Bcast(FileToProcess, sizeof(int) * nfiles, MPI_BYTE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(TaskToProcess, sizeof(int) * nfiles, MPI_BYTE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(FileToProcess, sizeof(int) * n_files_, MPI_BYTE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(TaskToProcess, sizeof(int) * n_files_, MPI_BYTE, 0, MPI_COMM_WORLD);
 #else /* not defined PARALLEL */
-  (void)nfiles; /* avoid unused-parameter warning */
+  (void)n_files_; /* avoid unused-parameter warning */
 #endif /* not defined PARALLEL */
 }
