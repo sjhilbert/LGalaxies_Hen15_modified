@@ -58,29 +58,6 @@ struct elements
 };
 */
 
-struct elements elements_add(struct elements ele1, struct elements ele2, float fraction)
-{
-  struct elements ele;
-  ele.H=ele1.H+fraction*ele2.H;
-  ele.He=ele1.He+fraction*ele2.He;
-#ifndef MAINELEMENTS
-  ele.Cb=ele1.Cb+fraction*ele2.Cb;
-  ele.N=ele1.N+fraction*ele2.N;
-#endif
-  ele.O=ele1.O+fraction*ele2.O;
-#ifndef MAINELEMENTS
-  ele.Ne=ele1.Ne+fraction*ele2.Ne;
-#endif
-  ele.Mg=ele1.Mg+fraction*ele2.Mg;
-#ifndef MAINELEMENTS
-  ele.Si=ele1.Si+fraction*ele2.Si;
-  ele.S=ele1.S+fraction*ele2.S;
-  ele.Ca=ele1.Ca+fraction*ele2.Ca;
-#endif
-  ele.Fe=ele1.Fe+fraction*ele2.Fe;
-
-  return(ele);
-}
 
 struct elements elements_init()
 {
@@ -106,6 +83,168 @@ struct elements elements_init()
 }
 
 
+struct elements elements_add(const struct elements ele1, const struct elements ele2)
+{
+  struct elements ele;
+  ele.H=ele1.H+ele2.H;
+  ele.He=ele1.He+ele2.He;
+#ifndef MAINELEMENTS
+  ele.Cb=ele1.Cb+ele2.Cb;
+  ele.N=ele1.N+ele2.N;
+#endif
+  ele.O=ele1.O+ele2.O;
+#ifndef MAINELEMENTS
+  ele.Ne=ele1.Ne+ele2.Ne;
+#endif
+  ele.Mg=ele1.Mg+ele2.Mg;
+#ifndef MAINELEMENTS
+  ele.Si=ele1.Si+ele2.Si;
+  ele.S=ele1.S+ele2.S;
+  ele.Ca=ele1.Ca+ele2.Ca;
+#endif
+  ele.Fe=ele1.Fe+ele2.Fe;
+
+  return(ele);
+}
+
+
+struct elements elements_fraction(const struct elements ele2, const float fraction)
+{
+  struct elements ele;
+  ele.H= fraction*ele2.H;
+  ele.He= fraction*ele2.He;
+#ifndef MAINELEMENTS
+  ele.Cb= fraction*ele2.Cb;
+  ele.N= fraction*ele2.N;
+#endif
+  ele.O= fraction*ele2.O;
+#ifndef MAINELEMENTS
+  ele.Ne= fraction*ele2.Ne;
+#endif
+  ele.Mg= fraction*ele2.Mg;
+#ifndef MAINELEMENTS
+  ele.Si= fraction*ele2.Si;
+  ele.S= fraction*ele2.S;
+  ele.Ca= fraction*ele2.Ca;
+#endif
+  ele.Fe= fraction*ele2.Fe;
+
+  return(ele);
+}
+
+
+struct elements elements_add_fraction(const struct elements ele1, const struct elements ele2, const float fraction)
+{
+  struct elements ele;
+  ele.H=ele1.H+fraction*ele2.H;
+  ele.He=ele1.He+fraction*ele2.He;
+#ifndef MAINELEMENTS
+  ele.Cb=ele1.Cb+fraction*ele2.Cb;
+  ele.N=ele1.N+fraction*ele2.N;
+#endif
+  ele.O=ele1.O+fraction*ele2.O;
+#ifndef MAINELEMENTS
+  ele.Ne=ele1.Ne+fraction*ele2.Ne;
+#endif
+  ele.Mg=ele1.Mg+fraction*ele2.Mg;
+#ifndef MAINELEMENTS
+  ele.Si=ele1.Si+fraction*ele2.Si;
+  ele.S=ele1.S+fraction*ele2.S;
+  ele.Ca=ele1.Ca+fraction*ele2.Ca;
+#endif
+  ele.Fe=ele1.Fe+fraction*ele2.Fe;
+
+  return(ele);
+}
+
+
+void elements_add_to(struct elements *ele, const struct elements ele2)
+{
+  ele->H  += *ele2.H;
+  ele->He += *ele2.He;
+#ifndef MAINELEMENTS
+  ele->Cb += *ele2.Cb;
+  ele->N  += *ele2.N;
+#endif
+  ele->O  += *ele2.O;
+#ifndef MAINELEMENTS
+  ele->Ne += *ele2.Ne;
+#endif
+  ele->Mg += *ele2.Mg;
+#ifndef MAINELEMENTS
+  ele->Si += *ele2.Si;
+  ele->S  += *ele2.S;
+  ele->Ca += *ele2.Ca;
+#endif
+  ele->Fe += *ele2.Fe;
+}
+
+
+void elements_add_fraction_to(struct elements *ele, const struct elements ele2, const float fraction)
+{
+  ele->H  += fraction*ele2.H;
+  ele->He += fraction*ele2.He;
+#ifndef MAINELEMENTS
+  ele->Cb += fraction*ele2.Cb;
+  ele->N  += fraction*ele2.N;
+#endif
+  ele->O  += fraction*ele2.O;
+#ifndef MAINELEMENTS
+  ele->Ne += fraction*ele2.Ne;
+#endif
+  ele->Mg += fraction*ele2.Mg;
+#ifndef MAINELEMENTS
+  ele->Si += fraction*ele2.Si;
+  ele->S  += fraction*ele2.S;
+  ele->Ca += fraction*ele2.Ca;
+#endif
+  ele->Fe += fraction*ele2.Fe;
+}
+
+
+void elements_deduct_from(struct elements *ele, const struct elements ele2)
+{
+  ele->H  -= *ele2.H;
+  ele->He -= *ele2.He;
+#ifndef MAINELEMENTS
+  ele->Cb -= *ele2.Cb;
+  ele->N  -= *ele2.N;
+#endif
+  ele->O  -= *ele2.O;
+#ifndef MAINELEMENTS
+  ele->Ne -= *ele2.Ne;
+#endif
+  ele->Mg -= *ele2.Mg;
+#ifndef MAINELEMENTS
+  ele->Si -= *ele2.Si;
+  ele->S  -= *ele2.S;
+  ele->Ca -= *ele2.Ca;
+#endif
+  ele->Fe -= *ele2.Fe;
+}
+
+
+void elements_deduct_fraction_from(struct elements *ele, const struct elements ele2, const float fraction)
+{
+  ele->H  -= fraction*ele2.H;
+  ele->He -= fraction*ele2.He;
+#ifndef MAINELEMENTS
+  ele->Cb -= fraction*ele2.Cb;
+  ele->N  -= fraction*ele2.N;
+#endif
+  ele->O  -= fraction*ele2.O;
+#ifndef MAINELEMENTS
+  ele->Ne -= fraction*ele2.Ne;
+#endif
+  ele->Mg -= fraction*ele2.Mg;
+#ifndef MAINELEMENTS
+  ele->Si -= fraction*ele2.Si;
+  ele->S  -= fraction*ele2.S;
+  ele->Ca -= fraction*ele2.Ca;
+#endif
+  ele->Fe -= fraction*ele2.Fe;
+}
+
 void elements_print(char s[],struct elements ele)
 {
   printf("%s.H [Msun]  = %.2f\n",s,ele.H);
@@ -128,6 +267,7 @@ void elements_print(char s[],struct elements ele)
   return;
 }
 
+
 double elements_total(struct elements ele)
 {
 #ifndef MAINELEMENTS
@@ -136,6 +276,7 @@ double elements_total(struct elements ele)
   return(ele.H+ele.He+ele.O+ele.Mg+ele.Fe);
 #endif
 }
+
 
 double metal_elements_total(struct elements ele)
 {

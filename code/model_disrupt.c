@@ -139,8 +139,8 @@ void disrupt(int p)
     /* Put gas component to the central galaxy hot gas and stellar material into the ICM.
      * Note that the satellite should have no extended components. */
 
-    transfer_gas(centralgal,HotGasComponent,p,ColdGasComponent,1.,"disrupt", __LINE__);
-    transfer_gas(centralgal,HotGasComponent,p,HotGasComponent,1.,"disrupt", __LINE__);
+    transfer_gas(centralgal,HotGasComponent,p,ColdGasComponent,1.);
+    transfer_gas(centralgal,HotGasComponent,p,HotGasComponent,1.);
 #ifdef TRACK_BURST
     /* Transfer burst component first */
     transfer_stars(centralgal,BurstComponent,p,BurstComponent,

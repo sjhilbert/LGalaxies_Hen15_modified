@@ -132,10 +132,10 @@ do { size_t arr_##idx_; for(arr_##idx_ = 0; arr_##idx_ < (sizeof arr_ / sizeof *
 
 #endif /* defined STAR_FORMATION_HISTORY */
 
-typedef enum { HotGasComponent, ColdGasComponent, EjectedGasComponent } GasComponentType;
+typedef enum GasComponentType_ { HotGasComponent, ColdGasComponent, EjectedGasComponent } GasComponentType;
 extern const char* GasComponentStr[];
 
-typedef enum { DiskComponent, BulgeComponent, ICMComponent, BurstComponent } StellarComponentType;
+typedef enum StellarComponentType_ { DiskComponent, BulgeComponent, ICMComponent, BurstComponent } StellarComponentType;
 extern const char* StellarComponentStr[];
 
 
@@ -867,7 +867,7 @@ extern int ReIncorporationModel;
 extern int AGNRadioModeModel;
 extern int DiskInstabilityModel;
 extern int BHGrowthInDiskInstabilityModel;
-extern int HotGasStripingModel;
+extern int HotGasStrippingModel;
 extern int DisruptionModel;
 extern int StarBurstModel;
 extern int BulgeFormationInMinorMergersOn;

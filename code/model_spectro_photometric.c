@@ -371,9 +371,9 @@ void init_jump_index(void)
 }
 
 
-int get_jump_index(double age)
+int get_jump_index(const double log10_age_)
 {
-  return jumptab[(int) ((age - SSP_logAgeTab[1]) * jumpfac)];
+  return jumptab[(int) ((log10_age_ - SSP_logAgeTab[1]) * jumpfac)];
 }
 
 

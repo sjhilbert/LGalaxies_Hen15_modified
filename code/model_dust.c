@@ -162,8 +162,6 @@ void dust_model(int p, int snap, int halonr)
   double tauv, taubc, tauvbc, mu, dly;
   int k;
   
-  float gasdev(long *idum);
-  
   const double VBand_WaveLength = 0.55;
 
   if(Gal[p].ColdGas > 0.0)

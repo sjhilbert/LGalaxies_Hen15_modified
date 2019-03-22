@@ -81,7 +81,7 @@ void reincorporate_gas(int p, double dt)
   if (Gal[p].EjectedMass > 0.)
     {
       fraction=((float)reincorporated)/Gal[p].EjectedMass;
-      transfer_gas(p,HotGasComponent,p,EjectedGasComponent,fraction,"reincorporate_gas", __LINE__);
+      transfer_gas(p,HotGasComponent,p,EjectedGasComponent,fraction);
     }
 
   mass_checks("reincorporate_gas #2",p);

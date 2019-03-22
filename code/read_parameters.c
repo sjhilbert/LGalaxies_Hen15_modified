@@ -399,8 +399,8 @@ void read_parameter_file(char *file_name)
   parameter_address[nt] = &BHGrowthInDiskInstabilityModel;
   parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "HotGasStripingModel");
-  parameter_address[nt] = &HotGasStripingModel;
+  strcpy(parameter_tag[nt], "HotGasStrippingModel");
+  parameter_address[nt] = &HotGasStrippingModel;
   parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
 
   strcpy(parameter_tag[nt], "DisruptionModel");
@@ -643,5 +643,157 @@ void read_parameter_file(char *file_name)
   {
     printf("Error: parameter file \"%s\" missing or missing values for mandatory parameters\n", file_name);
     terminate("parameterfile incorrect");
+  }
+}
+
+
+
+
+/**
+ * @brief checks some program parameters for valid values
+ *
+ * if used properly, may reduce number of sanity checks later in program
+ */
+void check_program_parameters()
+{
+  
+  if(!(
+   (ReionizationModel == 0) ||
+   (ReionizationModel == 1) ||
+   (ReionizationModel == 2)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  ReionizationModel = %d\n  error: unknown reionization model\n", ReionizationModel);
+    terminate("invalid value program parameter encounted (ReionizationModel).");
+  }
+  
+  if(!(
+   (DiskRadiusModel == 0) ||
+   (DiskRadiusModel == 1) ||
+   (DiskRadiusModel == 2)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  DiskRadiusModel = %d\n  error: unknown disk radius model\n", DiskRadiusModel);
+    terminate("invalid value program parameter encounted (DiskRadiusModel).");
+  }
+
+  if(!(
+   (StarFormationModel == 0)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  StarFormationModel = %d\n  error: unknown star formation model\n", StarFormationModel);
+    terminate("invalid value program parameter encounted (StarFormationModel).");
+  }
+
+  if(!(
+   (FeedbackReheatingModel == 0)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  FeedbackReheatingModel = %d\n  error: unknown feedback reheating model\n", FeedbackReheatingModel);
+    terminate("invalid value program parameter encounted (FeedbackReheatingModel).");
+  }
+  
+  if(!(
+   (FeedbackEjectionModel == 0) ||
+   (FeedbackEjectionModel == 1)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  FeedbackEjectionModel = %d\n  error: unknown feedback ejection model\n", FeedbackEjectionModel);
+    terminate("invalid value program parameter encounted (FeedbackEjectionModel).");
+  }
+  
+  if(!(
+   (FateOfSatellitesGas == 0) ||
+   (FateOfSatellitesGas == 1)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  FateOfSatellitesGas = %d\n  error: unknown model of ejection of satellite galaxies\n", FateOfSatellitesGas);
+    terminate("invalid value program parameter encounted (FateOfSatellitesGas).");
+  }
+   
+  if(!(
+   (ReIncorporationModel == 0) ||
+   (ReIncorporationModel == 1) ||
+   (ReIncorporationModel == 2)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  ReIncorporationModel = %d\n  error: unknown model for reincorporation time scale\n", ReIncorporationModel);
+    terminate("invalid value program parameter encounted (ReIncorporationModel).");
+  }
+   
+  if(!(
+   (AGNRadioModeModel == 0) ||
+//   (AGNRadioModeModel == 1) ||
+   (AGNRadioModeModel == 2) ||
+   (AGNRadioModeModel == 3) ||
+   (AGNRadioModeModel == 4) ||
+   (AGNRadioModeModel == 5)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  AGNRadioModeModel = %d\n  error: unknown AGN radio model\n", AGNRadioModeModel);
+    terminate("invalid value program parameter encounted (AGNRadioModeModel).");
+  }
+   
+  if(!(
+   (DiskInstabilityModel == 0) ||
+   (DiskInstabilityModel == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  DiskInstabilityModel = %d\n  error: unknown disk instability model\n", DiskInstabilityModel);
+    terminate("invalid value program parameter encounted (DiskInstabilityModel).");
+  }
+   
+  if(!(
+   (BHGrowthInDiskInstabilityModel == 0) ||
+   (BHGrowthInDiskInstabilityModel == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  BHGrowthInDiskInstabilityModel = %d\n  error: unknown disk instability feeds BH model\n", BHGrowthInDiskInstabilityModel);
+    terminate("invalid value program parameter encounted (BHGrowthInDiskInstabilityModel).");
+  }
+    
+  if(!(
+   (HotGasStrippingModel == 0) ||
+   (HotGasStrippingModel == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  HotGasStrippingModel = %d\n  error: unknown model for stripping gas off satellite galaxies\n", HotGasStrippingModel);
+    terminate("invalid value program parameter encounted (HotGasStrippingModel).");
+  }
+    
+  if(!(
+   (DisruptionModel == 0) ||
+   (DisruptionModel == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  DisruptionModel = %d\n  error: unknown model for tidal disruption of satellite galaxies\n", DisruptionModel);
+    terminate("invalid value program parameter encounted (DisruptionModel).");
+  }
+    
+  if(!(
+   (StarBurstModel == 0) ||
+   (StarBurstModel == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  StarBurstModel = %d\n  error: unknown star burst model\n", StarBurstModel);
+    terminate("invalid value program parameter encounted (StarBurstModel).");
+  }
+    
+  if(!(
+   (BulgeFormationInMinorMergersOn == 0) ||
+   (BulgeFormationInMinorMergersOn == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  BulgeFormationInMinorMergersOn = %d\n  error: unkown model for bulge formation in mergers\n", BulgeFormationInMinorMergersOn);
+    terminate("invalid value program parameter encounted (BulgeFormationInMinorMergersOn).");
+  }
+    
+  if(!(
+   (MetallicityOption == 0) ||
+   (MetallicityOption == 1) 
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  MetallicityOption = %d\n  error: unkown choice for metallicities in photometric tables from SPS models\n", MetallicityOption);
+    terminate("invalid value program parameter encounted (MetallicityOption).");
   }
 }

@@ -61,16 +61,14 @@ struct metals metals_init()
   return m;
 }
 
-
 static inline
 struct metals metals_add(const struct metals m1,
-                         const struct metals m2,
-                         const float fraction)
+                         const struct metals m2)
 {
   struct metals m;
-  m.type1a=m1.type1a+fraction*m2.type1a;
-  m.type2=m1.type2+fraction*m2.type2;
-  m.agb=m1.agb+fraction*m2.agb;
+  m.type1a=m1.type1a+m2.type1a;
+  m.type2=m1.type2+m2.type2;
+  m.agb=m1.agb+m2.agb;
   return m;
 }
 
@@ -84,6 +82,81 @@ struct metals metals_fraction(const struct metals m2,
   m.type2=fraction*m2.type2;
   m.agb=fraction*m2.agb;
   return m;
+}
+
+
+static inline
+struct metals metals_add_fraction(const struct metals m1,
+                                 const struct metals m2,
+                                 const float fraction)
+{
+  struct metals m;
+  m.type1a=m1.type1a+fraction*m2.type1a;
+  m.type2=m1.type2+fraction*m2.type2;
+  m.agb=m1.agb+fraction*m2.agb;
+  return m;
+}
+
+
+static inline
+void metals_add_to(struct *metals m,
+                  const struct metals m2)
+{
+  m->type1a += m2.type1a;
+  m->type2  += m2.type2;
+  m->agb    += m2.agb;
+}
+
+
+static inline
+void metals_add_fraction_to(struct *metals m,
+                            const struct metals m2,
+                            const float fraction)
+{
+  m->type1a += fraction * m2.type1a;
+  m->type2  += fraction * m2.type2;
+  m->agb    += fraction * m2.agb;
+}
+
+
+static inline
+void metals_deduct_from(struct *metals m,
+                        const struct metals m2)
+{
+  m->type1a -= m2.type1a;
+  m->type2  -= m2.type2;
+  m->agb    -= m2.agb;
+}
+
+
+static inline
+void metals_deduct_fraction_from(struct *metals m,
+                                 const struct metals m2,
+                                 const float fraction)
+{
+  m->type1a -= fraction * m2.type1a;
+  m->type2  -= fraction * m2.type2;
+  m->agb    -= fraction * m2.agb;
+}
+
+
+static inline
+void metals_multiply_by(struct *metals m,
+                       const float factor)
+{
+  m->type1a *= factor;
+  m->type2  *= factor;
+  m->agb    *= factor;
+}
+
+
+static inline
+void metals_divide_by(struct *metals m,
+                      const float factor)
+{
+  m->type1a /= factor;
+  m->type2  /= factor;
+  m->agb    /= factor;
 }
 
 
@@ -111,15 +184,59 @@ float metals_init()
 
 static inline
 float metals_add(const float m1,
-                 const float m2,
-                 const float fraction)
-{ return m1 + fraction * m2; }
+                 const float m2)
+{ return m1 + m2; }
 
 
 static inline
 float metals_fraction(const float m2,
                       const float fraction)
 { return fraction * m2; }
+
+
+static inline
+float metals_add_fraction(const float m1,
+                          const float m2,
+                          const float fraction)
+{ return m1 + fraction * m2; }
+
+
+static inline
+void metals_add_to(float *m,
+                   const float m2)
+{ *m += m2; }
+
+
+static inline
+void metals_add_fraction_to(float *m,
+                            const float m2,
+                            const float fraction)
+{ *m += fraction * m2; }
+
+
+static inline
+void metals_deduct_from(float *m,
+                       const float m2)
+{ *m -= m2; }
+
+
+static inline
+void metals_deduct_fraction_from(float *m,
+                                 const float m2,
+                                 const float fraction)
+{ *m -= fraction * m2; }
+
+
+static inline
+void metals_multiply_by(float *m,
+                        const float factor)
+{ *m *= factor; }
+
+
+static inline
+void metals_divide_by(float *m,
+                      const float factor)
+{ *m /= factor; }
 
 
 static inline

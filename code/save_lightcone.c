@@ -50,7 +50,7 @@
 // lightcone_galaxy_output;
 
 
-/* if defined OUTPUT_MOMAF_INPUTS and OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT,
+/** if defined OUTPUT_MOMAF_INPUTS and OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT,
  * use pointer magic and fancy i_/o to avoid OUTPUT_MOMAF_INPUTS showing up on disk.
  *
  * currently, dObsMagDust is the first member of the MOMAF/KITZBICHLER dObsMag fields,
@@ -61,7 +61,7 @@
  * warning: relies on particular layout of struct GALAXY_OUTPUT,
  * so need to check and possibly adjust, when GALAXY_OUTPUT changes.
  * 
- * TODO: think about separate struct for lightcone galaxy to avoid this mess.
+ * @todo think about separate struct for lightcone galaxy to avoid this mess.
  */
 #if defined OUTPUT_MOMAF_INPUTS && defined OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT
 

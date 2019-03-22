@@ -32,11 +32,11 @@
  *       There are basically 2 options for the way satellite components are
  *       added into centrals:
  *
- *         HotGasStripingModel ==1
+ *         HotGasStrippingModel ==1
  *         If inside Rvir, hot and ejected gas from satellites of both types 1 and 2
  *         is instantaneously striped and added to type 0.
  *
- *         HotGasStripingModel ==0
+ *         HotGasStrippingModel ==0
  *         Type 1's keep an ejected component.
  *         Type 1's are stripped of hot and ejected gas gradually and later in the code.
  *         A fraction of the hot and ejected gas in the type 2's is
@@ -66,7 +66,7 @@ void deal_with_satellites(int centralgal, int ngal)
       dis=separation_gal(centralgal,Gal[i].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
 
 
-      /* HotGasStripingModel ==  0=> Guo2010 non instantaneous treatment of gas stripping in type 1's
+      /* HotGasStrippingModel ==  0=> Guo2010 non instantaneous treatment of gas stripping in type 1's
        *
        * if the galaxy is a type 2 and still has hot and ejected gas it is removed at this point
        * (meaning that the halo was fully stripped in previous step) and split between type 0 and type 1
@@ -77,7 +77,7 @@ void deal_with_satellites(int centralgal, int ngal)
        *
        * If the type 2 is orbiting a type 0 centralgal and Gal[i].CentralGal both refer to the type 0*/
 
-      if(HotGasStripingModel == 0)
+      if(HotGasStrippingModel == 0)
 	{
 	  /* All gas Stripped from Type 2 galaxies */
 	  if (Gal[i].Type ==2)
@@ -91,9 +91,9 @@ void deal_with_satellites(int centralgal, int ngal)
 
 	      Gal[i].HotRadius = 0.0;
 	      if(Gal[i].HotGas > 0.0)
-		transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,gasfraction_intotype1,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,gasfraction_intotype1);
 	      if(Gal[i].EjectedMass > 0.0)
-		transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,gasfraction_intotype1,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,gasfraction_intotype1);
 
 	      mass_checks("deal_with_satellites i #0",i);
 	      mass_checks("deal_with_satellites Gal[i].CentraGal #0",Gal[i].CentralGal);
@@ -114,9 +114,9 @@ void deal_with_satellites(int centralgal, int ngal)
 	      if (gasfraction_intotype1 < 1.)
 		{
 		  if(Gal[i].HotGas > 0.0)
-		    transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.,"deal_with_satellites", __LINE__);
+		    transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.);
 		  if(Gal[i].EjectedMass > 0.0)
-		    transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.,"deal_with_satellites", __LINE__);
+		    transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.);
 
 #ifdef TRACK_BURST
 		  /* Transfer burst component first */
@@ -147,8 +147,8 @@ void deal_with_satellites(int centralgal, int ngal)
 		    exit(1);
 		  }
 
-		transfer_gas(merger_centre,HotGasComponent,i,HotGasComponent,stripped_fraction,"deal_with_satellites", __LINE__);
-		transfer_gas(merger_centre,EjectedGasComponent,i,EjectedGasComponent,stripped_fraction,"deal_with_satellites", __LINE__);
+		transfer_gas(merger_centre,HotGasComponent,i,HotGasComponent,stripped_fraction);
+		transfer_gas(merger_centre,EjectedGasComponent,i,EjectedGasComponent,stripped_fraction);
 		mass_checks("deal_with_satellites #3",i);
 		mass_checks("deal_with_satellites #3",merger_centre);
 #ifdef TRACK_BURST
@@ -175,15 +175,15 @@ void deal_with_satellites(int centralgal, int ngal)
        * still there is the condition on Rvir that determines that if a galaxy is a newly
        * accreted type 2 outside Rvir of type 0, its gas will go into the type 1. If it's
        * a type 1 outside Rvir of type 0, it retains all its gas. -> DeLucia2007*/
-      else if (HotGasStripingModel == 1)
+      else if (HotGasStrippingModel == 1)
 	{
 	/* If galaxy is a satellite inside Rvir it will lose its hot and
 	 * ejected gas into the hot gas component of the centralgal.
 	 * Only galaxies within Rvir contribute to the central halo.*/
 	  if ( dis < Gal[centralgal].Rvir && i != centralgal)
 	    {
-	      transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.,"deal_with_satellites", __LINE__);
-	      transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.,"deal_with_satellites", __LINE__);
+	      transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.);
+	      transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.);
 	#ifdef TRACK_BURST
 	      /* Transfer burst component first */
 	      transfer_stars(centralgal,BurstComponent,i,BurstComponent,
@@ -204,8 +204,8 @@ void deal_with_satellites(int centralgal, int ngal)
 	  else
 	    if (Gal[i].Type == 2)
 	      {
-		transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,1.,"deal_with_satellites", __LINE__);
-		transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,1.,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,1.);
+		transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,1.);
 	#ifdef TRACK_BURST
 		/* Transfer burst component first */
 		transfer_stars(Gal[i].CentralGal,BurstComponent,i,BurstComponent,
@@ -219,12 +219,12 @@ void deal_with_satellites(int centralgal, int ngal)
 	#endif
 		Gal[i].HotRadius =0.;
 	      }
-	}//end of HotGasStripingModel == 1
+	}//end of HotGasStrippingModel == 1
 
       mass_checks("Bottom of deal_with_satellites i",i);
       mass_checks("Bottom of deal_with_satellites centralgal",centralgal);
 
-  } /* End of HotGasStripingModel choice */
+  } /* End of HotGasStrippingModel choice */
 
    return;
 

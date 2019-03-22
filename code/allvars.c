@@ -146,7 +146,7 @@ int ReIncorporationModel;
 int AGNRadioModeModel;
 int DiskInstabilityModel;
 int BHGrowthInDiskInstabilityModel;
-int HotGasStripingModel;
+int HotGasStrippingModel;
 int DisruptionModel;
 int StarBurstModel;
 int BulgeFormationInMinorMergersOn;

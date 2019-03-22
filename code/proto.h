@@ -26,9 +26,9 @@
 #ifndef MCMC
 void SAM(int filenr);
 #endif /* not defined MCMC */
-void construct_galaxies(int filenr, int tree, int halonr);
-int join_galaxies_of_progenitors(int halonr, int ngalstart, int *cenngal);
-void evolve_galaxies(int halonr, int ngal, int tree, int cenngal);
+void construct_galaxies(const int tree, const int halonr);
+int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cenngal);
+void evolve_galaxies(const int halonr, const int ngal, const int tree, const int cenngal);
 
 size_t myfread(void *ptr, size_t size, size_t nmemb, FILE * stream);
 size_t myfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream);
@@ -44,7 +44,7 @@ int walk(int nr);
 
 int peano_hilbert_key(int x, int y, int z, int bits);
 void update_type_two_coordinate_and_velocity(int tree, int i, int centralgal);
-void output_galaxy(int treenr, int heap_index);
+void output_galaxy(const int treenr, const int heap_index);
 
 void close_galaxy_tree_file(void);
 void create_galaxy_tree_file(int filenr);
@@ -120,18 +120,18 @@ void endrun(int ierr);
 
 void finalize_galaxy_file(int filenr);
 
-void starformation(int p, int centralgal, double time, double dt, int nstep);
-void update_stars_due_to_reheat(int p, int centralgal, double *stars);
-void update_from_star_formation(int p, double stars, bool flag_burst, int nstep);
-void SN_feedback(int p, int centralgal, double stars, char feedback_location[]);
-void update_from_feedback(int p, int centralgal, double reheated_mass, double ejected_mass);
-void update_massweightage(int p, double stars, double time);
+void starformation(const int p, const int centralgal, const double time, const double dt, const int nstep);
+void update_stars_due_to_reheat(const int p, const int centralgal, double *stars);
+void update_from_star_formation(const int p, const double stars, const bool flag_burst, const int nstep);
+void SN_feedback(const int p, const int centralgal, const double stars, const GasComponentType feedback_location);
+void update_from_feedback(const int p, const int centralgal, const double reheated_mass, double ejected_mass);
+void update_massweightage(const int p, const double stars, const double time);
 
 void add_galaxies_together(int t, int p);
 void init_galaxy(int p, int halonr);
 double infall_recipe(int centralgal, int ngal, double Zcurr);
 void add_infall_to_hot(int centralgal, double infallingGas);
-void compute_cooling(int p, double dt);
+void compute_cooling(const int p, const double dt);
 void do_AGN_heating(double dt, int ngal);
 void cool_gas_onto_galaxy(int p, double dt);
 void reincorporate_gas(int p, double dt);
@@ -197,15 +197,16 @@ float gasdev(long *idum);
 
 double estimate_merging_time(int halonr, int mostmassive, int p);
 
-double get_hubble_parameter(int halonr);
-double get_virial_velocity(int halonr);
-double get_virial_radius(int halonr);
-double get_virial_mass(int halonr);
+double get_hubble_parameter_for_halo(const int halonr);
+double get_hubble_parameter_squared_for_halo(const int halonr);
+double get_virial_velocity(const int halonr);
+double get_virial_radius(const int halonr);
+double get_virial_mass(const int halonr);
 double collisional_starburst_recipe(double mass_ratio, int merger_centralgal, int centralgal, double time, double deltaT);
 
 void make_bulge_from_burst(int p);
 void grow_black_hole(int merger_centralgal, double mass_ratio, double deltaT);
-void check_disk_instability(int p);
+void check_disk_instability(const int p);
 
 double slab_model(float tau, float teta);
 double get_metallicity(double gas, double metals);
@@ -225,39 +226,39 @@ double get_rate(int tab, double logTemp);
 void find_interpolate_reionization(double zcurr, int *tabindex, double *f1, double *f2);
 
 void init_jump_index(void);
-int get_jump_index(double age);
+int get_jump_index(const double log10_age);
 
 void disrupt(int p);
 double peri_radius(int p, int centralgal);
 
-
 double hot_retain_sat(int i, int centralgal);
 
 double get_initial_disk_radius(const int halonr, const int p);
-void update_bulge_from_disk(int p, double stars);
-double bulge_from_disk(double frac);
-double func_size(double x, double a);
+void update_bulge_from_disk(const int p, const double stars);
+double bulge_from_disk(const double frac);
+double func_size(const double x, const double a);
 void bulgesize_from_merger(double mass_ratio, int merger_centralgal, int p, double Mcstar,double Mcbulge,double Mcgas, double Mpstar, double Mpbulge,double Mpgas, double frac);
 double isothermal_mass(double Mvir, double Rvir, double dr);
 double diskmass(double x);
 double bulgemass(double x);
 double sat_radius(int p);
 
-void update_type_2(int ngal,int halonr, int prog,int mostmassive);
-void update_centralgal(int ngal,int halonr);
-void update_hotgas(int ngal,int centralgal);
-void update_type_1(int ngal, int halonr,int prog);
-void transfer_ICL(int p, int q, double fraction);
-double separation_gal(int p, int q);
-double separation_halo(int p, int q);
+void update_type_2(const int ngal, const int halonr, const int prog, int mostmassive);
+void update_centralgal(const  int ngal, const int halonr);
+void update_hotgas(const int ngal, const int centralgal);
+void update_type_1(const int ngal, const int halonr,const int prog);
+double separation_gal(const int p, const int q);
+double separation_halo(const int p, const int q);
 
+/** @bug can't find implementation for transfer_ICL() */
+void transfer_ICL(int p, int q, double fraction); 
 
 /* check funs */
 void update_hot_frac(int p, double reincorporated, float HotGas);
 int get_merger_center(int fofhalo);
 
 void transfer_stars(const int p, const StellarComponentType cp, const int q, StellarComponentType cq, const double fraction);
-void transfer_gas(const int p, const GasComponentType cp, const int q, const GasComponentType cq, const double fraction, char call_function[], int line);
+void transfer_gas(const int p, const GasComponentType cp, const int q, const GasComponentType cq, const double fraction);
 void deal_with_satellites(int centralgal, int ngal);
 void perform_mass_checks(char string[], int igal) ;
 
@@ -265,7 +266,7 @@ void perform_mass_checks(char string[], int igal) ;
 void sfh_initialise(int p);
 void sfh_merge(int p, int p1);
 void sfh_print(int p);
-void sfh_update_bins(int p, int snap, int step, double time);
+void sfh_update_bins(const int p, const int snap, const int step, const double time);
 void create_sfh_bins();
 void write_sfh_bins();
 #endif /* defined STAR_FORMATION_HISTORY */ 
@@ -304,11 +305,17 @@ void find_actual_ejecta_limits(int channel_type, double Mi_lower_actual, double 
 void print_galaxy(char string[], int p, int halonr);
 
 //in elements.c:
-struct elements elements_add(struct elements ele1, struct elements ele2, float fraction);
 struct elements elements_init();
-void elements_print(char s[],struct elements ele);
-double elements_total(struct elements ele);
-double metal_elements_total(struct elements ele);
+struct elements elements_add(const struct elements ele1, const struct elements ele2);
+struct elements elements_fraction(const struct elements ele2, const float fraction);
+struct elements elements_add_fraction(const struct elements ele1, const struct elements ele2, const float fraction);
+void elements_add_to(struct elements *ele1, const struct elements ele2);
+void elements_add_fraction_to(struct elements *ele1, const struct elements ele2, const float fraction);
+void elements_deduct_from(struct elements *ele, const struct elements ele2);
+void elements_deduct_fraction_from(struct elements *ele, const struct elements ele2, const float fraction);
+void elements_print(char s[],const struct elements ele);
+double elements_total(const struct elements ele);
+double metal_elements_total(const struct elements ele);
 
 //in recipe_yields.c:
 void update_yields_and_return_mass(int p, int centralgal, double dt, int nstep);
