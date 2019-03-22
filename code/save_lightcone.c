@@ -265,6 +265,7 @@ init_lightcone(void)
   printf("------------------------------------\n");
   */
   
+  lightcone_N_fof_groups_skipped_construction                       = 0;
   lightcone_N_galaxies_skipped_construction                         = 0;
   lightcone_N_galaxies_skipped_output_early                         = 0;
   lightcone_N_galaxies_for_output                                   = 0;
@@ -288,6 +289,7 @@ void show_lightcone_statistics(void)
 #endif /* not defined GALAXYTREE */
 
   printf("\n--- statistics for lightcone files from last tree file: ---");
+  printf("\n  lightcone_N_fof_groups_skipped_construction = %lld", lightcone_N_fof_groups_skipped_construction                                            );
   printf("\n  lightcone_N_galaxies_skipped_construction = %lld", lightcone_N_galaxies_skipped_construction                                                );
   printf("\n  lightcone_N_galaxies_remaining_for_output_past_construct_galaxies = %lld", lightcone_N_galaxies_remaining_for_output_past_construct_galaxies);
   printf("\n  lightcone_N_galaxies_skipped_output_early = %lld", lightcone_N_galaxies_skipped_output_early                                                );
@@ -777,30 +779,45 @@ int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const vo
  */
 int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightcone_galaxy_b_)
 {
-#ifdef GALAXYTREE 
-/* if GalID available, use GalID for primary sorting */
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+/* first use SnapNum for sorting (reverse order) */
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
     return -1;
 
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
+    return +1;
+  
+#ifdef GALAXYTREE 
+/* if GalID available, use GalID for sorting */
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+    return -1;
+
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return +1;
 #endif /* defined GALAXYTREE */
 
 /* next, use CubeShiftIndex for sorting (if GalID is available, (GalID,CubeShiftIndex) provide total order) */
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
     return -1;
 
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
+    return +1;
+
+/* next, use obs. redshift */
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
+    return -1;
+
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
     return +1;
 
 /* next, use StellarMass (reverse order)*/
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
     return -1;
 
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
     return +1;
 
-  return 0;
+  else 
+    return 0;
 }
 
 

@@ -318,6 +318,7 @@ float lightcone_lower_dec;
 float lightcone_upper_dec;
 float lightcone_lower_stellar_mass;
 
+long long lightcone_N_fof_groups_skipped_construction;
 long long lightcone_N_galaxies_skipped_construction;
 long long lightcone_N_galaxies_skipped_output_early;
 long long lightcone_N_galaxies_for_output;

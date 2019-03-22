@@ -282,22 +282,21 @@ struct mp_tree_data
 };
 
 
-
 /** @brief sorts galaxies in output files  */
 void save_galaxy_tree_reorder_on_disk(void)
 {
-  int i, idsource, idsave, dest, *id;
+  int i, idsource, idsave, dest;
   struct GALAXY_OUTPUT galaxy_save, galaxy_source;
-  struct mp_tree_data *mp;
-
-  mp = (struct mp_tree_data *) mymalloc("mp", sizeof(struct mp_tree_data) * NGalTree);
-  id = (int *) mymalloc("id", sizeof(int) * NGalTree);
+  
+  struct mp_tree_data *mp = (struct mp_tree_data *) mymalloc("mp", sizeof(struct mp_tree_data) * NGalTree);
+  int *id = (int *) mymalloc("id", sizeof(int) * NGalTree);
   
   for(i = 0; i < NGalTree; i++)
   {
-    mp[i].index = i;
+    mp[i].index       = i;
     mp[i].key = GalTree[i].GalID;
   }
+
   
   qsort(mp, NGalTree, sizeof(struct mp_tree_data), save_galaxy_tree_mp_comp);
   
@@ -348,10 +347,11 @@ int save_galaxy_tree_compare(const void *a, const void *b)
   if(((struct galaxy_tree_data *) a)->IndexStored < ((struct galaxy_tree_data *) b)->IndexStored)
     return -1;
 
-  if(((struct galaxy_tree_data *) a)->IndexStored > ((struct galaxy_tree_data *) b)->IndexStored)
+  else if(((struct galaxy_tree_data *) a)->IndexStored > ((struct galaxy_tree_data *) b)->IndexStored)
     return +1;
 
-  return 0;
+  else
+    return 0;
 }
 
 
@@ -361,10 +361,11 @@ int save_galaxy_tree_mp_comp(const void *a, const void *b)
   if(((struct mp_tree_data *) a)->key < ((struct mp_tree_data *) b)->key)
     return -1;
 
-  if(((struct mp_tree_data *) a)->key > ((struct mp_tree_data *) b)->key)
+  else if(((struct mp_tree_data *) a)->key > ((struct mp_tree_data *) b)->key)
     return +1;
 
-  return 0;
+  else
+    return 0;
 }
 
 

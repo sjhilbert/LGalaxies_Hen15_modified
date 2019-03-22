@@ -198,8 +198,8 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
   do { mu_ = gasdev(&mu_seed) * MUWIDTH + MUCENTER; }
   while (mu_ < 0.1 || mu_ > 1.0);
   
-  // for testing:
-  mu_ = MUCENTER;
+//   // for testing:
+//   mu_ = MUCENTER;
 
   // extinction on Vband used as reference for the BC extinction
   const double tauvbc_ = get_extinction(NMAG, Z_g_, 0) * n_h_ * (1. / mu_ - 1.);

@@ -752,12 +752,14 @@ extern struct halo_aux_data  /* auxiliary halo data */
 	int HaloFlag;
 	int NGalaxies;
 	int FirstGalaxy;
+#ifdef ALLOW_UNSCALE_COSMOLOGY
 	float M_Mean200_Unscaled;
 	float M_Crit200_Unscaled;
 	float Pos_Unscaled[3];
 	float Vel_Unscaled[3];
 	float Vmax_Unscaled;
 	float Spin_Unscaled[3];
+#endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 }
  *HaloAux;
 
@@ -1225,6 +1227,7 @@ extern float lightcone_lower_dec;
 extern float lightcone_upper_dec;
 extern float lightcone_lower_stellar_mass;
 
+extern long long lightcone_N_fof_groups_skipped_construction;
 extern long long lightcone_N_galaxies_skipped_construction;
 extern long long lightcone_N_galaxies_skipped_output_early;
 extern long long lightcone_N_galaxies_for_output;

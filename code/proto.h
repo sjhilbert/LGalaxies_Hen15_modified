@@ -28,6 +28,7 @@
 double SAM(const int filenr);
 
 void construct_galaxies(const int tree_number_, const int halo_number_);
+void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_halo_number_);
 void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof_group_, int *merger_center_);
 void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int cenngal);
 
@@ -76,7 +77,9 @@ void get_coordinates(float *pos, float *vel, const long long ID, const int tree,
 //functions used to scale to a different cosmology
 void read_scaling_parameters();
 void scale_cosmology(const int nhalos);
+#ifdef ALLOW_UNSCALE_COSMOLOGY
 void un_scale_cosmology(const int nhalos);
+#endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 void read_zlist_original_cosm(void);
 void read_zlist_new(void);
 double c_correction(const float mass, const int snapnum);

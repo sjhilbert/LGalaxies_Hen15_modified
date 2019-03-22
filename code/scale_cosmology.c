@@ -97,82 +97,83 @@ void scale_cosmology(const int nhalos)
   int i, j;
   double Scale_V,CenVel[3],dv;
 
-
+#ifdef ALLOW_UNSCALE_COSMOLOGY
   //Save unscaled properties
   for(i = 0; i < nhalos ; i++)
+  {
+    //will make sure haloes in the future are not scaled/un_scaled
+    if(Halo[i].SnapNum<=LastSnapShotNr)
     {
-      //will make sure haloes in the future are not scaled/un_scaled
-      if(Halo[i].SnapNum<=LastSnapShotNr)
-        {
-          HaloAux[i].M_Crit200_Unscaled = Halo[i].M_Crit200;
-          HaloAux[i].M_Mean200_Unscaled = Halo[i].M_Mean200;
-          HaloAux[i].Vmax_Unscaled = Halo[i].Vmax;
-          for (j = 0; j < 3 ; j++)
-            {
-              HaloAux[i].Pos_Unscaled[j] = Halo[i].Pos[j];
-              HaloAux[i].Vel_Unscaled[j] = Halo[i].Vel[j];
-              HaloAux[i].Spin_Unscaled[j] = Halo[i].Spin[j];
-            }
-        }
+      HaloAux[i].M_Crit200_Unscaled = Halo[i].M_Crit200;
+      HaloAux[i].M_Mean200_Unscaled = Halo[i].M_Mean200;
+      HaloAux[i].Vmax_Unscaled = Halo[i].Vmax;
+      for (j = 0; j < 3 ; j++)
+      {
+        HaloAux[i].Pos_Unscaled[j] = Halo[i].Pos[j];
+        HaloAux[i].Vel_Unscaled[j] = Halo[i].Vel[j];
+        HaloAux[i].Spin_Unscaled[j] = Halo[i].Spin[j];
+      }
     }
+  }
+#endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 
   for (i = 0; i < nhalos ; i++)
+  {
+    Scale_V = scale_v_cen(Halo[Halo[i].FirstHaloInFOFgroup].SnapNum);
+
+    //will make sure haloes in the future are not scaled/un_scaled
+    if(Halo[i].SnapNum<=LastSnapShotNr)
     {
-      Scale_V = scale_v_cen(Halo[Halo[i].FirstHaloInFOFgroup].SnapNum);
+      if(Halo[i].M_Crit200 > 1.e-8)
+        Halo[i].M_Crit200 = Halo[i].M_Crit200 * ScaleMass * c_correction(Halo[i].M_Crit200,Halo[i].SnapNum);
+      if(Halo[i].M_Mean200 > 1.e-8)
+        Halo[i].M_Mean200 = Halo[i].M_Mean200 * ScaleMass * c_correction(Halo[i].M_Mean200,Halo[i].SnapNum);
+      Halo[i].Vmax = Halo[i].Vmax * sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[i].SnapNum]/AA[Halo[i].SnapNum]);
 
-      //will make sure haloes in the future are not scaled/un_scaled
-      if(Halo[i].SnapNum<=LastSnapShotNr)
+      for (j = 0; j < 3 ; j++)
+      {
+        Halo[i].Pos[j] = Halo[i].Pos[j] * ScalePos;
+        Halo[i].Spin[j] *= ScalePos * sqrt(ScaleMass/ScalePos) * sqrt(AA[Halo[i].SnapNum]/AA_OriginalCosm[Halo[i].SnapNum]);
+
+        CenVel[j] = Halo[Halo[i].FirstHaloInFOFgroup].Vel[j] * Scale_V ;
+        if(i !=  Halo[i].FirstHaloInFOFgroup) // subhalos
         {
-          if(Halo[i].M_Crit200 > 1.e-8)
-            Halo[i].M_Crit200 = Halo[i].M_Crit200 * ScaleMass * c_correction(Halo[i].M_Crit200,Halo[i].SnapNum);
-          if(Halo[i].M_Mean200 > 1.e-8)
-            Halo[i].M_Mean200 = Halo[i].M_Mean200 * ScaleMass * c_correction(Halo[i].M_Mean200,Halo[i].SnapNum);
-          Halo[i].Vmax = Halo[i].Vmax * sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[i].SnapNum]/AA[Halo[i].SnapNum]);
-
-          for (j = 0; j < 3 ; j++)
-            {
-              Halo[i].Pos[j] = Halo[i].Pos[j] * ScalePos;
-              Halo[i].Spin[j] *= ScalePos * sqrt(ScaleMass/ScalePos) * sqrt(AA[Halo[i].SnapNum]/AA_OriginalCosm[Halo[i].SnapNum]);
-
-              CenVel[j] = Halo[Halo[i].FirstHaloInFOFgroup].Vel[j] * Scale_V ;
-              if(i !=  Halo[i].FirstHaloInFOFgroup) // subhalos
-                {
-                  dv = Halo[i].Vel[j] - Halo[Halo[i].FirstHaloInFOFgroup].Vel[j];
-                  dv *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[i].SnapNum]/AA[Halo[i].SnapNum]);
-                  Halo[i].Vel[j] = CenVel[j] + dv;
-                }
-              else //central halos
-                Halo[i].Vel[j] = Halo[i].Vel[j] * Scale_V  ;
-            }
+          dv = Halo[i].Vel[j] - Halo[Halo[i].FirstHaloInFOFgroup].Vel[j];
+          dv *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[i].SnapNum]/AA[Halo[i].SnapNum]);
+          Halo[i].Vel[j] = CenVel[j] + dv;
         }
+        else //central halos
+          Halo[i].Vel[j] = Halo[i].Vel[j] * Scale_V  ;
+      }
     }
+  }
 }
 
-
+#ifdef ALLOW_UNSCALE_COSMOLOGY
 /** @brief scales all halos back to old cosmology */
 void un_scale_cosmology(const int nhalos)
 {
   int i, j;
 
   for(i = 0; i < nhalos ; i++)
+  {
+    //will make sure haloes in the future are not scaled/un_scaled
+    if(Halo[i].SnapNum<=LastSnapShotNr)
     {
-      //will make sure haloes in the future are not scaled/un_scaled
-      if(Halo[i].SnapNum<=LastSnapShotNr)
-        {
-          Halo[i].M_Crit200 = HaloAux[i].M_Crit200_Unscaled;
-          Halo[i].M_Mean200 = HaloAux[i].M_Mean200_Unscaled;
-          Halo[i].Vmax = HaloAux[i].Vmax_Unscaled;
+      Halo[i].M_Crit200 = HaloAux[i].M_Crit200_Unscaled;
+      Halo[i].M_Mean200 = HaloAux[i].M_Mean200_Unscaled;
+      Halo[i].Vmax = HaloAux[i].Vmax_Unscaled;
 
-          for (j = 0; j < 3 ; j++)
-            {
-              Halo[i].Pos[j] = HaloAux[i].Pos_Unscaled[j];
-              Halo[i].Vel[j] = HaloAux[i].Vel_Unscaled[j];
-              Halo[i].Spin[j] = HaloAux[i].Spin_Unscaled[j];
-            }
-        }
+      for (j = 0; j < 3 ; j++)
+      {
+        Halo[i].Pos[j] = HaloAux[i].Pos_Unscaled[j];
+        Halo[i].Vel[j] = HaloAux[i].Vel_Unscaled[j];
+        Halo[i].Spin[j] = HaloAux[i].Spin_Unscaled[j];
+      }
     }
+  }
 }
-
+#endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 
 
 /** @brief computes c correction */
