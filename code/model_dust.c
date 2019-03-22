@@ -77,7 +77,7 @@ void dust_model(int p, int snap, int halonr)
       /* 0.94 = 2.83/3. -> 3 to get scale lenght and 2.83 = 1.68^2 */
       nh = Gal[p].ColdGas / (M_PI * pow(Gal[p].GasDiskRadius * 0.94, 2) * 1.4);
       /* now convert from 10^10 M_sun/h / (Mpc/h)^2 to (2.1 10^21 atoms/cm^2) */
-      nh = nh / 3252.37;	// 3252.37 = 10^(3.5122) ... ha ha ! 
+      nh = nh / 3252.37;        // 3252.37 = 10^(3.5122) ... ha ha ! 
 
       /*redshift dependence */
       nh = nh * pow(1 + ZZ[Halo[halonr].SnapNum], -1.0);
@@ -89,18 +89,21 @@ void dust_model(int p, int snap, int halonr)
                                        Gal[p].StellarSpin[2]*Gal[p].StellarSpin[2]);
       cosinc = Gal[p].CosInclination;
       if(cosinc < 0.2)
-    	cosinc = 0.2;		// minimum inclination ~80 degrees
+            cosinc = 0.2;                // minimum inclination ~80 degrees
       sec = 1.0 / cosinc;
 
       /* mu for YS extinction, given by a Gaussian with centre 0.3 (MUCENTER)
        * and width 0.2 (MUWIDTH), truncated at 0.1 and 1.  */
       mu = -1.;
       while (mu < 0) 
-	{
-    	  mu = gasdev(&mu_seed) * MUWIDTH + MUCENTER;
-    	  if(mu < 0.1 || mu > 1.0)
-    		mu = -1.;
+        {
+              mu = gasdev(&mu_seed) * MUWIDTH + MUCENTER;
+              if(mu < 0.1 || mu > 1.0)
+                    mu = -1.;
         }
+        
+        //for testing:
+        mu = MUWIDTH;
 
       Zg = metals_total(Gal[p].MetalsColdGas)/Gal[p].ColdGas/0.02;
 
@@ -112,25 +115,25 @@ void dust_model(int p, int snap, int halonr)
 
       for(k = 0; k < NMAG; k++)
         {
-    	  tau = get_extinction(k, Zg, 0) * nh;
-    	  tau = tau * sec;
+              tau = get_extinction(k, Zg, 0) * nh;
+              tau = tau * sec;
 
-    	  if(tau > 0.0)
-    		alam = (1.0 - exp(-tau)) / tau;
-    	  else
-    		alam = 1.;
+              if(tau > 0.0)
+                    alam = (1.0 - exp(-tau)) / tau;
+              else
+                    alam = 1.;
 
-    	  Lum_disk = Gal[p].Lum[k][snap] - Gal[p].LumBulge[k][snap];
-    	  Gal[p].LumDust[k][snap] = Gal[p].LumBulge[k][snap] + Lum_disk * alam;
+              Lum_disk = Gal[p].Lum[k][snap] - Gal[p].LumBulge[k][snap];
+              Gal[p].LumDust[k][snap] = Gal[p].LumBulge[k][snap] + Lum_disk * alam;
 
-    	  // now remove light from young stars absorbed by birth clouds
-    	  tauvbc = tauv * (1. / mu - 1.);
-    	  taubc = tauvbc * pow(FilterLambda[k] / VBand_WaveLength, -0.7);
+              // now remove light from young stars absorbed by birth clouds
+              tauvbc = tauv * (1. / mu - 1.);
+              taubc = tauvbc * pow(FilterLambda[k] / VBand_WaveLength, -0.7);
 
-    	  dly = (Gal[p].YLum[k][snap] - Gal[p].YLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
-    			 Gal[p].YLumBulge[k][snap] * (1. - ExpTauBCBulge);
+              dly = (Gal[p].YLum[k][snap] - Gal[p].YLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
+                             Gal[p].YLumBulge[k][snap] * (1. - ExpTauBCBulge);
 
-    	  Gal[p].LumDust[k][snap] -= dly;
+              Gal[p].LumDust[k][snap] -= dly;
         }
 #endif
 
@@ -140,51 +143,51 @@ void dust_model(int p, int snap, int halonr)
 
       for(k = 0; k < NMAG; k++)
         {
-    	  tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap]]) * nh;
-    	  tau = tau * sec;
-    	  if(tau > 0.0)
-    		alam = (1.0 - exp(-tau)) / tau;
-    	  else
-    		alam = 1.;
+              tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap]]) * nh;
+              tau = tau * sec;
+              if(tau > 0.0)
+                    alam = (1.0 - exp(-tau)) / tau;
+              else
+                    alam = 1.;
 
-    	  Lum_disk = Gal[p].ObsLum[k][snap] - Gal[p].ObsLumBulge[k][snap];
-    	  Gal[p].ObsLumDust[k][snap] = Gal[p].ObsLumBulge[k][snap] + Lum_disk * alam;
+              Lum_disk = Gal[p].ObsLum[k][snap] - Gal[p].ObsLumBulge[k][snap];
+              Gal[p].ObsLumDust[k][snap] = Gal[p].ObsLumBulge[k][snap] + Lum_disk * alam;
 
-    	  // now remove light from young stars absorbed by birth clouds
-    	  tauvbc = tauv * (1. / mu - 1.);
-    	  taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap]])) / VBand_WaveLength, -0.7);
+              // now remove light from young stars absorbed by birth clouds
+              tauvbc = tauv * (1. / mu - 1.);
+              taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap]])) / VBand_WaveLength, -0.7);
 
-    	  dly = (Gal[p].ObsYLum[k][snap] - Gal[p].ObsYLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
-    			 Gal[p].ObsYLumBulge[k][snap] * (1. - ExpTauBCBulge);
+              dly = (Gal[p].ObsYLum[k][snap] - Gal[p].ObsYLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
+                             Gal[p].ObsYLumBulge[k][snap] * (1. - ExpTauBCBulge);
 
-    	  Gal[p].ObsLumDust[k][snap] -= dly;
+              Gal[p].ObsLumDust[k][snap] -= dly;
 
 
 #ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z + 1
 
-    	  if(snap < (LastDarkMatterSnapShot+1) - 1)
-    		tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap] + 1]) * nh;
-    	  else
-    		tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap]]) * nh;
-    	  tau = tau * sec;
-    	  if(tau > 0.0)
-    		alam = (1.0 - exp(-tau)) / tau;
-    	  else
-    		alam = 1.;
+              if(snap < (LastDarkMatterSnapShot+1) - 1)
+                    tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap] + 1]) * nh;
+              else
+                    tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap]]) * nh;
+              tau = tau * sec;
+              if(tau > 0.0)
+                    alam = (1.0 - exp(-tau)) / tau;
+              else
+                    alam = 1.;
 
-    	  Lum_disk = Gal[p].dObsLum[k][snap] - Gal[p].dObsLumBulge[k][snap];
-    	  Gal[p].dObsLumDust[k][snap] = Gal[p].dObsLumBulge[k][snap] + Lum_disk * alam;
+              Lum_disk = Gal[p].dObsLum[k][snap] - Gal[p].dObsLumBulge[k][snap];
+              Gal[p].dObsLumDust[k][snap] = Gal[p].dObsLumBulge[k][snap] + Lum_disk * alam;
 
-    	  // now remove light from young stars absorbed by birth clouds
-    	  if(snap < (LastDarkMatterSnapShot+1) - 1)
-    		taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap] + 1])) / VBand_WaveLength, -0.7);
-    	  else
-    		taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap]])) / VBand_WaveLength, -0.7);
+              // now remove light from young stars absorbed by birth clouds
+              if(snap < (LastDarkMatterSnapShot+1) - 1)
+                    taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap] + 1])) / VBand_WaveLength, -0.7);
+              else
+                    taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap]])) / VBand_WaveLength, -0.7);
 
-    	  dly = (Gal[p].dObsYLum[k][snap] - Gal[p].dObsYLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
-    			 Gal[p].dObsYLumBulge[k][snap] * (1. - ExpTauBCBulge);
+              dly = (Gal[p].dObsYLum[k][snap] - Gal[p].dObsYLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
+                             Gal[p].dObsYLumBulge[k][snap] * (1. - ExpTauBCBulge);
 
-    	  Gal[p].dObsLumDust[k][snap] -= dly;
+              Gal[p].dObsLumDust[k][snap] -= dly;
 
 #endif //OUTPUT_MOMAF_INPUTS
 
@@ -222,32 +225,39 @@ double get_extinction(int mag, double Zg, double redshift)
     0.00, 0.00
   };
 
-  FilterLambda[NMAG] = 0.55;	//to use by the dust model for birth clouds, the wavelength of the V-band
+  FilterLambda[NMAG] = 0.55;        //to use by the dust model for birth clouds, the wavelength of the V-band
 
   ObsFrameLambda = FilterLambda[mag] / (1. + redshift);
 
-  i = 0;
-  while(ObsFrameLambda > MathisLambda[i] && i < MathisN)
-    i++;
+  //  while(ObsFrameLambda > MathisLambda[i] && i < MathisN)
+
 
   /*If ObsFrameLambda less then the first MathisLambda, higher then the last,
    * or equal to a value of MathisLambda no interpolation is done. The first,
    * last, or correspondent value is taken respectively. */
-  if(i == 0 || i == (MathisN - 1) || ObsFrameLambda == MathisLambda[i])
-    {
-      A_Av = MathisAv[i];
-      Albedo = MathisAlbedo[i];
-    }
+  if(ObsFrameLambda <= MathisLambda[0])
+  {
+    A_Av = MathisAv[i];
+    Albedo = MathisAlbedo[i];
+  }
+  else if(ObsFrameLambda >= MathisLambda[MathisN - 1])
+  {
+    A_Av = MathisAv[i];
+    Albedo = MathisAlbedo[i];
+  }
   else
-    {
-      A_Av =
-	((ObsFrameLambda - MathisLambda[i]) * MathisAv[i + 1] +
-	 (MathisLambda[i + 1] - ObsFrameLambda) * MathisAv[i]) / (MathisLambda[i + 1] - MathisLambda[i]);
+  {
+    i = 0;
+    while(i < MathisN - 1 && ObsFrameLambda > MathisLambda[i + 1]) ++i; 
+    
+    A_Av =
+      ((ObsFrameLambda - MathisLambda[i]) * MathisAv[i + 1] +
+       (MathisLambda[i + 1] - ObsFrameLambda) * MathisAv[i]) / (MathisLambda[i + 1] - MathisLambda[i]);
 
-      Albedo =
-	((ObsFrameLambda - MathisLambda[i]) * MathisAlbedo[i + 1] +
-	 (MathisLambda[i + 1] - ObsFrameLambda) * MathisAlbedo[i]) / (MathisLambda[i + 1] - MathisLambda[i]);
-    }
+    Albedo =
+      ((ObsFrameLambda - MathisLambda[i]) * MathisAlbedo[i + 1] +
+       (MathisLambda[i + 1] - ObsFrameLambda) * MathisAlbedo[i]) / (MathisLambda[i + 1] - MathisLambda[i]);
+  }
 
   if(ObsFrameLambda < 0.2)
     A_Av = A_Av * pow(Zg, 1.35) * pow((1. - Albedo), 0.5);
@@ -284,11 +294,11 @@ double get_extinction(int mag, double Zg, double redshift)
       a=1.;
       b=0.;
       for(k=0;k<7;k++)
-	{
-	  a+=a_opt[k]*y;
-  	  b+=b_opt[k]*y;
-  	  y*=x;
-	}
+        {
+          a+=a_opt[k]*y;
+            b+=b_opt[k]*y;
+            y*=x;
+        }
     }
   else if(x>=3.3 && x<= 8.0)
     {
@@ -309,9 +319,9 @@ double get_extinction(int mag, double Zg, double redshift)
   A_Av=(a+b/R_V);
 
   if(ObsFrameLambda < 0.2)
-  	A_Av = A_Av * pow(Zg, 1.35);
+          A_Av = A_Av * pow(Zg, 1.35);
   else
-  	A_Av = A_Av * pow(Zg, 1.6);
+          A_Av = A_Av * pow(Zg, 1.6);
 
 
 #endif
@@ -346,11 +356,11 @@ float gasdev(long *idum)
   if(iset == 0)
     {
       do
-	{
-	  v1 = 2.0 * ran1(idum) - 1.0;
-	  v2 = 2.0 * ran1(idum) - 1.0;
-	  rsq = v1 * v1 + v2 * v2;
-	}
+        {
+          v1 = 2.0 * ran1(idum) - 1.0;
+          v2 = 2.0 * ran1(idum) - 1.0;
+          rsq = v1 * v1 + v2 * v2;
+        }
       while(rsq >= 1.0 || rsq == 0.0);
       fac = sqrt(-2.0 * log(rsq) / rsq);
       gset = v1 * fac;
@@ -375,18 +385,18 @@ float ran1(long *idum)
   if(*idum <= 0 || !iy)
     {
       if(-(*idum) < 1)
-	*idum = 1;
+        *idum = 1;
       else
-	*idum = -(*idum);
+        *idum = -(*idum);
       for(j = NTAB + 7; j >= 0; j--)
-	{
-	  k = (*idum) / IQ;
-	  *idum = IA * (*idum - k * IQ) - IR * k;
-	  if(*idum < 0)
-	    *idum += IM;
-	  if(j < NTAB)
-	    iv[j] = *idum;
-	}
+        {
+          k = (*idum) / IQ;
+          *idum = IA * (*idum - k * IQ) - IR * k;
+          if(*idum < 0)
+            *idum += IM;
+          if(j < NTAB)
+            iv[j] = *idum;
+        }
       iy = iv[0];
     }
   k = (*idum) / IQ;

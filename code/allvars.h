@@ -195,7 +195,7 @@ struct GALAXY_OUTPUT
 #endif
 };
 #else
-#pragma pack(1)  //structure alignment for 1 Byte.
+// #pragma pack(1)  //structure alignment for 1 Byte.
 struct GALAXY_OUTPUT
 {
 #ifdef GALAXYTREE
@@ -348,9 +348,9 @@ struct GALAXY_OUTPUT
 #endif  //COMPUTE_SPECPHOT_PROPERTIES
 
   float MassWeightAge;
-#ifdef  POST_PROCESS_MAGS
+// #ifdef  POST_PROCESS_MAGS
   float rbandWeightAge;
-#endif
+// #endif
 
 #ifdef STAR_FORMATION_HISTORY
   int sfh_ibin; //Index of highest bin currently in use

@@ -760,9 +760,9 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
    *   Disk
    *   Bulge
    *   ICM
-   * If -DTRACK_BURST is set then can also specify BurstMass as an option.  This is
+   * If -DTRACK_BURST is set then can also specify Burst as an option.  This is
    * a little different in that it is not a separate component, so it should only
-   * be transferred if both cq and cp are BurstMass
+   * be transferred if both cq and cp are Burst
    *
    */
 
@@ -803,9 +803,9 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
   }
 #endif
 #ifdef TRACK_BURST
-  if ((strcmp(cp,"BurstMass")==0 && !strcmp(cq,"BurstMass")==0) ||
-      (strcmp(cq,"BurstMass")==0 && !strcmp(cp,"BurstMass")==0)) {
-    printf("\n*** transfer_stars: used incorrectly with BurstMass ***\n");
+  if ((strcmp(cp,"Burst")==0 && !strcmp(cq,"Burst")==0) ||
+      (strcmp(cq,"Burst")==0 && !strcmp(cp,"Burst")==0)) {
+    printf("\n*** transfer_stars: used incorrectly with Burst ***\n");
     exit(1);
   }
 #endif
@@ -1027,7 +1027,7 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
   }
   else if (strcmp(cq,"Burst")==0)
   {
-    Gal[q].BurstMass -=0.;
+    Gal[q].BurstMass -= Mass;
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[q].sfh_ibin; i++) Gal[q].sfh_BurstMass[i] -= sfh_Mass[i];
 #endif

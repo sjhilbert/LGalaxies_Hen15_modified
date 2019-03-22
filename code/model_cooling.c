@@ -289,7 +289,8 @@ void do_AGN_heating(double dt, int ngal)
 
 	  if(AGNRadioModeModel == 0 && Gal[p].Type==1)
 	    {
-	      if(dist < Gal[FoFCentralGal].Rvir)
+//	      if(dist < Gal[FoFCentralGal].Rvir)
+        if(separation_gal(p, FoFCentralGal) < Gal[FoFCentralGal].Rvir)
 		{
 		  if(AGNheating > (Gal[p].CoolingGas + Gal[FoFCentralGal].CoolingGas))
 		    {

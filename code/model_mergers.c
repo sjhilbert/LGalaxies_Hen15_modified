@@ -384,7 +384,8 @@ void deal_with_galaxy_merger(int p, int merger_centralgal, int centralgal, doubl
   	terminate(sbuf);
   }
 
-  if (DiskRadiusModel == 0) {
+  if (DiskRadiusModel == 0)
+  {
     get_gas_disk_radius(merger_centralgal);
     get_stellar_disk_radius(merger_centralgal);
   }

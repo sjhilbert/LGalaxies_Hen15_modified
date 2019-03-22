@@ -85,72 +85,72 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *o)
 
       //loop on SFH bins
       for(ll=0; ll<=o->sfh_ibin; ll++)
-	{
-	  //compute the time at beginning and end of SFH bin, divide into 10Myr steps
-	  //All the SFH bins are divided into this smaller steps for the LUM calculation
-	  bin_size=SFH_dt[o->SnapNum][0][ll];
-	  Small_Age_bin=bin_size; //NO SMALL BINS
-	  N_AgeBin=0;
+        {
+          //compute the time at beginning and end of SFH bin, divide into 10Myr steps
+          //All the SFH bins are divided into this smaller steps for the LUM calculation
+          bin_size=SFH_dt[o->SnapNum][0][ll];
+          Small_Age_bin=bin_size; //NO SMALL BINS
+          N_AgeBin=0;
 
-	  for (N_AgeBin=1;N_AgeBin<=MaxBins;N_AgeBin++)
-	    {
-	      //define N_AgeBin
-	      if(bin_size/((float)N_AgeBin) <= Small_Age_bin) break;
-	      if(N_AgeBin==MaxBins)
-		terminate("MaxBins reached in post_process_mags");
-	    }
+          for (N_AgeBin=1;N_AgeBin<=MaxBins;N_AgeBin++)
+            {
+              //define N_AgeBin
+              if(bin_size/((float)N_AgeBin) <= Small_Age_bin) break;
+              if(N_AgeBin==MaxBins)
+                terminate("MaxBins reached in post_process_mags");
+            }
 
-	  for(i_AgeBin=0;i_AgeBin<N_AgeBin;i_AgeBin++)
-	    {
+          for(i_AgeBin=0;i_AgeBin<N_AgeBin;i_AgeBin++)
+            {
 
-	      age = SFH_t[o->SnapNum][0][ll]+SFH_dt[o->SnapNum][0][ll]-NumToTime(o->SnapNum);
-	      //time at the finer age bin
+              age = SFH_t[o->SnapNum][0][ll]+SFH_dt[o->SnapNum][0][ll]-NumToTime(o->SnapNum);
+              //time at the finer age bin
 
-	      age -= (bin_size/((float)N_AgeBin)/2. + i_AgeBin*bin_size/((float)N_AgeBin));
+              age -= (bin_size/((float)N_AgeBin)/2. + i_AgeBin*bin_size/((float)N_AgeBin));
 
-	      /* The stellar populations tables have magnitudes for all the mass
-	       * formed in stars including what will be shortly lost by SNII   */
+              /* The stellar populations tables have magnitudes for all the mass
+               * formed in stars including what will be shortly lost by SNII   */
 #ifdef DETAILED_METALS_AND_MASS_RETURN
-	      diskmass = sfh_bins[ll].sfh_DiskMass* 0.1 / Hubble_h / N_AgeBin;
-	      bulgemass = sfh_bins[ll].sfh_BulgeMass* 0.1 / Hubble_h / N_AgeBin;
-	      icmmass = sfh_bins[ll].sfh_ICM* 0.1 / Hubble_h / N_AgeBin;
+              diskmass = sfh_bins[ll].sfh_DiskMass* 0.1 / Hubble_h / N_AgeBin;
+              bulgemass = sfh_bins[ll].sfh_BulgeMass* 0.1 / Hubble_h / N_AgeBin;
+              icmmass = sfh_bins[ll].sfh_ICM* 0.1 / Hubble_h / N_AgeBin;
 #else
-	      diskmass = sfh_bins[ll].sfh_DiskMass* 0.1 / (Hubble_h * (1-RecycleFraction) ) / N_AgeBin;
-	      bulgemass = sfh_bins[ll].sfh_BulgeMass* 0.1 / (Hubble_h * (1-RecycleFraction) ) / N_AgeBin;
-	      icmmass = sfh_bins[ll].sfh_ICM* 0.1 / (Hubble_h * (1-RecycleFraction) ) / N_AgeBin;
+              diskmass = sfh_bins[ll].sfh_DiskMass* 0.1 / (Hubble_h * (1-RecycleFraction) ) / N_AgeBin;
+              bulgemass = sfh_bins[ll].sfh_BulgeMass* 0.1 / (Hubble_h * (1-RecycleFraction) ) / N_AgeBin;
+              icmmass = sfh_bins[ll].sfh_ICM* 0.1 / (Hubble_h * (1-RecycleFraction) ) / N_AgeBin;
 #endif //DETAILED_METALS_AND_MASS_RETURN
 
-	      diskmetals = metals_total(sfh_bins[ll].sfh_MetalsDiskMass) / sfh_bins[ll].sfh_DiskMass;
-	      bulgemetals = metals_total(sfh_bins[ll].sfh_MetalsBulgeMass) / sfh_bins[ll].sfh_BulgeMass;
-	      icmmetals = metals_total(sfh_bins[ll].sfh_MetalsICM) / sfh_bins[ll].sfh_ICM;
+              diskmetals = metals_total(sfh_bins[ll].sfh_MetalsDiskMass) / sfh_bins[ll].sfh_DiskMass;
+              bulgemetals = metals_total(sfh_bins[ll].sfh_MetalsBulgeMass) / sfh_bins[ll].sfh_BulgeMass;
+              icmmetals = metals_total(sfh_bins[ll].sfh_MetalsICM) / sfh_bins[ll].sfh_ICM;
 
-	      //Disk MAGS
-	      if(sfh_bins[ll].sfh_DiskMass > 0.0)
-		compute_post_process_lum (diskmass, age, diskmetals, o->SnapNum, nlum,
-					  &LumDisk, &ObsLumDisk, &dObsLumDisk, &dObsLumDisk_forward,
-					  &YLumDisk, &ObsYLumDisk, &dObsYLumDisk, &dObsYLumDisk_forward);
+              //Disk MAGS
+              if(sfh_bins[ll].sfh_DiskMass > 0.0)
+                compute_post_process_lum (diskmass, age, diskmetals, o->SnapNum, nlum,
+                                          &LumDisk, &ObsLumDisk, &dObsLumDisk, &dObsLumDisk_forward,
+                                          &YLumDisk, &ObsYLumDisk, &dObsYLumDisk, &dObsYLumDisk_forward);
 
-	      //Bulge MAGS
-	      if(sfh_bins[ll].sfh_BulgeMass > 0.0)
-		compute_post_process_lum (bulgemass, age, bulgemetals, o->SnapNum, nlum,
-					  &LumBulge, &ObsLumBulge, &dObsLumBulge, &dObsLumBulge_forward,
-					  &YLumBulge, &ObsYLumBulge, &dObsYLumBulge, &dObsYLumBulge_forward);
+              //Bulge MAGS
+              if(sfh_bins[ll].sfh_BulgeMass > 0.0)
+                compute_post_process_lum (bulgemass, age, bulgemetals, o->SnapNum, nlum,
+                                          &LumBulge, &ObsLumBulge, &dObsLumBulge, &dObsLumBulge_forward,
+                                          &YLumBulge, &ObsYLumBulge, &dObsYLumBulge, &dObsYLumBulge_forward);
 
-	      //ICL MAGS
-	      if(sfh_bins[ll].sfh_ICM > 0.0)
-		compute_post_process_lum (icmmass, age, icmmetals, o->SnapNum, nlum,
-					  &LumICL, &ObsLumICL, &dObsLumICL, &dObsLumICL_forward,
-					  &YLumICL, &ObsYLumICL, &dObsYLumICL, &dObsYLumICL_forward);
+              //ICL MAGS
+              if(sfh_bins[ll].sfh_ICM > 0.0)
+                compute_post_process_lum (icmmass, age, icmmetals, o->SnapNum, nlum,
+                                          &LumICL, &ObsLumICL, &dObsLumICL, &dObsLumICL_forward,
+                                          &YLumICL, &ObsYLumICL, &dObsYLumICL, &dObsYLumICL_forward);
 
-	      //r-band weighted ages and mass weighted
-	      if((o->DiskMass+o->BulgeMass)>0.0 && nlum==17)
-		{
-		  o->rbandWeightAge += (age * (LumDisk+LumBulge-previous_lum));
-		  previous_lum=LumDisk+LumBulge;
-		}
+              //r-band weighted ages and mass weighted
+              if((o->DiskMass+o->BulgeMass)>0.0 && nlum==17)
+                {
+                  o->rbandWeightAge += (age * (LumDisk+LumBulge-previous_lum));
+                  previous_lum=LumDisk+LumBulge;
+                }
 
-	    }//end loop on smaller age bins
-	}//end of loop on sfh bins
+            }//end loop on smaller age bins
+        }//end of loop on sfh bins
 
 
 #ifdef FULL_SPECTRA
@@ -219,16 +219,16 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *o)
 #endif //FULL_SPECTRA
 
       o->CosInclination = fabs(o->StellarSpin[2]) /
-	  sqrt(o->StellarSpin[0]*o->StellarSpin[0]+
-	       o->StellarSpin[1]*o->StellarSpin[1]+
-	       o->StellarSpin[2]*o->StellarSpin[2]);
+          sqrt(o->StellarSpin[0]*o->StellarSpin[0]+
+               o->StellarSpin[1]*o->StellarSpin[1]+
+               o->StellarSpin[2]*o->StellarSpin[2]);
 
       //Dust correction for disks (Inter-stellar Medium  + birth clouds)
       if(o->ColdGas > 0.0)
-	dust_correction_for_post_processing(nlum, o->SnapNum, Zg, o->ColdGas, o->GasDiskRadius, o->CosInclination,
-					    LumDisk, ObsLumDisk, dObsLumDisk, dObsLumDisk_forward,
-					    YLumDisk, ObsYLumDisk, dObsYLumDisk, dObsYLumDisk_forward,
-					    &LumDiskDust, &ObsLumDiskDust, &dObsLumDiskDust, &dObsLumDiskDust_forward);
+        dust_correction_for_post_processing(nlum, o->SnapNum, Zg, o->ColdGas, o->GasDiskRadius, o->CosInclination,
+                                            LumDisk, ObsLumDisk, dObsLumDisk, dObsLumDisk_forward,
+                                            YLumDisk, ObsYLumDisk, dObsYLumDisk, dObsYLumDisk_forward,
+                                            &LumDiskDust, &ObsLumDiskDust, &dObsLumDiskDust, &dObsLumDiskDust_forward);
 
       //Dust correction for bulges (remove light from young stars absorbed by birth clouds)
       LumBulgeDust=LumBulge - YLumBulge * (1. - ExpTauBCBulge);
@@ -266,11 +266,11 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *o)
 #endif //#ifdef FULL_SPECTRA
 
       if((o->DiskMass+o->BulgeMass)>0.0 && nlum==17)
-	{
-	  //LumDisk & LumBulge are sdss r-band luminosities (nlum==17)
-	  o->rbandWeightAge /= (LumDisk+LumBulge);
-	  o->rbandWeightAge = o->rbandWeightAge / 1000. * UnitTime_in_Megayears / Hubble_h; //conversion in age from code units/h -> Gyr
-	}
+        {
+          //LumDisk & LumBulge are sdss r-band luminosities (nlum==17)
+          o->rbandWeightAge /= (LumDisk+LumBulge);
+          o->rbandWeightAge = o->rbandWeightAge / 1000. * UnitTime_in_Megayears / Hubble_h; //conversion in age from code units/h -> Gyr
+        }
 
     }//end of loop on bands
 
@@ -278,8 +278,8 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *o)
 }
 
 void compute_post_process_lum (double mass, double age, double metals, int snap, int nlum,
-						       double *Lum, double *ObsLum, double *dObsLum, double *dObsLum_forward,
-						       double *YLum, double *ObsYLum, double *dObsYLum, double *dObsYLum_forward)
+                                                       double *Lum, double *ObsLum, double *dObsLum, double *dObsLum_forward,
+                                                       double *YLum, double *ObsYLum, double *dObsYLum, double *dObsYLum_forward)
 {
   double tbc;
   int metindex, tabindex, zindex;
@@ -300,8 +300,8 @@ void compute_post_process_lum (double mass, double age, double metals, int snap,
   zindex   = 0;
   LumToAdd = mass * (fmet1 * (f1 * LumTables[nlum][metindex][zindex][tabindex] +
                               f2 * LumTables[nlum][metindex][zindex][tabindex + 1]) +
-	             fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
-		              f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
+                     fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
+                              f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
 
   *Lum += LumToAdd;
   if(age<=tbc)
@@ -313,9 +313,9 @@ void compute_post_process_lum (double mass, double age, double metals, int snap,
 
   zindex   = (LastDarkMatterSnapShot+1) - 1 - snap;
   ObsLumToAdd = mass * (fmet1 * (f1 * LumTables[nlum][metindex][zindex][tabindex] +
-				 f2 * LumTables[nlum][metindex][zindex][tabindex + 1]) +
-		        fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
-			         f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
+                                 f2 * LumTables[nlum][metindex][zindex][tabindex + 1]) +
+                        fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
+                                 f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
 
   *ObsLum += ObsLumToAdd;
   if(age<=tbc)
@@ -326,9 +326,9 @@ void compute_post_process_lum (double mass, double age, double metals, int snap,
 
   zindex   = (LastDarkMatterSnapShot+1) - 1 - (snap-1);
   dObsLumToAdd = mass * (fmet1 * (f1 * LumTables[nlum][metindex][zindex][tabindex] +
-				  f2 * LumTables[nlum][metindex][zindex][tabindex + 1]) +
-			 fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
-				  f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
+                                  f2 * LumTables[nlum][metindex][zindex][tabindex + 1]) +
+                         fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
+                                  f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
 
   *dObsLum += dObsLumToAdd;
   if(age<=tbc)
@@ -339,8 +339,8 @@ void compute_post_process_lum (double mass, double age, double metals, int snap,
   if(zindex < 0) zindex = 0;
   dObsLumToAdd = mass * (fmet1 * (f1 * LumTables[nlum][metindex][zindex][tabindex] +
                                   f2 * LumTables[nlum][metindex][zindex][tabindex + 1]) +
-			 fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
-		                  f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
+                         fmet2 * (f1 * LumTables[nlum][metindex + 1][zindex][tabindex] +
+                                  f2 * LumTables[nlum][metindex + 1][zindex][tabindex + 1]));
 
   *dObsLum_forward += dObsLumToAdd;
   if(age<=tbc)
@@ -355,9 +355,9 @@ void compute_post_process_lum (double mass, double age, double metals, int snap,
 
 
 void dust_correction_for_post_processing(int nlum, int snap, double Zg, double ColdGas, double GasDiskRadius, double CosInclination,
-		                                 double LumDisk, double ObsLumDisk, double dObsLumDisk, double dObsLumDisk_forward,
-		                                 double YLumDisk, double ObsYLumDisk, double dObsYLumDisk, double dObsYLumDisk_forward,
-		                                 double *LumDiskDust, double *ObsLumDiskDust, double *dObsLumDiskDust, double *dObsLumDiskDust_forward)
+                                                 double LumDisk, double ObsLumDisk, double dObsLumDisk, double dObsLumDisk_forward,
+                                                 double YLumDisk, double ObsYLumDisk, double dObsYLumDisk, double dObsYLumDisk_forward,
+                                                 double *LumDiskDust, double *ObsLumDiskDust, double *dObsLumDiskDust, double *dObsLumDiskDust_forward)
 {
   double nh, tau, alam, sec, cosinc;
   double tauv, taubc, tauvbc, mu, VBand_WaveLength=0.55;
@@ -367,14 +367,14 @@ void dust_correction_for_post_processing(int nlum, int snap, double Zg, double C
   nh = ColdGas / (M_PI * pow(GasDiskRadius * 0.94, 2) * 1.4);
   //nh = ColdGas / (M_PI * pow(GasDiskRadius * 0.56, 2) * 1.4);
   /* now convert from 10^10 M_sun/h / (Mpc/h)^2 to (2.1 10^21 atoms/cm^2) */
-  nh = nh / 3252.37;	// 3252.37 = 10^(3.5122)
+  nh = nh / 3252.37;        // 3252.37 = 10^(3.5122)
 
   // redshift dependence of dust-to-ColdGas ratio
   nh = nh * pow(1 + ZZ[snap], -1.0);
 
   cosinc = CosInclination;
   if(cosinc < 0.2)
-	cosinc = 0.2;		// minimum inclination ~80 degrees
+        cosinc = 0.2;                // minimum inclination ~80 degrees
   sec = 1.0 / cosinc;
 
   /* mu for YS extinction, given by a Gaussian with centre 0.3 (MUCENTER)
@@ -384,8 +384,11 @@ void dust_correction_for_post_processing(int nlum, int snap, double Zg, double C
     {
       mu = gasdev(&mu_seed) * MUWIDTH + MUCENTER;
       if(mu < 0.1 || mu > 1.0)
-	mu = -1.;
+        mu = -1.;
     }
+    
+  // for testing:
+  mu = MUWIDTH;
 
   // extinction on Vband used as reference for the BC extinction
   tauv = get_extinction(NMAG, Zg, 0) * nh;
@@ -396,7 +399,7 @@ void dust_correction_for_post_processing(int nlum, int snap, double Zg, double C
   tau = get_extinction(nlum, Zg, 0) * nh;
   tau = tau * sec;
   if(tau > 0.0)
-	alam = (1.0 - exp(-tau)) / tau;
+        alam = (1.0 - exp(-tau)) / tau;
   else
     alam = 1.;
 
@@ -417,9 +420,9 @@ void dust_correction_for_post_processing(int nlum, int snap, double Zg, double C
   tau = get_extinction(nlum, Zg, ZZ[snap]) * nh;
   tau = tau * sec;
   if(tau > 0.0)
-	alam = (1.0 - exp(-tau)) / tau;
+        alam = (1.0 - exp(-tau)) / tau;
   else
-	alam = 1.;
+        alam = 1.;
 
   *ObsLumDiskDust = ObsLumDisk * alam;
 
@@ -433,43 +436,43 @@ void dust_correction_for_post_processing(int nlum, int snap, double Zg, double C
 
 #ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z + 1
   if(snap > 0)
- 	tau = get_extinction(nlum, Zg, ZZ[snap - 1]) * nh;
+         tau = get_extinction(nlum, Zg, ZZ[snap - 1]) * nh;
   else
-	tau = get_extinction(nlum, Zg, ZZ[snap]) * nh;
+        tau = get_extinction(nlum, Zg, ZZ[snap]) * nh;
   tau = tau * sec;
   if(tau > 0.0)
-	alam = (1.0 - exp(-tau)) / tau;
+        alam = (1.0 - exp(-tau)) / tau;
   else
-	alam = 1.;
+        alam = 1.;
 
   *dObsLumDiskDust = dObsLumDisk * alam;
 
   // now remove light from young stars absorbed by birth clouds
   if(snap > 0)
- 	taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap - 1])) / VBand_WaveLength, -0.7);
+         taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap - 1])) / VBand_WaveLength, -0.7);
    else
- 	taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap])) / VBand_WaveLength, -0.7);
+         taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap])) / VBand_WaveLength, -0.7);
 
   *dObsLumDiskDust -= (dObsYLumDisk) * alam * (1. - exp(-taubc));
 
 #ifdef KITZBICHLER
   if(snap < LastDarkMatterSnapShot)
- 	tau = get_extinction(nlum, Zg, ZZ[snap + 1]) * nh;
+         tau = get_extinction(nlum, Zg, ZZ[snap + 1]) * nh;
   else
-	tau = get_extinction(nlum, Zg, ZZ[snap]) * nh;
+        tau = get_extinction(nlum, Zg, ZZ[snap]) * nh;
   tau = tau * sec;
   if(tau > 0.0)
-	alam = (1.0 - exp(-tau)) / tau;
+        alam = (1.0 - exp(-tau)) / tau;
   else
-	alam = 1.;
+        alam = 1.;
 
   *dObsLumDiskDust_forward = dObsLumDisk_forward * alam;
 
   // now remove light from young stars absorbed by birth clouds
   if(snap < LastDarkMatterSnapShot)
- 	taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap + 1])) / VBand_WaveLength, -0.7);
+         taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap + 1])) / VBand_WaveLength, -0.7);
   else
-	taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap])) / VBand_WaveLength, -0.7);
+        taubc = tauvbc * pow((FilterLambda[nlum] * (1. + ZZ[snap])) / VBand_WaveLength, -0.7);
 
   *dObsLumDiskDust_forward -= (dObsYLumDisk_forward) * alam * (1. - exp(-taubc));
 #endif
