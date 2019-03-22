@@ -127,58 +127,58 @@ int get_merger_center(const int fofhalo)
   int halonr = fofhalo;
   while(halonr >= 0)
   {
-      lenmax = 0;
-      first_occupied = Halo[halonr].FirstProgenitor;
-      prog = Halo[halonr].FirstProgenitor;
+    lenmax = 0;
+    first_occupied = Halo[halonr].FirstProgenitor;
+    prog = Halo[halonr].FirstProgenitor;
 
-      /* If the main progenitor of the current halo had no galaxies,
-       * set first_occupied to the most massive progenitor. */
-      if(prog >= 0)
+    /* If the main progenitor of the current halo had no galaxies,
+     * set first_occupied to the most massive progenitor. */
+    if(prog >= 0)
+    {
+      if(HaloAux[prog].NGalaxies == 0)
+        while(prog >= 0)
         {
-          if(HaloAux[prog].NGalaxies == 0)
-            while(prog >= 0)
+          for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)
+          {
+            type = HaloGal[currentgal].Type;
+
+            if(type == 0 || type == 1)
+            {
+              if(Halo[prog].Len > lenmax)
               {
-                for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)
-                  {
-                    type = HaloGal[currentgal].Type;
-
-                    if(type == 0 || type == 1)
-                      {
-                        if(Halo[prog].Len > lenmax)
-                          {
-                            lenmax = Halo[prog].Len;
-                            first_occupied = prog;
-                          }
-                      }
-                    currentgal = HaloGal[currentgal].NextGalaxy;
-                  }
-                prog = Halo[prog].NextProgenitor;
+                lenmax = Halo[prog].Len;
+                first_occupied = prog;
               }
+            }
+            currentgal = HaloGal[currentgal].NextGalaxy;
+          }
+          prog = Halo[prog].NextProgenitor;
         }
+    }
 
-      prog = Halo[halonr].FirstProgenitor;
+    prog = Halo[halonr].FirstProgenitor;
 
-      while(prog >= 0)//loop over all the progenitors
-        {
-              for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)//loop over all the galaxies in a given progenitor
-                {
-                  type = HaloGal[currentgal].Type;
+    while(prog >= 0)//loop over all the progenitors
+    {
+      for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)//loop over all the galaxies in a given progenitor
+      {
+        type = HaloGal[currentgal].Type;
 
-                  if(type == 0 || type == 1) // the galaxy is a type 0 or 1?
-                    if(prog == first_occupied) //is the main progenitor?
-                      if(halonr == Halo[halonr].FirstHaloInFOFgroup) //is the main halo?
-                        return currentgal;
-                  currentgal = HaloGal[currentgal].NextGalaxy;
-                }
-              prog = Halo[prog].NextProgenitor;
-        }
+        if(type == 0 || type == 1) // the galaxy is a type 0 or 1?
+          if(prog == first_occupied) //is the main progenitor?
+            if(halonr == Halo[halonr].FirstHaloInFOFgroup) //is the main halo?
+              return currentgal;
+        currentgal = HaloGal[currentgal].NextGalaxy;
+      }
+      prog = Halo[prog].NextProgenitor;
+    }
 
-      //if the halo has no galaxies, return 0
-      if(i == 0)
-        if(Halo[halonr].FirstHaloInFOFgroup == halonr)
-          return i;
+    //if the halo has no galaxies, return 0
+    if(i == 0)
+      if(Halo[halonr].FirstHaloInFOFgroup == halonr)
+        return i;
 
-      halonr = Halo[halonr].NextHaloInFOFgroup;
+    halonr = Halo[halonr].NextHaloInFOFgroup;
   }
 
   char sbuf[1000];

@@ -714,7 +714,10 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
   }
   
 #ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
-#error "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_LIGHTCONE_GALAXY_OUTPUT without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+#warning "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_LIGHTCONE_GALAXY_OUTPUT without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+/** @todo implement on-disk version for sorting galaxy output,
+ *        taking inspiration from save_galaxy_tree_reorder_on_disk() */
+
 #endif /* not defined SORT_LIGHTCONE_GALAXY_OUTPUT */  
 #endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
 
@@ -790,11 +793,11 @@ int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightc
   if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
     return +1;
 
-/* next, use ObsRedshift */
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
+/* next, use StellarMass (reverse order)*/
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
     return -1;
 
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
     return +1;
 
   return 0;

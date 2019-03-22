@@ -166,6 +166,7 @@ void prepare_galaxy_for_output(const int n, const struct GALAXY *g, struct GALAX
 #endif /* not defined  GALAXYTREE */
   o->ObsRedshift = ZZ[g->SnapNum];
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY  */
+  o->CubeShiftIndex = 0;
 #endif /* defined LIGHTCONE_OUTPUT */
 
 #ifdef GALAXYTREE

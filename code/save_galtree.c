@@ -170,7 +170,9 @@ void save_galaxy_tree_finalize(const int filenr, const int tree)
   // BTW it is BETTER not to reorder galaxies if SFHBins are not also reordered,
   // if at least both are to be used in light cone post processing.
   // for easier to read
+#ifdef SORT_GALAXYTREE_OUTPUT
   save_galaxy_tree_reorder_on_disk();
+#endif /* defined SORT_GALAXYTREE_OUTPUT */
 
   TotGalCount += NGalTree;
 }

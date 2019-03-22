@@ -243,6 +243,8 @@ time_to_present_ni(const double redshift_)
  *
  * Returns Age in code units/Hubble_h
  *
+ * \f$ t(z) = \frac{2}{3 H_0 sqrt{\Omega_{\Lambda}}} \left[\mathrm{asinh}\sqrt{\frac{\Omega_{\Lambda}}{\Omega_{m}}} - \mathrm{asinh}\sqrt{\frac{\Omega_{\Lambda}}{\Omega_{m}(1+z)^3}}\right] \f$
+ *
  * @bug (corrected on 2018-02.17) forgot sqrt around first OmegaLambda 
  */
 static inline double

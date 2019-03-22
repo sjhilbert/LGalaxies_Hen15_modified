@@ -27,9 +27,9 @@
 
 double SAM(const int filenr);
 
-void construct_galaxies(const int tree, const int halonr);
-int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cenngal);
-void evolve_galaxies(const int halonr, const int ngal, const int tree, const int cenngal);
+void construct_galaxies(const int tree_number_, const int halo_number_);
+void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof_group_, int *merger_center_);
+void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int cenngal);
 
 size_t myfread (void *ptr, size_t size, size_t nmemb, FILE * stream);
 size_t myfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream);
