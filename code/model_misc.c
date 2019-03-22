@@ -144,7 +144,7 @@ double get_virial_mass(const int halonr)
 
 double get_virial_velocity(const int halonr)
 {
-  return sqrt(G * get_virial_mass(halonr) / get_virial_radius(halonr));
+  return sqrt(Gravity * get_virial_mass(halonr) / get_virial_radius(halonr));
 }
 
 
@@ -178,7 +178,8 @@ double get_hubble_parameter_squared_for_halo(const int halonr)
  * \f$ R_{\rm{vir}}=\left( \frac{3M_{\rm{vir}}}{4\pi 200 \rho_c}\right)^{1/3}\f$
  */
 double get_virial_radius(const int halonr)
-{ return pow(get_virial_mass(halonr) / get_hubble_parameter_squared_for_halo(halonr) * (0.01 * G), 1. / 3.); }
+// { return pow(get_virial_mass(halonr) / get_hubble_parameter_squared_for_halo(halonr) * (0.01 * Gravity), 1. / 3.); }
+{ return cbrt(get_virial_mass(halonr) / get_hubble_parameter_squared_for_halo(halonr) * (0.01 * Gravity)); }
 
 
 /** @brief Updates the gas disk radius.

@@ -251,7 +251,7 @@ void update_from_star_formation(const int p, const double stars, const bool flag
   Gal[p].ColdGas  -= stars_to_add;
 #ifdef INDIVIDUAL_ELEMENTS
   elements_add_fraction_to(&Gal[p].DiskMass_elements, Gal[p].ColdGas_elements,  fraction);
-  Gelements_add_fraction_to(&Gal[p].ColdGas_elements , Gal[p].ColdGas_elements, -fraction);
+  elements_add_fraction_to(&Gal[p].ColdGas_elements , Gal[p].ColdGas_elements, -fraction);
 #endif
 #ifdef TRACK_BURST
   if (flag_burst) Gal[p].BurstMass += stars_to_add;
@@ -334,13 +334,15 @@ void SN_feedback(const int p, const int centralgal, const double stars, const Ga
 
   if(FeedbackEjectionModel == 0)
   {
-    ejected_mass = (FeedbackEjectionEfficiency * (EtaSNcode * EnergySNcode) * stars *
-            min(1./FeedbackEjectionEfficiency, 0.5 + pow(EjectVmax / EjectPreVelocity, -EjectSlope)) -
-            reheated_mass * EjectVvir * EjectVvir) / (EjectVvir * EjectVvir);
+    // ejected_mass = (FeedbackEjectionEfficiency * (EtaSNcode * EnergySNcode) * stars *  min(1./FeedbackEjectionEfficiency, 0.5 + pow(EjectVmax / EjectPreVelocity, -EjectSlope)) - reheated_mass * EjectVvir * EjectVvir) / (EjectVvir * EjectVvir);
+
+    const double ef_1_ = 1. / FeedbackEjectionEfficiency;
+    const double ef_2_ = 0.5 + pow(EjectVmax / EjectPreVelocity, -EjectSlope);
+    ejected_mass = FeedbackEjectionEfficiency * EtaSNcode * EnergySNcode * stars * min(ef_1_, ef_2_) / (EjectVvir * EjectVvir) - reheated_mass;
   }
   else if(FeedbackEjectionModel == 1)//the ejected material is assumed to have V_SN
   {
-    SN_Energy = 0.5 * stars * (EtaSNcode * EnergySNcode);
+    SN_Energy     = 0.5 * stars * (EtaSNcode * EnergySNcode);
     Reheat_Energy = 0.5 * reheated_mass * EjectVvir * EjectVvir;
 
     ejected_mass = (SN_Energy - Reheat_Energy)/(0.5 * FeedbackEjectionEfficiency*(EtaSNcode * EnergySNcode));
@@ -490,7 +492,7 @@ void check_disk_instability(const int p)
   if(DiskInstabilityModel == 0)
   {
     /* check stellar disk -> eq 34 Guo2010*/
-    Mcrit = (Gal[p].Type == 0) ? Gal[p].Vmax * Gal[p].Vmax * Gal[p].StellarDiskRadius / G : Gal[p].InfallVmax * Gal[p].InfallVmax * Gal[p].StellarDiskRadius / G; 
+    Mcrit = (Gal[p].Type == 0) ? Gal[p].Vmax * Gal[p].Vmax * Gal[p].StellarDiskRadius / Gravity : Gal[p].InfallVmax * Gal[p].InfallVmax * Gal[p].StellarDiskRadius / Gravity; 
     diskmass = Gal[p].DiskMass;
     stars = diskmass - Mcrit;
 

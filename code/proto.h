@@ -94,8 +94,7 @@ long long calc_big_db_offset(const int filenr, const int treenr);
 void init(void);
 void read_parameter_file(char *fname);
 void check_program_parameters();
-// void check_compile_time_options();
-void set_units(void);
+
 #ifdef SPECIFYFILENR
 void read_file_nrs(void);
 #endif /* defined SPECIFYFILENR */
@@ -130,7 +129,7 @@ void compute_cooling(const int p, const double dt);
 void do_AGN_heating(const double dt, const int ngal);
 void cool_gas_onto_galaxy(const int p, const double dt);
 void reincorporate_gas(const int p, const double dt);
-void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int centralgal, const double time, const double deltaT, const int nstep);
+void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int centralgal, const double time, const double deltaT);
 double get_reionization_modifier(const float Mvir, const double Zcurr);
 
 

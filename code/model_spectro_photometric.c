@@ -13,10 +13,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2009
- *      Author: Chiara Tonini & Bruno Henriques
- */
+/** @file model_spectro_photometric.c
+ *
+ *  @date   2009-2018
+ *  @author Chiara Tonini
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert 
+ **/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -229,9 +232,10 @@ void init_SSP_log_age_jump_index(void)
   * If MetallicityOption = 0 -> only solar metallicity.
   * If MetallicityOption = 1 -> 6 metallicities.
   *
-  * @bug MetallicityOption = 0 (-> only solar metallicity) used to only set tabindex,
+  * @bug (corrected by Stefan Hilbert) 
+  *      MetallicityOption = 0 (-> only solar metallicity) used to only set tabindex,
   *      but not fractions, now corrected (by Stefan Hilbert)
-  * */
+  **/
 #ifndef  POST_PROCESS_MAGS
 void add_to_luminosities(const int p, double stellar_mass_, double time_, double dt_, const double metallicity_)
 {

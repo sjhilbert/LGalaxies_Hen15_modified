@@ -230,7 +230,7 @@ double estimate_merging_time(const int halonr, const int mother_halonr, const in
 
   if(SatelliteMass > 0.0) {
     mergtime = 1.17 * SatelliteRadius * SatelliteRadius * get_virial_velocity(mother_halonr) /
-               (coulomb * G * SatelliteMass); // Binney & Tremaine Eq.7.26
+               (coulomb * Gravity * SatelliteMass); // Binney & Tremaine Eq.7.26
 
     /* change introduced by Delucia2007 to fit observations */
     mergtime = MergerTimeMultiplier*mergtime;
@@ -244,7 +244,7 @@ double estimate_merging_time(const int halonr, const int mother_halonr, const in
 
 
 /** @brief Deals with all the physics triggered by mergers */
-void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int centralgal, const double time, const double deltaT, const int nstep)
+void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int centralgal, const double time, const double deltaT)
 {
 
 /** @brief Deals with the physics triggered by mergers, according to the mass
@@ -259,7 +259,6 @@ void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int
  *         the disk of both merging galaxies is completely destroyed to form
  *         a bulge. New stars form of to the bulge*/
 
-  (void) nstep; /* avoid unused-parameter warning */
 
 #ifdef GALAXYTREE
   mass_checks("deal_with_galaxy_merger #0",p);
@@ -343,8 +342,7 @@ void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int
         /* All star formation happens in the disk, but in a major merger this will then
          * be destroyed with everything moved to the bulge. */
     const double frac = collisional_starburst_recipe(mass_ratio, merger_centralgal, centralgal, time, deltaT);
-    bulgesize_from_merger(mass_ratio,merger_centralgal,p,
-                          Mcstar, Mcbulge, Mcgas, Mpstar, Mpbulge, Mpgas, frac);
+    bulgesize_from_merger(mass_ratio,merger_centralgal,p, Mcstar, Mcbulge, Mcgas, Mpstar, Mpbulge, Mpgas, frac);
 
     mass_checks("deal_with_galaxy_merger #3.5",p);
     mass_checks("deal_with_galaxy_merger #3.5",merger_centralgal);
@@ -398,26 +396,26 @@ void grow_black_hole(const int merger_centralgal, const double mass_ratio, const
    *                              in main.c */
 
   if(Gal[merger_centralgal].ColdGas > 0.0)
-    {
-      BHaccrete = BlackHoleGrowthRate * mass_ratio
-          / (1.0 + pow2((BlackHoleCutoffVelocity / Gal[merger_centralgal].Vvir))) * Gal[merger_centralgal].ColdGas;
-      /* redshift dependent accretion, not published */
-      /* BHaccrete = BlackHoleGrowthRate * (1.0 + ZZ[Halo[halonr].SnapNum]) * mass_ratio */
+  {
+    BHaccrete = BlackHoleGrowthRate * mass_ratio
+        / (1.0 + pow2((BlackHoleCutoffVelocity / Gal[merger_centralgal].Vvir))) * Gal[merger_centralgal].ColdGas;
+    /* redshift dependent accretion, not published */
+    /* BHaccrete = BlackHoleGrowthRate * (1.0 + ZZ[Halo[halonr].SnapNum]) * mass_ratio */
 
-      /* cannot accrete more gas than is available! */
-      if(BHaccrete > Gal[merger_centralgal].ColdGas)
-        BHaccrete = Gal[merger_centralgal].ColdGas;
+    /* cannot accrete more gas than is available! */
+    if(BHaccrete > Gal[merger_centralgal].ColdGas)
+      BHaccrete = Gal[merger_centralgal].ColdGas;
 
-      fraction=BHaccrete/Gal[merger_centralgal].ColdGas;
+    fraction=BHaccrete/Gal[merger_centralgal].ColdGas;
 
-      Gal[merger_centralgal].BlackHoleMass += BHaccrete;
-      Gal[merger_centralgal].QuasarAccretionRate += BHaccrete / deltaT;
+    Gal[merger_centralgal].BlackHoleMass += BHaccrete;
+    Gal[merger_centralgal].QuasarAccretionRate += BHaccrete / deltaT;
 
-      Gal[merger_centralgal].ColdGas -= BHaccrete;
-      metals_add_fraction_to(&Gal[merger_centralgal].MetalsColdGas, Gal[merger_centralgal].MetalsColdGas,-fraction);
+    Gal[merger_centralgal].ColdGas -= BHaccrete;
+    metals_add_fraction_to(&Gal[merger_centralgal].MetalsColdGas, Gal[merger_centralgal].MetalsColdGas,-fraction);
 
 #ifdef INDIVIDUAL_ELEMENTS
-      elements_add_fraction_to(&Gal[merger_centralgal].ColdGas_elements, Gal[merger_centralgal].ColdGas_elements,-fraction);
+    elements_add_fraction_to(&Gal[merger_centralgal].ColdGas_elements, Gal[merger_centralgal].ColdGas_elements,-fraction);
 #endif
   }
 }

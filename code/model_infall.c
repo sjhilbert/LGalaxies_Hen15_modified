@@ -165,7 +165,7 @@ double get_reionization_modifier(float Mvir, double Zcurr)
     deltacritZ = 18.0 * M_PI * M_PI + 82.0 * xZ - 39.0 * xZ * xZ;
     HubbleZ = Hubble * sqrt(Omega * pow3(1.0 + Zcurr) + OmegaLambda);
 
-    Mchar = Vchar * Vchar * Vchar / (G * HubbleZ * sqrt(0.5 * deltacritZ));
+    Mchar = Vchar * Vchar * Vchar / (Gravity * HubbleZ * sqrt(0.5 * deltacritZ));
 
     /*  we use the maximum of Mfiltering and Mchar */
     mass_to_use = max(Mfiltering, Mchar);

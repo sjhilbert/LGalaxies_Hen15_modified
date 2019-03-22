@@ -195,8 +195,7 @@ double redshift_for_comoving_los_distance(const double d_)
  */
 double redshift_for_radial_velocity(const double v_)
 {
-  const double velocity_to_beta_factor_ = 1.e5 / C; /* inverse speed of light in simulation units for velocity, i.e. km/s */
-  const double beta_ = v_ * velocity_to_beta_factor_; /* velocity in units of speed of light */
+  const double beta_ = v_ * (1. / SpeedOfLight); /* velocity in units of speed of light */
   if(beta_ < 0.03)
   { return beta_ + 0.5 * beta_ * beta_ + 0.5 * beta_ * beta_ * beta_; }
   else

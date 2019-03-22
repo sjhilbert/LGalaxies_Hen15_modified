@@ -719,7 +719,7 @@ void init_numgal(float masslimit_low, float masslimit_high, int snap) {
   double **NgalTable;
   double *borders,*radii,*p,*perror,*pberr,*paerr,*pcerr;
   double boxsize=BoxSize;
-  double massoffset=log10(2*(G/1e10)/(Delta*Omega*1e4));
+  double massoffset=log10(2*(Gravity/1e10)/(Delta*Omega*1e4));
   double r,rvir,relx,rely,relz;
   double *MassTable2,*pa_m,*pb_m,*pc_m;
   const gsl_multimin_fdfminimizer_type *T;

@@ -94,7 +94,7 @@
 /** @brief controlling recipe for init.c, calls functions to read in tables and
  *         defines some SN and AGN feedback parameters.
  *       
- *         Calls set_units(), read_output_snaps(), read_zlist(), read_recgas(),
+ *         Calls read_output_snaps(), read_zlist(), read_recgas(),
  *         read_file_nrs(), read_sfrz(), read_reionization(), read_dust_tables() and
  *         read_cooling_functions().
  *       
@@ -113,7 +113,6 @@ void init(void)
 
   gsl_rng_set(random_generator, 42);	/* start-up seed */
 
-  set_units();
 #ifdef GALAXYTREE
   ScaleFactor = pow(2, Hashbits) / BoxSize;
 #endif
@@ -412,87 +411,6 @@ void read_output_snaps(void)
     ListOutputNumberOfSnapshot[i] = (i < NOUT) ? i : NOUT - 1;
   LastSnapShotNr=LastDarkMatterSnapShot;
 #endif /* defined GALAXYTREE */
-}
-
-
-/** @brief Sets up some variables used to convert from physical to internal
- *         units (as UnitDensity_in_cgs); These are obtained from
- *         UNITLENGTH_IN_CM (cm to Mpc), UNITMASS_IN_G
- *         (g to 1e10Msun) and UNITVELOCITY_IN_CM_PER_S (cm/s to km/s).
- *
- *         As defined in input.par, \f$\rm{UnitLength}_{\rm{cm}}=
- *         3.08568\times 10^{24}\rm{cm}\f$, converts from cm into Mpc and
- *         \f$\rm{UnitVelocity}_{\rm{cm/s}}=10000\rm{cm/s}\f$, converts from
- *         cm/s to Km/s (cm to km). In set_units() \f$\rm{UnitTime}_{\rm{s}}\f$
- *         is derived from these two quantities:
- *        
- *         \f$\frac{\rm{UnitLength}_{\rm{cm}}}{\rm{UnitVelocity}_{\rm{cm/s}}}
- *         =3.08568\times 10^{19}\rm{Mpc}~\rm{Km}^{-1}\rm{s}^{-1}\f$,
- *        
- *         through the code \f$t_{\rm{dyn}}\f$ has internal units and its never
- *         converted (note that \f$t_{\rm{dyn}}\f$ has an h factor, as the code internal
- *         units which despite not being included is \f$\rm{UnitTime}_{\rm{s}}\f$ is
- *         included in the output of time_to_present() - so it is consistent).
- *        
- *         \f$ \rm{UnitDensity}_{\rm{cgs}} =
- *         \frac{\rm{UnitMass}_{\rm{g}}}{\rm{UnitLength}_{\rm{cm}}^3}=6.769898\times 10^{-31}\f$,
- *         converts density in \f$\rm{g}~\rm{cm}^{-3}\f$ into internal units
- *         \f$(10^{10}M_{\odot}\rm{Mpc}^{-3})\f$
- *
- *         \f$ \rm{UnitPressure}_{\rm{cgs}} =
- *         \frac{\rm{UnitMass}_{\rm{g}}}{\rm{UnitLength}_{\rm{cm}} \times \rm{UnitTime}_{\rm{s}}^2}
- *         =6.769898\times 10^{-21}\f$, converts pressure in
- *         \f$\rm{g}~\rm{cm}^{-1}\rm{s}^{-2}\f$ into internal units
- *         \f$(10^{10}M_{\odot}~\rm{Mpc}^{-1}(Mpc/Mk/s) \f$
- *
- *         \f$ \rm{UnitCoolingRate}_{\rm{cgs}} =
- *         \frac{\rm{UnitPressure}_{\rm{cgs}}}{\rm{UnitTime}_{\rm{s}}}=2.193973\times 10^{-40}\f$,
- *         converts the cooling rate in \f$\rm{g}~\rm{cm}^{-1}\rm{s}^{-3}\f$ into
- *         internal units \f$(10^{10}M_{\odot}~\rm{Mpc}^{-1}(Mpc/Mk/s)^{-3}) \f$
- *        
- *         \f$ \rm{UnitEnergy}_{\rm{cgs}} =
- *         \frac{\rm{UnitMass}_{\rm{g}} \times \rm{UnitLength}_{\rm{cm}}^2}{\rm{UnitTime}_{\rm{s}}^2}
- *         =1.989000\times 10^{53}\f$, converts energy in
- *         \f$\rm{g}~\rm{cm}^2\rm{s}^{-2}\f$ into internal units
- *         \f$(10^{10}M_{\odot}~\rm{Mpc}^{2}(Mpc/Mk/s)^{-2})\f$
- *        
- *         \f$ \rm{Hubble} = \rm{HUBBLE} \times \rm{UnitTime}_{\rm{s}}=100.0001\f$, where
- *         \f$\rm{HUBBLE}=3.2407789\times 10^{-18} h~\rm{s}^{-1}\f$, is the hubble
- *         constante in \f$(h~\rm{Km}~\rm{s}^{-1}\rm{Mpc}^{-1})\f$.
- *
- *        */
-void set_units(void)
-{
-	// SEC_PER_MEGAYEAR   3.155e13
-	// SEC_PER_YEAR       3.155e7
-
-  //UNITLENGTH_IN_CM & UNITVELOCITY_IN_CM_PER_S; defined at allvars.h
-  UnitTime_in_s = UNITLENGTH_IN_CM / UNITVELOCITY_IN_CM_PER_S;
-  UnitTime_in_Megayears = UnitTime_in_s / SEC_PER_MEGAYEAR;
-  UnitTime_in_years = 1e6*UnitTime_in_Megayears;
-  
-  //gravity in internal units
-  G = GRAVITY / pow3(UNITLENGTH_IN_CM) * UNITMASS_IN_G * pow2(UnitTime_in_s);//43.00708
-
-  //converts g.cm^-3 into internal units (1e10Msun Mpc^-3)
-  UnitDensity_in_cgs = UNITMASS_IN_G / pow3(UNITLENGTH_IN_CM);//6.769898e-31
-
-  //converts g.cm^-1s^-2 into internal units (10^10Msun.Mpc^-1(Mpc/Km/s)^-2) \f$
-  UnitPressure_in_cgs = UNITMASS_IN_G / UNITLENGTH_IN_CM / pow2(UnitTime_in_s);//6.769898e-21
-
-  //converts g.cm^-1.s^-3 into internal units (10^10Msun.Mpc^-1(Mpc/Km/s)^-3)
-  UnitCoolingRate_in_cgs = UnitPressure_in_cgs / UnitTime_in_s;//2.193973e-40
-
-  //converts g.cm^2.s^-2 into internal units (10^10Msun.Mpc^2(Mpc/Km/s)^-2)
-  UnitEnergy_in_cgs = UNITMASS_IN_G * pow2(UNITLENGTH_IN_CM) / pow2(UnitTime_in_s);//1.989000e+53
-
-  /* converts the Hubble constant from h.s^-1 into h.Km.s^-1.Mpc-1 */
-  // Would make much more sense to define this including the h100 factor.
-  Hubble = HUBBLE * UnitTime_in_s;//100.000
-
-#ifdef HALOMODEL
-  RhoCrit = 3 * Hubble * Hubble / (8 * M_PI * G);//27.75505 (h^2.10^10Msun.Mpc^-3)
-#endif
 }
 
 

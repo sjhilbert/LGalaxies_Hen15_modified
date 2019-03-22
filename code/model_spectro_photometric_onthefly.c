@@ -69,7 +69,7 @@ void read_vega_spectra(double *LambdaVega, double *FluxVega)
     fscanf(fa,"%lf %lf" , &LambdaVega[i], &FluxVega[i]);
     //convert to ergs.cm^-2.s^-1.AA-1
     FluxVega[i]*=2e-17;
-    FluxVega[i]=FluxVega[i]*LambdaVega[i]*LambdaVega[i]/(C*1e8);
+    FluxVega[i]=FluxVega[i]*LambdaVega[i]*LambdaVega[i]/(SPEED_OF_LIGHT*1e8);
   }
   fclose(fa);
 }
@@ -204,7 +204,7 @@ void read_InputSSP_spectra(double LambdaInputSSP[SSP_NAGES][SSP_NLambda], double
     for (i=0;i<SSP_NLambda;i++)
     {
       fscanf(fa,"%lf %lf %lf %lf\n" , &age, &Dumb1,&LambdaInputSSP[ageloop][i], &FluxInputSSP[ageloop][i]);
-      FluxInputSSP[ageloop][i]=1e11*FluxInputSSP[ageloop][i]*LambdaInputSSP[ageloop][i]*LambdaInputSSP[ageloop][i]/(C*1.e8);
+      FluxInputSSP[ageloop][i]=1e11*FluxInputSSP[ageloop][i]*LambdaInputSSP[ageloop][i]*LambdaInputSSP[ageloop][i]/(SPEED_OF_LIGHT*1.e8);
     }
     if(MetalLoop==0) //only read age table once
       if(age>0.)
@@ -300,7 +300,7 @@ double lum_distance(const double redshift)
 
   dl=integral/1000.0;    //!Mpc
 
-  dl*=(1.+redshift)*(C/100.)/(Hubble_h*100.);   //in Mpc
+  dl*=(1.+redshift)*(SPEED_OF_LIGHT/100.)/(Hubble_h*100.);   //in Mpc
 
   return dl;
 }

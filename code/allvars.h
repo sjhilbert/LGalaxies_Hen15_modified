@@ -23,6 +23,9 @@
 #include <time.h>
 #include <stdbool.h>
 
+#include "mathematical_constants.h"
+#include "physical_constants_and_units.h"
+
 #define MIN_ALLOC_NUMBER       1000
 #define ALLOC_INCREASE_FACTOR  1.1
 #define ALLOC_DECREASE_FACTOR  0.7
@@ -56,27 +59,6 @@
 
 #define  ALLOCPARAMETER 50.  /* new definition !!! THIS HAS TO BE 50 !!! DONT EVER EVER EVER CHANGE !!! */
 
-//To understand the units in the code read through set_units in init.c!!!
-#define  GRAVITY     6.672e-8
-#define  SOLAR_MASS  1.989e33
-#define  SOLAR_LUM   3.826e33
-#define  RAD_CONST   7.565e-15
-#define  AVOGADRO    6.0222e23
-#define  BOLTZMANN   1.3806e-16
-#define  GAS_CONST   8.31425e7
-#define  C           2.9979e10
-#define  PLANCK      6.6262e-27
-#define  PROTONMASS  1.6726e-24
-#define  HUBBLE      3.2407789e-18   /* in h/sec */
-#define  D_HUBBLE    2997.92458      /* in Mpc/h */
-
-//To understand the units in the code read through set_units in init.c!!!
-
-#define UNITLENGTH_IN_CM                   3.08568e+24	// Mpc - WATCH OUT, distances in the code are in Mpc/h
-#define UNITMASS_IN_G                      1.989e+43	// 10^10Msun - WATCH OUT, masses in the code are in 10^10Msun/h
-#define UNITVELOCITY_IN_CM_PER_S           100000	// Km/s - WATCH OUT, this are the correct units in the code km/s
-#define  SEC_PER_MEGAYEAR   3.155e13
-#define  SEC_PER_YEAR       3.155e7
 
 #ifdef GALAXYTREE
 #undef  NOUT
@@ -881,20 +863,21 @@ extern double ReIncorporationFactor;
 extern double EnergySNcode, EnergySN;
 extern double EtaSNcode, EtaSN;
 
-extern double
-	UnitTime_in_s,
-	UnitPressure_in_cgs,
-	UnitDensity_in_cgs,
-	UnitCoolingRate_in_cgs,
-	UnitEnergy_in_cgs,
-	UnitTime_in_Megayears, //Using time as stored in the code, this gives Myr/h
-	UnitTime_in_years,
-#ifdef HALOMODEL
-	RhoCrit,
-#endif /* defined HALOMODEL */
-	G,
-	Hubble,
-	a0, ar;
+// internal units and phys. consts. in internal units moved to "physical_constants_and_units.h"
+// extern double UnitTime_in_s;
+// extern double UnitPressure_in_cgs;
+// extern double UnitDensity_in_cgs;
+// extern double UnitCoolingRate_in_cgs;
+// extern double UnitEnergy_in_cgs;
+// extern double UnitTime_in_Megayears; //Using time as stored in the code, this gives Myr/h
+// extern double UnitTime_in_years;
+// 
+// extern double Gravity;
+// extern double SpeedOfLight;
+// extern double Hubble;
+// extern double RhoCrit;
+  
+extern double	a0, ar;
 
 extern int ListOutputSnaps[NOUT];
 extern float ListOutputRedshifts[NOUT];

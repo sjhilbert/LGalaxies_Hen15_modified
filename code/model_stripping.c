@@ -289,8 +289,8 @@ double hot_retain_sat(const int i, const int centralgal)
   else
     {
       TotalMass_sat=Gal[i].Mvir;
-      Vorbit=sqrt((G*Gal[centralgal].Mvir)/Gal[centralgal].Rvir);
-      R_RamPressure= sqrt(Gal[i].HotGas/Gal[i].HotRadius) * sqrt(G * TotalMass_sat/Gal[i].Rvir) *
+      Vorbit=sqrt((Gravity*Gal[centralgal].Mvir)/Gal[centralgal].Rvir);
+      R_RamPressure= sqrt(Gal[i].HotGas/Gal[i].HotRadius) * sqrt(Gravity * TotalMass_sat/Gal[i].Rvir) *
 	  sqrt(Gal[centralgal].Rvir/Gal[centralgal].HotGas)*R_Orbit * 1./Vorbit;
     }
 

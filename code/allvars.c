@@ -180,19 +180,21 @@ double ReIncorporationFactor;
 double EnergySNcode, EnergySN;
 double EtaSNcode, EtaSN;
 
-double UnitTime_in_s,
-  UnitPressure_in_cgs,
-  UnitDensity_in_cgs,
-  UnitCoolingRate_in_cgs,
-  UnitEnergy_in_cgs,
-  UnitTime_in_Megayears,
-  UnitTime_in_years,
-#ifdef HALOMODEL
-  RhoCrit,
-#endif
-  G,
-  Hubble,
-  a0, ar;
+// internal units and phys. consts. in internal units moved to "physical_constants_and_units.h"
+// double UnitTime_in_s;
+// double UnitPressure_in_cgs;
+// double UnitDensity_in_cgs;
+// double UnitCoolingRate_in_cgs;
+// double UnitEnergy_in_cgs;
+// double UnitTime_in_Megayears; //Using time as stored in the code, this gives Myr/h
+// double UnitTime_in_years;
+// 
+// double Gravity;
+// double SpeedOfLight;
+// double Hubble;
+// double RhoCrit;
+
+double  a0, ar;
 
 int ListOutputSnaps[NOUT];
 float ListOutputRedshifts[NOUT];
