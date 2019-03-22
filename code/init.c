@@ -117,15 +117,13 @@ void init(void)
   EnergySNcode = EnergySN / UnitEnergy_in_cgs * Hubble_h;
   EtaSNcode = EtaSN * (UNITMASS_IN_G / SOLAR_MASS) / Hubble_h;
 
-
   //reads in the redshifts for the used Cosmology
   read_zlist();
   //reads in the redshifts for Original Cosmology
   read_zlist_original_cosm();
 
   //reads in the desired output snapshots
-   read_output_snaps();
-
+  read_output_snaps();
 
 #ifdef SPECIFYFILENR
   /* read in the number of the files to be processed */
@@ -133,7 +131,7 @@ void init(void)
 #endif
 
   if(ReionizationModel == 0)
-    read_reionization();
+  { read_reionization(); }
 
   //Values of a for the beginning and end of reionization
   a0 = 1.0 / (1.0 + Reionization_z0);
@@ -216,13 +214,14 @@ void read_zlist(void)
   fclose(fd);
 
   for(i = 0; i < Zlistlen; i++)
-     {
-  	//convert AA[] into redshift - ZZ[]
-       ZZ[i] = 1 / AA[i] - 1;
-       //table with time in internal units (Mpc/Km/s/h)
-       Age[i] = time_to_present(ZZ[i]);
-
-     }
+    {
+      //convert AA[] into A_inv[]
+      /* AA_inv[i] = 1 / AA[i]; */
+      //convert AA[] into redshift - ZZ[]
+      ZZ[i] = 1 / AA[i] - 1;
+      //table with time in internal units (Mpc/Km/s/h)
+      Age[i] = time_to_present(ZZ[i]);
+    }
 
 #ifndef MCMC
 #ifdef PARALLEL
@@ -266,6 +265,7 @@ void read_zlist_new(void)
   for(i = 0; i < Zlistlen; i++)
   {
   	//convert redshift - ZZ[] into AA[]
+                /* AA_inv[i] = ZZ[i] + 1; */
   	AA[i] = 1/(ZZ[i] + 1);
   	//printf("z[%d]=%f\n",i,ZZ[i]);
   	//table with time in internal units (Mpc/Km/s/h)
@@ -285,6 +285,7 @@ void read_zlist_new(void)
 #endif
 #endif
 }
+
 
 void read_zlist_original_cosm(void)
 {
@@ -310,6 +311,10 @@ void read_zlist_original_cosm(void)
   while(Zlistlen < LastDarkMatterSnapShot+1);
 
   fclose(fd);
+  
+/*  int i;
+  for(i = 0; i < Zlistlen; i++)
+  { AA_OriginalCosm_inv[i] = 1 / AA_OriginalCosm[i]; } */
 
 #ifndef MR_PLUS_MRII //option for MCMC
 #ifdef PARALLEL

@@ -16,6 +16,8 @@
 
 #include "allvars.h"
 
+const char* GasComponentStr    [] = {"HotGas", "ColdGas", "EjectedGas"};
+const char* StellarComponentStr[] = {"Disk", "Bulge", "ICM", "Burst"};
 
 struct GALAXY			/* Galaxy data */
  *Gal, *HaloGal;
@@ -144,7 +146,7 @@ int ReIncorporationModel;
 int AGNRadioModeModel;
 int DiskInstabilityModel;
 int BHGrowthInDiskInstabilityModel;
-int HotGasStrippingModel;
+int HotGasStripingModel;
 int DisruptionModel;
 int StarBurstModel;
 int BulgeFormationInMinorMergersOn;

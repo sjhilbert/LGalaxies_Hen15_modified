@@ -122,10 +122,12 @@ int main(int argc, char **argv)
    printf("%s\n",COMPILETIMESETTINGS); 
 
  /* check compatibility of some Makefile Options*/
-  check_options();
+  check_compile_time_options();
 
   /*Reads the parameter file, given as an argument at run time. */
   read_parameter_file(argv[1]);
+  
+  check_program_parameters();
 
 #ifdef MR_PLUS_MRII
   //Start with MR files and later change to MRII
@@ -419,7 +421,7 @@ void SAM(int filenr)
 void construct_galaxies(int filenr, int treenr, int halonr)
 {
   static int halosdone = 0;
-  int prog, fofhalo, ngal, cenngal, p;
+  int prog, fofhalo, ngal, cenngal;
   
 // #ifdef LIGHTCONE_OUTPUT_ONLY
 //   /* if halos is outside lightcone, don't construct, but return early */
@@ -500,6 +502,7 @@ void construct_galaxies(int filenr, int treenr, int halonr)
       /*Evolve the Galaxies -> SAM! */
       evolve_galaxies(Halo[halonr].FirstHaloInFOFgroup, ngal, treenr, cenngal);
 
+      int p;
       for (p =0;p<ngal;p++)
                     mass_checks("Construct_galaxies #1",p);
     }
@@ -612,7 +615,7 @@ int join_galaxies_of_progenitors(int halonr, int ngalstart, int *cenngal)
                   Gal[ngal].FirstProgGal = HaloGal[currentgal].GalTreeIndex;    /* CHECK */
 #endif /* defined GALAXYTREE */
                   // To fail this check means that we copy in a failed galaxy
-                  mass_checks("Middle of join_galaxies_of_progenitors",ngal);
+                  mass_checks("Middle of join_galaxies_of_progenitors", ngal);
 
                   /* Update Properties of this galaxy with physical properties of halo */
                   /* this deals with the central galaxies of subhalos */
@@ -715,10 +718,10 @@ int join_galaxies_of_progenitors(int halonr, int ngalstart, int *cenngal)
                     Gal[i].MergCentralPos[j] = Gal[*cenngal].Pos[j];
                 }
     }
-  
+    
   for (i = ngalstart; i<ngal; i++)
     mass_checks("Bottom of join_galaxies_of_progenitors",i);
-  
+
   report_memory_usage(&HighMark, "join_galaxies");
 
   return ngal;
@@ -767,9 +770,9 @@ void evolve_galaxies(int halonr, int ngal, int treenr, int cenngal)
   Zcurr = ZZ[Halo[halonr].SnapNum];
 
   centralgal = Gal[0].CentralGal;
-                
+
   for (p =0;p<ngal;p++)
-                  mass_checks("Evolve_galaxies #0",p);
+  { mass_checks("Evolve_galaxies #0",p); }
 
   //print_galaxy("\n\ncheck1", centralgal, halonr);
 
@@ -793,7 +796,9 @@ void evolve_galaxies(int halonr, int ngal, int treenr, int cenngal)
     if (Gal[p].Type ==2 && Gal[p].ColdGas+Gal[p].DiskMass+Gal[p].BulgeMass <1.e-8)
       Gal[p].Type = 3;
     else
+    {
       mass_checks("Evolve_galaxies #0.1",p);
+    }
    
   /* Calculate how much hot gas needs to be accreted to give the correct baryon fraction
    * in the main halo. This is the universal fraction, less any reduction due to reionization. */
@@ -830,6 +835,7 @@ void evolve_galaxies(int halonr, int ngal, int treenr, int cenngal)
                   /* don't treat galaxies that have already merged */
                   if(Gal[p].Type == 3)
                     continue;
+                  
                   mass_checks("Evolve_galaxies #1",p);
 
                   if (Gal[p].Type == 0 || Gal[p].Type == 1)
@@ -875,17 +881,13 @@ void evolve_galaxies(int halonr, int ngal, int treenr, int cenngal)
                                     merger_centralgal = Gal[p].CentralGal;
                                   else
                                     merger_centralgal = cenngal;
-
                                   mass_checks("Evolve_galaxies #4",p);
                                   mass_checks("Evolve_galaxies #4",merger_centralgal);
                                   mass_checks("Evolve_galaxies #4",centralgal);
-
                                   deal_with_galaxy_merger(p, merger_centralgal, centralgal, time, deltaT, nstep);
-
                                   mass_checks("Evolve_galaxies #5",p);
                                   mass_checks("Evolve_galaxies #5",merger_centralgal);
                                   mass_checks("Evolve_galaxies #5",centralgal);
-
                                 }
                     }
                 }//loop on all galaxies to detect mergers
@@ -924,9 +926,10 @@ void evolve_galaxies(int halonr, int ngal, int treenr, int cenngal)
                     disrupt(p);
                 }
     }
-
+    
   for (p =0;p<ngal;p++)
     mass_checks("Evolve_galaxies #6",p);
+
   
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef  POST_PROCESS_MAGS
@@ -1142,9 +1145,27 @@ void output_galaxy(int treenr, int heap_index)
 
 
 /**
+ * @brief checks some program parameters for valid values
+ */
+void check_program_parameters()
+{
+  /* the star formation model: */
+  if(!(
+   (StarFormationModel == 0)
+    ))
+  {
+    printf("invalid value for program parameter encountered:\n  StarFormationModel = %d\n  error: unknown star formation model\n", StarFormationModel);
+    terminate("invalid value program parameter encounted (StarFormationModel).");
+  }
+}
+
+
+
+/**
  * @brief Check whether makefile options are compatible.
  */
-void check_options() {
+void check_compile_time_options()
+{
 #ifdef OUTPUT_OBS_MAGS
 #ifndef COMPUTE_OBS_MAGS
 #error "Makefile option OUTPUT_OBS MAGS requires option COMPUTE_OBS_MAGS"
@@ -1241,6 +1262,5 @@ terminate("\n\n> Error : Makefile option LIGHTCONE_OUTPUT cannot run with MCMC\n
 terminate("\n\n> Error : Makefile option LIGHTCONE_OUTPUT_ONLY requires LIGHTCONE_OUTPUT \n");
 #endif /* defined LIGHTCONE_OUTPUT_ONLY */
 #endif /* not defined LIGHTCONE_OUTPUT */
-
 /* Description of the code to appear in the first page of the documentation. */
 }

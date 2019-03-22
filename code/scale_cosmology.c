@@ -174,45 +174,76 @@ void un_scale_cosmology(int nhalos)
 }
 
 
-double c_correction(float mass, int snapnum)
+
+/** @brief computes c correction */
+double c_correction(const float mass, const int snapnum)
 {
   double c_original, c_new, Omega_new, Omega_original, ratio;
 
-  c_original = 5 * pow(mass/10000., -0.1);
-  Omega_new = Omega * 1./pow3(AA[snapnum]) / (Omega * 1./pow3(AA[snapnum]) + OmegaLambda);
+  c_original = 5 * pow(0.0001 * mass, -0.1);
+  
+  Omega_new = Omega * 1./pow3(AA[snapnum]) / 
+             (Omega * 1./pow3(AA[snapnum]) + OmegaLambda);
+  
   Omega_original = Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapnum]) /
                   (Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapnum]) + OmegaLambda_OriginalCosm);
+                  
   ratio = Omega_original/ Omega_new;
+  
   c_new = find_c(c_original, ratio);
 
   return func_c(c_new) / func_c(c_original);
 }
 
 
-double find_c(double c_ori, double ratio)
+/** @brief finds c
+ * 
+ * finds c using bisection
+ * 
+ * since the original version of this function showed up
+ * surprisingly high on profile, a more optimized bisection
+ * version was implemented
+ * 
+ * @warning assumes that initial values bracket the result 
+ */
+double find_c(const double c_ori_, const double ratio_)
 {
-  double x1, x2, xx, constant;
-  x1 = 1.;
-  x2 = 50.;
-  xx = (x1 + x2) / 2.;
-  constant = ratio * func_c(c_ori)/c_ori/c_ori/c_ori;
-  do
-    {
-
-      if((func_c(xx)/xx/xx/xx - constant) * (func_c(x1)/x1/x1/x1 - constant) > 0)
-	x1 = xx;
-      else
-	x2 = xx;
-      xx = (x1 + x2 )/ 2.;
+  const double constant_ = ratio_ * func_c_p(c_ori_);
+  
+  double x_1_ = 1.;
+  double x_2_ = 50.;
+  
+  double f_1_ = func_c_p(x_1_) - constant_;
+  double x_m_, f_m_;
+  while(
+    x_m_ = 0.5 * (x_1_ + x_2_),
+    f_m_ = func_c_p(x_m_) - constant_,
+    fabs(f_m_) > 1.e-8
+  ) 
+  {
+    if(f_m_ * f_1_ > 0)
+    {       
+      x_1_ = x_m_;
+      f_1_ = f_m_;
     }
-  while(fabs(func_c(xx)/xx/xx/xx- constant) > 1.e-8);
-  return xx;
+    else
+    { x_2_ = x_m_; }
+  }
+  return x_m_;
 }
 
-double func_c(double c)
+
+double func_c(const double c)
 {
   return log(1 + c) - c / (1 + c);
 }
+
+
+double func_c_p(const double c)
+{
+  return (log(1 + c) - c / (1 + c)) / (c * c * c);
+}
+
 
 double dgrowth_factor_dt(double a, double omega_m, double omega_l)
 {

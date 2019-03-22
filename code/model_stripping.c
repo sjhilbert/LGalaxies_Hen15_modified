@@ -32,11 +32,11 @@
  *       There are basically 2 options for the way satellite components are
  *       added into centrals:
  *
- *         HotGasStrippingModel ==1
+ *         HotGasStripingModel ==1
  *         If inside Rvir, hot and ejected gas from satellites of both types 1 and 2
  *         is instantaneously striped and added to type 0.
  *
- *         HotGasStrippingModel ==0
+ *         HotGasStripingModel ==0
  *         Type 1's keep an ejected component.
  *         Type 1's are stripped of hot and ejected gas gradually and later in the code.
  *         A fraction of the hot and ejected gas in the type 2's is
@@ -66,7 +66,7 @@ void deal_with_satellites(int centralgal, int ngal)
       dis=separation_gal(centralgal,Gal[i].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
 
 
-      /* HotGasStrippingModel ==  0=> Guo2010 non instantaneous treatment of gas stripping in type 1's
+      /* HotGasStripingModel ==  0=> Guo2010 non instantaneous treatment of gas stripping in type 1's
        *
        * if the galaxy is a type 2 and still has hot and ejected gas it is removed at this point
        * (meaning that the halo was fully stripped in previous step) and split between type 0 and type 1
@@ -77,7 +77,7 @@ void deal_with_satellites(int centralgal, int ngal)
        *
        * If the type 2 is orbiting a type 0 centralgal and Gal[i].CentralGal both refer to the type 0*/
 
-      if(HotGasStrippingModel == 0)
+      if(HotGasStripingModel == 0)
 	{
 	  /* All gas Stripped from Type 2 galaxies */
 	  if (Gal[i].Type ==2)
@@ -91,18 +91,18 @@ void deal_with_satellites(int centralgal, int ngal)
 
 	      Gal[i].HotRadius = 0.0;
 	      if(Gal[i].HotGas > 0.0)
-		transfer_gas(Gal[i].CentralGal,"Hot",i,"Hot",gasfraction_intotype1,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,gasfraction_intotype1,"deal_with_satellites", __LINE__);
 	      if(Gal[i].EjectedMass > 0.0)
-		transfer_gas(Gal[i].CentralGal,"Ejected",i,"Ejected",gasfraction_intotype1,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,gasfraction_intotype1,"deal_with_satellites", __LINE__);
 
 	      mass_checks("deal_with_satellites i #0",i);
 	      mass_checks("deal_with_satellites Gal[i].CentraGal #0",Gal[i].CentralGal);
 #ifdef TRACK_BURST
 	      /* Transfer burst component first */
-	      transfer_stars(Gal[i].CentralGal,"Burst",i,"Burst",
+	      transfer_stars(Gal[i].CentralGal,BurstComponent,i,BurstComponent,
 			     GasFraction_intotype1*Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
 #endif
-	      transfer_stars(Gal[i].CentralGal,"ICM",i,"ICM",gasfraction_intotype1);
+	      transfer_stars(Gal[i].CentralGal,ICMComponent,i,ICMComponent,gasfraction_intotype1);
 	      mass_checks("deal_with_satellites i #1",i);
 	      mass_checks("deal_with_satellites Gal[i].CentraGal #1",Gal[i].CentralGal);
 #ifndef POST_PROCESS_MAGS
@@ -114,16 +114,16 @@ void deal_with_satellites(int centralgal, int ngal)
 	      if (gasfraction_intotype1 < 1.)
 		{
 		  if(Gal[i].HotGas > 0.0)
-		    transfer_gas(centralgal,"Hot",i,"Hot",1.,"deal_with_satellites", __LINE__);
+		    transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.,"deal_with_satellites", __LINE__);
 		  if(Gal[i].EjectedMass > 0.0)
-		    transfer_gas(centralgal,"Ejected",i,"Ejected",1.,"deal_with_satellites", __LINE__);
+		    transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.,"deal_with_satellites", __LINE__);
 
 #ifdef TRACK_BURST
 		  /* Transfer burst component first */
-		  transfer_stars(centralgal,"Burst",i,"Burst",
+		  transfer_stars(centralgal,BurstComponent,i,BurstComponent,
 				 Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
 #endif
-		  transfer_stars(centralgal,"ICM",i,"ICM",1.);
+		  transfer_stars(centralgal,ICMComponent,i,ICMComponent,1.);
 		  mass_checks("deal_with_satellites #2",i);
 		  mass_checks("deal_with_satellites #2",centralgal);
 #ifndef POST_PROCESS_MAGS
@@ -147,16 +147,16 @@ void deal_with_satellites(int centralgal, int ngal)
 		    exit(1);
 		  }
 
-		transfer_gas(merger_centre,"Hot",i,"Hot",stripped_fraction,"deal_with_satellites", __LINE__);
-		transfer_gas(merger_centre,"Ejected",i,"Ejected",stripped_fraction,"deal_with_satellites", __LINE__);
+		transfer_gas(merger_centre,HotGasComponent,i,HotGasComponent,stripped_fraction,"deal_with_satellites", __LINE__);
+		transfer_gas(merger_centre,EjectedGasComponent,i,EjectedGasComponent,stripped_fraction,"deal_with_satellites", __LINE__);
 		mass_checks("deal_with_satellites #3",i);
 		mass_checks("deal_with_satellites #3",merger_centre);
 #ifdef TRACK_BURST
 		/* Transfer burst component first */
-		transfer_stars(merger_centre,"Burst",i,"Burst",
+		transfer_stars(merger_centre,BurstComponent,i,BurstComponent,
 			       stripped_fraction*Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
 #endif
-		transfer_stars(merger_centre,"ICM",i,"ICM",stripped_fraction);
+		transfer_stars(merger_centre,ICMComponent,i,ICMComponent,stripped_fraction);
 		mass_checks("deal_with_satellites #4",i);
 		mass_checks("deal_with_satellites #4",merger_centre);
 #ifndef POST_PROCESS_MAGS
@@ -175,21 +175,21 @@ void deal_with_satellites(int centralgal, int ngal)
        * still there is the condition on Rvir that determines that if a galaxy is a newly
        * accreted type 2 outside Rvir of type 0, its gas will go into the type 1. If it's
        * a type 1 outside Rvir of type 0, it retains all its gas. -> DeLucia2007*/
-      else if (HotGasStrippingModel == 1)
+      else if (HotGasStripingModel == 1)
 	{
 	/* If galaxy is a satellite inside Rvir it will lose its hot and
 	 * ejected gas into the hot gas component of the centralgal.
 	 * Only galaxies within Rvir contribute to the central halo.*/
 	  if ( dis < Gal[centralgal].Rvir && i != centralgal)
 	    {
-	      transfer_gas(centralgal,"Hot",i,"Hot",1.,"deal_with_satellites", __LINE__);
-	      transfer_gas(centralgal,"Ejected",i,"Ejected",1.,"deal_with_satellites", __LINE__);
+	      transfer_gas(centralgal,HotGasComponent,i,HotGasComponent,1.,"deal_with_satellites", __LINE__);
+	      transfer_gas(centralgal,EjectedGasComponent,i,EjectedGasComponent,1.,"deal_with_satellites", __LINE__);
 	#ifdef TRACK_BURST
 	      /* Transfer burst component first */
-	      transfer_stars(centralgal,"Burst",i,"Burst",
+	      transfer_stars(centralgal,BurstComponent,i,BurstComponent,
 			     Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
 	#endif
-	      transfer_stars(centralgal,"ICM",i,"ICM",1.);
+	      transfer_stars(centralgal,ICMComponent,i,ICMComponent,1.);
 	#ifndef POST_PROCESS_MAGS
 	#ifdef ICL
 	      transfer_ICL(centralgal, i, 1.);
@@ -204,14 +204,14 @@ void deal_with_satellites(int centralgal, int ngal)
 	  else
 	    if (Gal[i].Type == 2)
 	      {
-		transfer_gas(Gal[i].CentralGal,"Hot",i,"Hot",1.,"deal_with_satellites", __LINE__);
-		transfer_gas(Gal[i].CentralGal,"Ejected",i,"Ejected",1.,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,HotGasComponent,i,HotGasComponent,1.,"deal_with_satellites", __LINE__);
+		transfer_gas(Gal[i].CentralGal,EjectedGasComponent,i,EjectedGasComponent,1.,"deal_with_satellites", __LINE__);
 	#ifdef TRACK_BURST
 		/* Transfer burst component first */
-		transfer_stars(Gal[i].CentralGal,"Burst",i,"Burst",
+		transfer_stars(Gal[i].CentralGal,BurstComponent,i,BurstComponent,
 			       Gal[i].ICM/(Gal[i].DiskMass+Gal[i].BulgeMass+Gal[i].ICM));
 	#endif
-		transfer_stars(Gal[i].CentralGal,"ICM",i,"ICM",1.);
+		transfer_stars(Gal[i].CentralGal,ICMComponent,i,ICMComponent,1.);
 	#ifndef POST_PROCESS_MAGS
 	#ifdef ICL
 		transfer_ICL(Gal[i].CentralGal,i,1.);
@@ -219,12 +219,12 @@ void deal_with_satellites(int centralgal, int ngal)
 	#endif
 		Gal[i].HotRadius =0.;
 	      }
-	}//end of HotGasStrippingModel == 1
+	}//end of HotGasStripingModel == 1
 
       mass_checks("Bottom of deal_with_satellites i",i);
       mass_checks("Bottom of deal_with_satellites centralgal",centralgal);
 
-  } /* End of HotGasStrippingModel choice */
+  } /* End of HotGasStripingModel choice */
 
    return;
 

@@ -36,8 +36,12 @@
  *        radius, luminosity to mass, update central galaxy,
  *        update type 1 and type2, transfer stars and gas between galaxies. */
 
-/** This routine is no longer called (after Guo2010)*/
-double get_disk_radius(int halonr, int p)
+/** @brief computes disk radius
+ * 
+ *        computes disk radius from halo spin
+ * 
+ * @note This routine is no longer called (after Guo2010) */
+double get_disk_radius(const int halonr, const int p)
 {
   double SpinParameter;
 
@@ -54,9 +58,73 @@ double get_disk_radius(int halonr, int p)
   else
     /*  simple prescription */
     return Gal[p].Rvir / 10.0;
-
-
 }
+
+
+// void get_gas_disk_radius(int p)
+// {
+//   double dgas;
+//   if(Gal[p].Type == 0)
+//     dgas =
+//       3.0 * sqrt(Gal[p].GasSpin[0] * Gal[p].GasSpin[0] + Gal[p].GasSpin[1] * Gal[p].GasSpin[1] +
+//                  Gal[p].GasSpin[2] * Gal[p].GasSpin[2]) / 2.0 / Gal[p].Vmax;
+//   else
+//     dgas =
+//       3.0 * sqrt(Gal[p].GasSpin[0] * Gal[p].GasSpin[0] + Gal[p].GasSpin[1] * Gal[p].GasSpin[1] +
+//                  Gal[p].GasSpin[2] * Gal[p].GasSpin[2]) / 2.0 / Gal[p].InfallVmax;
+// 
+//   Gal[p].GasDiskRadius = dgas;
+// 
+//   //if the spin is not available for the halo
+//   if(Gal[p].GasSpin[0]==0 && Gal[p].GasSpin[1]==0 && Gal[p].GasSpin[2]==0)
+//           Gal[p].GasDiskRadius = Gal[p].Rvir / 10.0;
+// }
+
+
+// void get_stellar_disk_radius(const int p)
+// {
+//   double dstar;
+// 
+//   if(Gal[p].Type == 0)
+//     dstar = 3.0 * sqrt(Gal[p].StellarSpin[0] * Gal[p].StellarSpin[0] +
+//                        Gal[p].StellarSpin[1] * Gal[p].StellarSpin[1] +
+//                        Gal[p].StellarSpin[2] * Gal[p].StellarSpin[2]) / 2.0 / Gal[p].Vmax;
+//   else
+//     dstar = 3.0 * sqrt(Gal[p].StellarSpin[0] * Gal[p].StellarSpin[0] +
+//                        Gal[p].StellarSpin[1] * Gal[p].StellarSpin[1] +
+//                        Gal[p].StellarSpin[2] * Gal[p].StellarSpin[2]) / 2.0 / Gal[p].InfallVmax;
+// 
+//   Gal[p].StellarDiskRadius = dstar;
+// 
+//   //if the spin is not available for the halo
+//    if(dstar==0)
+//      Gal[p].StellarDiskRadius = Gal[p].Rvir / 10.0;
+// }
+
+
+// double get_initial_disk_radius(const int halonr, const int p)
+// {
+//   double SpinParameter, dgas;
+// 
+//   if(DiskRadiusModel == 0 || DiskRadiusModel == 1)
+//     {
+//       /*spin parameter */
+//       SpinParameter = sqrt(Halo[halonr].Spin[0] * Halo[halonr].Spin[0] +
+//                            Halo[halonr].Spin[1] * Halo[halonr].Spin[1] +
+//                              Halo[halonr].Spin[2] * Halo[halonr].Spin[2]) / (1.414 * Gal[p].Vvir * Gal[p].Rvir);
+// 
+//       if(Gal[p].GasSpin[0]==0 && Gal[p].GasSpin[1]==0 && Gal[p].GasSpin[2]==0)
+//         dgas = Gal[p].Rvir / 10.0;
+//       else
+//         dgas = 3.0 * (SpinParameter / 1.414) * Gal[p].Rvir;
+// 
+//       return dgas;
+//     }
+//   else
+//     /*  simpler prescription */
+//     return Gal[p].Rvir / 10.0;
+// }
+
 
 /** @brief Updates the gas disk radius.
  *
@@ -77,24 +145,18 @@ double get_disk_radius(int halonr, int p)
  *  assuming conservation of the angular momentum of the cooling gas and that the
  *  maximum circular velocity of satellite galaxies does not change after infall
  *  (inner dark matter regions are compact and don't change). */
-
-void get_gas_disk_radius(int p)
+void get_gas_disk_radius(const int p_)
 {
-  double dgas;
-  if(Gal[p].Type == 0)
-    dgas =
-      3.0 * sqrt(Gal[p].GasSpin[0] * Gal[p].GasSpin[0] + Gal[p].GasSpin[1] * Gal[p].GasSpin[1] +
-                 Gal[p].GasSpin[2] * Gal[p].GasSpin[2]) / 2.0 / Gal[p].Vmax;
+  const double spin_squared_ = Gal[p_].GasSpin[0] * Gal[p_].GasSpin[0] +
+                               Gal[p_].GasSpin[1] * Gal[p_].GasSpin[1] +
+                               Gal[p_].GasSpin[2] * Gal[p_].GasSpin[2];
+  if(spin_squared_ > 0.)
+  {
+    const double v_max_ = (Gal[p_].Type == 0) ? Gal[p_].Vmax : Gal[p_].InfallVmax;
+    Gal[p_].GasDiskRadius = 1.5 * sqrt(spin_squared_) / v_max_;
+  }
   else
-    dgas =
-      3.0 * sqrt(Gal[p].GasSpin[0] * Gal[p].GasSpin[0] + Gal[p].GasSpin[1] * Gal[p].GasSpin[1] +
-                 Gal[p].GasSpin[2] * Gal[p].GasSpin[2]) / 2.0 / Gal[p].InfallVmax;
-
-  Gal[p].GasDiskRadius = dgas;
-
-  //if the spin is not available for the halo
-  if(Gal[p].GasSpin[0]==0 && Gal[p].GasSpin[1]==0 && Gal[p].GasSpin[2]==0)
-          Gal[p].GasDiskRadius = Gal[p].Rvir / 10.0;
+  { Gal[p_].GasDiskRadius = 0.1 * Gal[p_].Rvir;  }
 }
 
 
@@ -117,25 +179,20 @@ void get_gas_disk_radius(int p)
  *  assuming that the maximum circular velocity of satellite galaxies does not
  *  change after infall (inner dark matter regions are compact and don't change). */
 
-void get_stellar_disk_radius(int p)
+void get_stellar_disk_radius(const int p_)
 {
-  double dstar;
-
-  if(Gal[p].Type == 0)
-    dstar = 3.0 * sqrt(Gal[p].StellarSpin[0] * Gal[p].StellarSpin[0] +
-                       Gal[p].StellarSpin[1] * Gal[p].StellarSpin[1] +
-                       Gal[p].StellarSpin[2] * Gal[p].StellarSpin[2]) / 2.0 / Gal[p].Vmax;
+  const double spin_squared_ = Gal[p_].StellarSpin[0] * Gal[p_].StellarSpin[0] +
+                               Gal[p_].StellarSpin[1] * Gal[p_].StellarSpin[1] +
+                               Gal[p_].StellarSpin[2] * Gal[p_].StellarSpin[2];
+  if(spin_squared_ > 0.)
+  {
+    const double v_max_ = (Gal[p_].Type == 0) ? Gal[p_].Vmax : Gal[p_].InfallVmax;
+    Gal[p_].StellarDiskRadius = 1.5 * sqrt(spin_squared_) / v_max_;
+  }
   else
-    dstar = 3.0 * sqrt(Gal[p].StellarSpin[0] * Gal[p].StellarSpin[0] +
-                       Gal[p].StellarSpin[1] * Gal[p].StellarSpin[1] +
-                       Gal[p].StellarSpin[2] * Gal[p].StellarSpin[2]) / 2.0 / Gal[p].InfallVmax;
-
-  Gal[p].StellarDiskRadius = dstar;
-
-  //if the spin is not available for the halo
-   if(dstar==0)
-     Gal[p].StellarDiskRadius = Gal[p].Rvir / 10.0;
+  { Gal[p_].StellarDiskRadius = 0.1 * Gal[p_].Rvir;  }
 }
+
 
 /** @brief Initiates the value of the disk radius.
  *
@@ -150,36 +207,33 @@ void get_stellar_disk_radius(int p)
  *
  *    \f$ R_d=\frac{1}{\sqrt{2}}\frac{j_d}{m_d}\lambda r_{200}\f$
  *
- *    and using the Milky Way as an approximate guide \f$R_{\rm{disk}}=3R_d\f$. */
+ *    and using the Milky Way as an approximate guide \f$R_{\rm{disk}}=3R_d\f$. 
+ * 
+ * @bug possible bug: should really test for GasSpin != 0 instead of HaloSpin != 0?
+ */
 
-double get_initial_disk_radius(int halonr, int p)
+double get_initial_disk_radius(const int halonr_, const int p_)
 {
-  double SpinParameter, dgas;
-
   if(DiskRadiusModel == 0 || DiskRadiusModel == 1)
-    {
-      /*spin parameter */
-      SpinParameter = sqrt(Halo[halonr].Spin[0] * Halo[halonr].Spin[0] +
-                           Halo[halonr].Spin[1] * Halo[halonr].Spin[1] +
-                             Halo[halonr].Spin[2] * Halo[halonr].Spin[2]) / (1.414 * Gal[p].Vvir * Gal[p].Rvir);
+  {
+    const double spin_squared_ = Halo[halonr_].Spin[0] * Halo[halonr_].Spin[0] +
+                                 Halo[halonr_].Spin[1] * Halo[halonr_].Spin[1] +
+                                 Halo[halonr_].Spin[2] * Halo[halonr_].Spin[2];  
 
-      if(Gal[p].GasSpin[0]==0 && Gal[p].GasSpin[1]==0 && Gal[p].GasSpin[2]==0)
-        dgas = Gal[p].Rvir / 10.0;
-      else
-        dgas = 3.0 * (SpinParameter / 1.414) * Gal[p].Rvir;
-
-      return dgas;
-    }
+    if(Gal[p_].GasSpin[0]==0 && Gal[p_].GasSpin[1]==0 && Gal[p_].GasSpin[2]==0)
+      return 0.1 * Gal[p_].Rvir;
+    else
+      return 1.5 * sqrt(spin_squared_) / Gal[p_].Vvir;
+  }
   else
     /*  simpler prescription */
-    return Gal[p].Rvir / 10.0;
+    return 0.1 * Gal[p_].Rvir;
 }
-
 
 
 /** @brief Initializes the Galaxy Structure by setting all its
  *         elements to zero. */
-void init_galaxy(int p, int halonr)
+void init_galaxy(const int p, const int halonr)
 {
   int j, outputbin;
 
@@ -499,15 +553,9 @@ void add_to_luminosities(int p, double mstars, double time, double dt, double me
 #endif  //POST_PROCESS_MAGS
 #endif  //COMPUTE_SPECPHOT_PROPERTIES
 
-// /**@brief gives the time from a given snapshot to z=0 (time in code_units/h).*/
-// double NumToTime(int num)
-// {
-//   return Age[num];
-// }
 
 /**@brief Calculates the virial mass: \f$M_{\rm{crit200}}\f$ for central halos
  *        with \f$M_{\rm{crit200}}\f$ or Len*PartMass for central halos without. */
-
 double get_virial_mass(int halonr)
 {
   if(halonr == Halo[halonr].FirstHaloInFOFgroup && Halo[halonr].M_Crit200)
@@ -528,6 +576,8 @@ double get_virial_velocity(int halonr)
 }
 
 
+
+/** @brief computes Hubbble parameter for halo redshift  */
 double get_hubble_parameter(int halonr)
 {
   double zplus1;
@@ -538,6 +588,7 @@ double get_hubble_parameter(int halonr)
   return Hubble * sqrt(Omega * zplus1 * zplus1 * zplus1 + (1 - Omega - OmegaLambda) * zplus1 * zplus1 +
                        OmegaLambda);
 }
+
 
 /**@brief Calculates virial radius from a critical overdensity
  *
@@ -560,9 +611,7 @@ double get_virial_radius(int halonr)
 }
 
 
-
-
-/**@brief Updates properties of central galaxies.
+/** @brief Updates properties of central galaxies.
  *
  *   \f$M_{\rm{vir}}\f$, \f$R_{\rm{vir}}\f$ and \f$V_{\rm{vir}}\f$ are only
  *   updated for type 0's. Once galaxies become satellites these quantities
@@ -738,19 +787,30 @@ void update_type_2(int ngal,int halonr, int prog,int mostmassive)
     }
 }
 
-void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
 
-  /* Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
-   * cp and cq must each be one of:
-   *   Disk
-   *   Bulge
-   *   ICM
-   * If -DTRACK_BURST is set then can also specify BurstMass as an option.  This is
-   * a little different in that it is not a separate component, so it should only
-   * be transferred if both cq and cp are BurstMass
+  /** @brief transfer part of stars between reservoirs and galaxies
+   * 
+   * Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
+   * cp and cq must each be one of: 
+   * DiskComponent, BulgeComponent, ICMComponent, BurstComponent
    *
+   * If -DTRACK_BURST is set then can also specify BurstComponent as an option.
+   * This is different in that it is not a separate component, so it should only
+   * be transferred if both cq and cp are BurstComponent
+   * 
+   * @bug (correct by Stefan Hilbert)
+   *       it was tested that "BurstMass" could only be transferred to "BurstMass",
+   *       but it was "Burst" to indicate BurstMass transfer and "BurstMass" was
+   *       never mentioned elsewhere.
+   *       So, "BurstMass" was replaced by "Burst" (and then by BurstComponent)
+   *      
+   * @bug (correct by Stefan Hilbert)
+   *       BurstMass was given to receiving galaxy, but not taken from donor galaxy
+   *       code used to be: Gal[q].BurstMass -= 0.;
+   *       now replaced by: Gal[q].BurstMass -= Mass;
    */
-
+void transfer_stars(const int p, const StellarComponentType cp, const int q, const StellarComponentType cq, const double fraction) 
+{
   float Mass;
 #ifdef DETAILED_METALS_AND_MASS_RETURN
   struct metals Metals;
@@ -773,107 +833,143 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
 #endif
 
   /* Sanity checks */
-  if (fraction > 1.) {
+  if (fraction > 1.)
+  {
     printf("\n*** transfer_stars: fraction>1 ***\n");
     exit(1);
   }
 #ifdef STAR_FORMATION_HISTORY
-  if (Gal[p].sfh_ibin != Gal[q].sfh_ibin) {
+  if (Gal[p].sfh_ibin != Gal[q].sfh_ibin)
+  {
     printf("\n*** transfer_stars: inconsistent itimes ***\n");
     for(i=0;i<SFH_NBIN;i++)
+    {
       printf("Bin[%d] time_1=%e dt_1=%e Nbins_1=%d time_2=%e dt_2=%e Nbins_2=%d\n",i,
                         Gal[p].sfh_t[i],Gal[p].sfh_dt[i],Gal[p].sfh_Nbins[i],
                         Gal[q].sfh_t[i],Gal[q].sfh_dt[i],Gal[q].sfh_Nbins[i]);
+    }
     exit(1);
   }
 #endif
 #ifdef TRACK_BURST
-  if ((strcmp(cp,"BurstMass")==0 && !strcmp(cq,"BurstMass")==0) ||
-      (strcmp(cq,"BurstMass")==0 && !strcmp(cp,"BurstMass")==0)) {
+  if ((cp == BurstComponent && cq != BurstComponent) ||
+      (cq == BurstComponent && cp != BurstComponent)   )
+  {
     printf("\n*** transfer_stars: used incorrectly with BurstMass ***\n");
     exit(1);
   }
 #endif
 
-  //Mass and metals to be transfered
-  if (strcmp(cq,"Disk")==0)
+  //Mass and metals to be transfered and taken from galaxy q
+  if (cq == DiskComponent)
   {
     Mass = fraction*Gal[q].DiskMass;
+    Gal[q].DiskMass -= Mass;
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[q].sfh_ibin; i++)
-            sfh_Mass[i]=fraction*Gal[q].sfh_DiskMass[i];
+    {
+      sfh_Mass[i]             = fraction*Gal[q].sfh_DiskMass[i];
+      Gal[q].sfh_DiskMass[i] -= sfh_Mass[i];
+    }
 #endif
-    Metals=metals_add(metals_init(),Gal[q].MetalsDiskMass,fraction);
+    Metals                = metals_fraction(Gal[q].MetalsDiskMass, fraction);
+    Gal[q].MetalsDiskMass = metals_add(Gal[q].MetalsDiskMass, Metals, -1.);
 #ifdef INDIVIDUAL_ELEMENTS
-    Yield = elements_add(elements_init(),Gal[q].DiskMass_elements,fraction);
+    Yield                    = elements_add(elements_init(),Gal[q].DiskMass_elements,fraction);
+    Gal[q].DiskMass_elements = elements_add(Gal[q].DiskMass_elements,Yield,-1.);
 #endif
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[q].sfh_ibin; i++)
-      {
-        sfh_Metals[i]=metals_add(metals_init(),Gal[q].sfh_MetalsDiskMass[i],fraction);
+    {
+      sfh_Metals[i]                = metals_fraction(Gal[q].sfh_MetalsDiskMass[i],fraction);
+      Gal[q].sfh_MetalsDiskMass[i] = metals_add(Gal[q].sfh_MetalsDiskMass[i],sfh_Metals[i],-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-        sfh_Elements[i]=elements_add(elements_init(),Gal[q].sfh_ElementsDiskMass[i],fraction);
+      sfh_Elements[i]                = elements_add(elements_init(),Gal[q].sfh_ElementsDiskMass[i],fraction);
+      Gal[q].sfh_ElementsDiskMass[i] = elements_add(Gal[q].sfh_ElementsDiskMass[i],sfh_Elements[i],-1.);
 #endif
-      }
+    }
 #endif  
   }
-  else if (strcmp(cq,"Bulge")==0)
+  else if (cq == BulgeComponent)
   {
-    Mass=fraction*Gal[q].BulgeMass;
+    Mass              = fraction*Gal[q].BulgeMass;
+    Gal[q].BulgeMass -= Mass;
 #ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) sfh_Mass[i]=fraction*Gal[q].sfh_BulgeMass[i];
+    for (i=0; i<=Gal[q].sfh_ibin; i++) 
+    { 
+      sfh_Mass[i]              = fraction*Gal[q].sfh_BulgeMass[i];
+      Gal[q].sfh_BulgeMass[i] -= sfh_Mass[i];
+    }
 #endif
-    Metals=metals_add(metals_init(),Gal[q].MetalsBulgeMass,fraction);
+    Metals                 = metals_fraction(Gal[q].MetalsBulgeMass,fraction);
+    Gal[q].MetalsBulgeMass = metals_add(Gal[q].MetalsBulgeMass,Metals,-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-    Yield = elements_add(elements_init(),Gal[q].BulgeMass_elements,fraction);
+    Yield                     = elements_add(elements_init(),Gal[q].BulgeMass_elements,fraction);
+    Gal[q].BulgeMass_elements = elements_add(Gal[q].BulgeMass_elements,Yield,-1.);
 #endif
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[q].sfh_ibin; i++)
-      {
-        sfh_Metals[i]=metals_add(metals_init(),Gal[q].sfh_MetalsBulgeMass[i],fraction);
+    {
+      sfh_Metals[i]                 = metals_fraction(Gal[q].sfh_MetalsBulgeMass[i],fraction);
+      Gal[q].sfh_MetalsBulgeMass[i] = metals_add(Gal[q].sfh_MetalsBulgeMass[i],sfh_Metals[i],-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-        sfh_Elements[i]=elements_add(elements_init(),Gal[q].sfh_ElementsBulgeMass[i],fraction);
+      sfh_Elements[i]                 = elements_add(elements_init(),Gal[q].sfh_ElementsBulgeMass[i],fraction);
+      Gal[q].sfh_ElementsBulgeMass[i] = elements_add(Gal[q].sfh_ElementsBulgeMass[i],sfh_Elements[i],-1.);
 #endif
-      }
+    }
 #endif  
   }
-  else if (strcmp(cq,"ICM")==0)
+  else if (cq == ICMComponent)
   {
-    Mass=fraction*Gal[q].ICM;
+    Mass        = fraction*Gal[q].ICM;
+    Gal[q].ICM -= Mass;
 #ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) sfh_Mass[i]=fraction*Gal[q].sfh_ICM[i];
+    for (i=0; i<=Gal[q].sfh_ibin; i++)
+    {
+      sfh_Mass[i]=fraction*Gal[q].sfh_ICM[i];
+      Gal[q].sfh_ICM[i] -= sfh_Mass[i];
+    }
 #endif
-    Metals=metals_add(metals_init(),Gal[q].MetalsICM,fraction);
+    Metals           = metals_fraction(Gal[q].MetalsICM,fraction);
+    Gal[q].MetalsICM = metals_add(Gal[q].MetalsICM,Metals,-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-    Yield = elements_add(elements_init(),Gal[q].ICM_elements,fraction);
+    Yield               = elements_add(elements_init(),Gal[q].ICM_elements,fraction);
+    Gal[q].ICM_elements = elements_add(Gal[q].ICM_elements,Yield,-1.);
 #endif
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[q].sfh_ibin; i++)
-      {
-        sfh_Metals[i]=metals_add(metals_init(),Gal[q].sfh_MetalsICM[i],fraction);
+    {
+      sfh_Metals[i]           = metals_fraction(Gal[q].sfh_MetalsICM[i],fraction);
+      Gal[q].sfh_MetalsICM[i] = metals_add(Gal[q].sfh_MetalsICM[i],sfh_Metals[i],-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-        sfh_Elements[i]=elements_add(elements_init(),Gal[q].sfh_ElementsICM[i],fraction);
+      sfh_Elements[i]           = elements_add(elements_init(),Gal[q].sfh_ElementsICM[i],fraction);
+      Gal[q].sfh_ElementsICM[i] = elements_add(Gal[q].sfh_ElementsICM[i],sfh_Elements[i],-1.);
 #endif
-      }
+    }
 #endif  
+  }
 #ifdef TRACK_BURST
-  }
-  else if (strcmp(cq,"Burst")==0)
+  else if (cq == BurstComponent)
   {
-    Mass = fraction*Gal[q].BurstMass;
+    Mass              = fraction*Gal[q].BurstMass;
+    Gal[q].BurstMass -= Mass;
 #ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) sfh_Mass[i]=fraction*Gal[q].sfh_BurstMass[i];
-#endif
+    for (i=0; i<=Gal[q].sfh_ibin; i++) 
+    { 
+      sfh_Mass[i]=fraction*Gal[q].sfh_BurstMass[i];
+      Gal[q].sfh_BurstMass[i] -= sfh_Mass[i];
+    }
 #endif
   }
+#endif
   else
   {
-    printf("Unknown component type %s in call to transfer_stars\n",cq);
+    printf("Unknown component type %s for galaxy q in call to transfer_stars\n", StellarComponentStr[cq]);
     exit(1);
   }
 
   //Add to galaxy p
-  if (strcmp(cp,"Disk")==0)
+  if (cp == DiskComponent)
   {
     Gal[p].DiskMass += Mass;
 #ifdef STAR_FORMATION_HISTORY
@@ -885,15 +981,15 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
 #endif
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[p].sfh_ibin; i++)
-      {
-        Gal[p].sfh_MetalsDiskMass[i]=metals_add(Gal[p].sfh_MetalsDiskMass[i],sfh_Metals[i],1.);
+    {
+      Gal[p].sfh_MetalsDiskMass[i]=metals_add(Gal[p].sfh_MetalsDiskMass[i],sfh_Metals[i],1.);
 #ifdef INDIVIDUAL_ELEMENTS
-        Gal[p].sfh_ElementsDiskMass[i]=elements_add(Gal[p].sfh_ElementsDiskMass[i],sfh_Elements[i],1.);
+      Gal[p].sfh_ElementsDiskMass[i]=elements_add(Gal[p].sfh_ElementsDiskMass[i],sfh_Elements[i],1.);
 #endif
-      }
+    }
 #endif  
   }
-  else if (strcmp(cp,"Bulge")==0)
+  else if (cp == BulgeComponent)
   {
     Gal[p].BulgeMass += Mass;
 #ifdef STAR_FORMATION_HISTORY
@@ -905,15 +1001,15 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
 #endif
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[p].sfh_ibin; i++)
-      {
-        Gal[p].sfh_MetalsBulgeMass[i]=metals_add(Gal[p].sfh_MetalsBulgeMass[i],sfh_Metals[i],1.);
+    {
+      Gal[p].sfh_MetalsBulgeMass[i]=metals_add(Gal[p].sfh_MetalsBulgeMass[i],sfh_Metals[i],1.);
 #ifdef INDIVIDUAL_ELEMENTS
-        Gal[p].sfh_ElementsBulgeMass[i]=elements_add(Gal[p].sfh_ElementsBulgeMass[i],sfh_Elements[i],1.);
+      Gal[p].sfh_ElementsBulgeMass[i]=elements_add(Gal[p].sfh_ElementsBulgeMass[i],sfh_Elements[i],1.);
 #endif
-      }
+    }
 #endif  
   }
-  else if (strcmp(cp,"ICM")==0)
+  else if (cp == ICMComponent)
   {
     Gal[p].ICM += Mass;
 #ifdef STAR_FORMATION_HISTORY
@@ -925,16 +1021,16 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
 #endif
 #ifdef STAR_FORMATION_HISTORY
     for (i=0; i<=Gal[p].sfh_ibin; i++)
-      {
-        Gal[p].sfh_MetalsICM[i]=metals_add(Gal[p].sfh_MetalsICM[i],sfh_Metals[i],1.);
+    {
+      Gal[p].sfh_MetalsICM[i]=metals_add(Gal[p].sfh_MetalsICM[i],sfh_Metals[i],1.);
 #ifdef INDIVIDUAL_ELEMENTS
-        Gal[p].sfh_ElementsICM[i]=elements_add(Gal[p].sfh_ElementsICM[i],sfh_Elements[i],1.);
+      Gal[p].sfh_ElementsICM[i]=elements_add(Gal[p].sfh_ElementsICM[i],sfh_Elements[i],1.);
 #endif
-      }
+    }
 #endif  
 #ifdef TRACK_BURST
   }
-  else if (strcmp(cp,"Burst")==0)
+  else if (cp == BurstComponent)
   {
     Gal[p].BurstMass += Mass;
 #ifdef STAR_FORMATION_HISTORY
@@ -944,98 +1040,23 @@ void transfer_stars(int p, char cp[], int q, char cq[], double fraction) {
   }
   else
   {
-    printf("Unknown component type %s in call to transfer_stars\n",cp);
+    printf("Unknown component type %s for galaxy p in call to transfer_stars\n", StellarComponentStr[cp]);
     exit(1);
   }
-
-  //Subtract from galaxy q; 
-  if (strcmp(cq,"Disk")==0)
-  {
-    Gal[q].DiskMass -= Mass;
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) Gal[q].sfh_DiskMass[i] -= sfh_Mass[i];
-#endif
-    Gal[q].MetalsDiskMass=metals_add(Gal[q].MetalsDiskMass,Metals,-1.);
-#ifdef INDIVIDUAL_ELEMENTS
-    Gal[q].DiskMass_elements = elements_add(Gal[q].DiskMass_elements,Yield,-1.);
-#endif
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) 
-      {
-            Gal[q].sfh_MetalsDiskMass[i]=metals_add(Gal[q].sfh_MetalsDiskMass[i],sfh_Metals[i],-1.);
-#ifdef INDIVIDUAL_ELEMENTS
-            Gal[q].sfh_ElementsDiskMass[i]=elements_add(Gal[q].sfh_ElementsDiskMass[i],sfh_Elements[i],-1.);
-#endif
-      }
-#endif  
-  }
-  else if (strcmp(cq,"Bulge")==0)
-  {
-    Gal[q].BulgeMass -= Mass;
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) Gal[q].sfh_BulgeMass[i] -= sfh_Mass[i];
-#endif
-    Gal[q].MetalsBulgeMass=metals_add(Gal[q].MetalsBulgeMass,Metals,-1.);
-#ifdef INDIVIDUAL_ELEMENTS
-    Gal[q].BulgeMass_elements = elements_add(Gal[q].BulgeMass_elements,Yield,-1.);
-#endif
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++)
-      {
-        Gal[q].sfh_MetalsBulgeMass[i]=metals_add(Gal[q].sfh_MetalsBulgeMass[i],sfh_Metals[i],-1.);
-#ifdef INDIVIDUAL_ELEMENTS
-        Gal[q].sfh_ElementsBulgeMass[i]=elements_add(Gal[q].sfh_ElementsBulgeMass[i],sfh_Elements[i],-1.);
-#endif
-      }
-#endif  
-  }
-  else if (strcmp(cq,"ICM")==0)
-  {
-    Gal[q].ICM -= Mass;
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) Gal[q].sfh_ICM[i] -= sfh_Mass[i];
-#endif
-    Gal[q].MetalsICM=metals_add(Gal[q].MetalsICM,Metals,-1.);
-#ifdef INDIVIDUAL_ELEMENTS
-    Gal[q].ICM_elements = elements_add(Gal[q].ICM_elements,Yield,-1.);
-#endif
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++)
-      {
-        Gal[q].sfh_MetalsICM[i]=metals_add(Gal[q].sfh_MetalsICM[i],sfh_Metals[i],-1.);
-#ifdef INDIVIDUAL_ELEMENTS
-        Gal[q].sfh_ElementsICM[i]=elements_add(Gal[q].sfh_ElementsICM[i],sfh_Elements[i],-1.);
-#endif
-      }
-#endif  
-#ifdef TRACK_BURST
-  }
-  else if (strcmp(cq,"Burst")==0)
-  {
-    Gal[q].BurstMass -=0.;
-#ifdef STAR_FORMATION_HISTORY
-    for (i=0; i<=Gal[q].sfh_ibin; i++) Gal[q].sfh_BurstMass[i] -= sfh_Mass[i];
-#endif
-#endif
-  } else
-  {
-    printf("Unknown component type %s in call to transfer_stars\n",cq);
-    exit(1);
-  }
-
-  return;
 }
 
 
-void transfer_gas(int p, char cp[], int q, char cq[], double fraction, char call_function[], int call_line)
+  /** @brief transfer part of gas between reservoirs and galaxies
+   *
+   * Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
+   * cp and cq must each be one of:
+   *   ColdGasComponent
+   *   HotGasComponent
+   *   EjectedGasComponent
+   */
+void transfer_gas(const int p, const GasComponentType cp, const int q, const GasComponentType  cq, const double fraction, char call_function[], int call_line)
 {
 
-  /* Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
-   * cp and cq must each be one of:
-   *   Cold
-   *   Hot
-   *   Ejected
-   */
   float Mass;
 #ifdef DETAILED_METALS_AND_MASS_RETURN
   struct metals Metals;
@@ -1047,128 +1068,107 @@ void transfer_gas(int p, char cp[], int q, char cq[], double fraction, char call
 #endif
 
   /* Sanity check */
-
-  if (fraction > 1.) //1.000001
+  if (fraction > 1.)
   {
-          char sbuf[1000];
-          sprintf(sbuf, "\nparent call from: %s, line %d \ntransfer_gas: fraction>1\nfraction = %.11f\nFrom '%s' to '%s\n",call_function, call_line, fraction,cq, cp);
-          terminate(sbuf);
+    char sbuf[1000];
+    sprintf(sbuf, "\nparent call from: %s, line %d \ntransfer_gas: fraction>1\nfraction = %.11f\nFrom '%s' to '%s\n",call_function, call_line, fraction, GasComponentStr[cq], GasComponentStr[cp]);
+    terminate(sbuf);
   }
-  //if (fraction > 1. && fraction < 1.000001) { //1.0000001
-        //  fraction = 1.0;
-    /*printf("\n*** fraction forced to 1.0 ***\n");
-    printf("*** fraction was = %.11f ***\n", fraction);
-    printf("*** From '%s' to '%s' ***\n\n", cq, cp);*/
- // }
 
-  //Mass and Metals to be transfered
-  if (strcmp(cq,"Cold")==0)
-    {
-      Mass = fraction*Gal[q].ColdGas;
-      Metals = metals_add(metals_init(),Gal[q].MetalsColdGas,fraction);
+  /* Mass and Metals to be transfered taken from galaxy q */
+  if (cq == ColdGasComponent)
+  {
+    Mass                    = fraction*Gal[q].ColdGas;
+    Gal[q].ColdGas         -= Mass;
+    Metals                  = metals_fraction(Gal[q].MetalsColdGas,fraction);
+    Gal[q].MetalsColdGas    = metals_add(Gal[q].MetalsColdGas, Metals,-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-      Yield = elements_add(elements_init(),Gal[q].ColdGas_elements,fraction);
-#endif
-    }
-  else if (strcmp(cq,"Hot")==0)
-    {
-      Mass=fraction*Gal[q].HotGas;
-      Metals = metals_add(metals_init(),Gal[q].MetalsHotGas,fraction);
-#ifdef INDIVIDUAL_ELEMENTS
-    Yield = elements_add(elements_init(),Gal[q].HotGas_elements,fraction);
-#endif
-    }
-  else if (strcmp(cq,"Ejected")==0)
-    {
-      Mass=fraction*Gal[q].EjectedMass;
-      Metals = metals_add(metals_init(),Gal[q].MetalsEjectedMass,fraction);
-#ifdef INDIVIDUAL_ELEMENTS
-    Yield = elements_add(elements_init(),Gal[q].EjectedMass_elements,fraction);
-#endif
-    }
-  else
-    {
-      printf("Unknown component type %s in call to transfer_gas\n",cq);
-      exit(1);
-    }
-
-  //Add to galaxy p
-  if (strcmp(cp,"Cold")==0)
-    {
-      Gal[p].ColdGas += Mass;
-      Gal[p].MetalsColdGas = metals_add(Gal[p].MetalsColdGas,Metals,1.);
-#ifdef INDIVIDUAL_ELEMENTS
-      Gal[p].ColdGas_elements = elements_add(Gal[p].ColdGas_elements,Yield,1.);
-#endif
-    }
-  else if (strcmp(cp,"Hot")==0)
-    {
-      Gal[p].HotGas += Mass;
-      Gal[p].MetalsHotGas = metals_add(Gal[p].MetalsHotGas,Metals,1.);
-#ifdef INDIVIDUAL_ELEMENTS
-      Gal[p].HotGas_elements = elements_add(Gal[p].HotGas_elements,Yield,1.);
-#endif
-#ifdef METALS_SELF
-      if (p==q) Gal[p].MetalsHotGasSelf = metals_add(Gal[p].MetalsHotGasSelf,Metals,1.);
-#endif
-    }
-  else if (strcmp(cp,"Ejected")==0)
-    {
-      Gal[p].EjectedMass += Mass;
-      Gal[p].MetalsEjectedMass = metals_add(Gal[p].MetalsEjectedMass,Metals,1.);
-#ifdef INDIVIDUAL_ELEMENTS
-      Gal[p].EjectedMass_elements = elements_add(Gal[p].EjectedMass_elements,Yield,1.);
-#endif
-    }
-  else
-    {
-      printf("Unknown component type %s in call to transfer_gas\n",cp);
-      exit(1);
-    }
-
-  //Subtract from galaxy q;
-  if (strcmp(cq,"Cold")==0)   {
-    Gal[q].ColdGas -= Mass;
-    Gal[q].MetalsColdGas = metals_add(Gal[q].MetalsColdGas,Metals,-1.);
-#ifdef INDIVIDUAL_ELEMENTS
+    Yield                   = elements_add(elements_init(),Gal[q].ColdGas_elements,fraction);
     Gal[q].ColdGas_elements = elements_add(Gal[q].ColdGas_elements,Yield,-1.);
 #endif
-  } else if (strcmp(cq,"Hot")==0) {
-    Gal[q].HotGas -= Mass;
-    Gal[q].MetalsHotGas = metals_add(Gal[q].MetalsHotGas,Metals,-1.);
+  }
+  else if (cq == HotGasComponent)
+  {
+    Mass                    = fraction*Gal[q].HotGas;
+    Gal[q].HotGas          -= Mass;
+    Metals                  = metals_fraction(Gal[q].MetalsHotGas,fraction);
+    Gal[q].MetalsHotGas     = metals_add(Gal[q].MetalsHotGas,Metals,-1.);
 #ifdef INDIVIDUAL_ELEMENTS
-    Gal[q].HotGas_elements = elements_add(Gal[q].HotGas_elements,Yield,-1.);
+    Yield                   = elements_add(elements_init(),Gal[q].HotGas_elements,fraction);
+    Gal[q].HotGas_elements  = elements_add(Gal[q].HotGas_elements,Yield,-1.);
 #endif
 #ifdef METALS_SELF
     Gal[q].MetalsHotGasSelf = metals_add(Gal[q].MetalsHotGasSelf,Metals,-1.);
 #endif
-  } else if (strcmp(cq,"Ejected")==0) {
-    Gal[q].EjectedMass -= Mass;
-    Gal[q].MetalsEjectedMass = metals_add(Gal[q].MetalsEjectedMass,Metals,-1.);
+  }
+  else if (cq == EjectedGasComponent)
+  {
+    Mass                        = fraction*Gal[q].EjectedMass;
+    Gal[q].EjectedMass         -= Mass;
+    Metals                      = metals_fraction(Gal[q].MetalsEjectedMass,fraction);
+    Gal[q].MetalsEjectedMass    = metals_add(Gal[q].MetalsEjectedMass,Metals,-1.);
 #ifdef INDIVIDUAL_ELEMENTS
+    Yield                       = elements_add(elements_init(),Gal[q].EjectedMass_elements,fraction);
     Gal[q].EjectedMass_elements = elements_add(Gal[q].EjectedMass_elements,Yield,-1.);
 #endif
-  } else {
-    printf("Unknown component type %s in call to transfer_gas\n",cq);
+  }
+  else
+  {
+    printf("Unknown component type %s in call to transfer_gas\n", GasComponentStr[cq]);
     exit(1);
   }
-
+ 
+ //Add to galaxy p
+  if (cp == ColdGasComponent)
+  {
+    Gal[p].ColdGas += Mass;
+    Gal[p].MetalsColdGas = metals_add(Gal[p].MetalsColdGas,Metals,1.);
+#ifdef INDIVIDUAL_ELEMENTS
+    Gal[p].ColdGas_elements = elements_add(Gal[p].ColdGas_elements,Yield,1.);
+#endif
+  }
+  else if (cp == HotGasComponent)
+  {
+    Gal[p].HotGas += Mass;
+    Gal[p].MetalsHotGas = metals_add(Gal[p].MetalsHotGas,Metals,1.);
+#ifdef INDIVIDUAL_ELEMENTS
+    Gal[p].HotGas_elements = elements_add(Gal[p].HotGas_elements,Yield,1.);
+#endif
+#ifdef METALS_SELF
+    if (p==q) Gal[p].MetalsHotGasSelf = metals_add(Gal[p].MetalsHotGasSelf,Metals,1.);
+#endif
+  }
+  else if (cp == EjectedGasComponent)
+  {
+    Gal[p].EjectedMass += Mass;
+    Gal[p].MetalsEjectedMass = metals_add(Gal[p].MetalsEjectedMass,Metals,1.);
+#ifdef INDIVIDUAL_ELEMENTS
+    Gal[p].EjectedMass_elements = elements_add(Gal[p].EjectedMass_elements,Yield,1.);
+#endif
+  }
+  else
+  {
+    printf("Unknown component type %s in call to transfer_gas\n", GasComponentStr[cp]);
+    exit(1);
+  }
   return;
 }
 
 
-
-void mass_checks(char string[], int igal) {
-
-  /* Some sanity checks on the masses of different components. 
+  /** @brief sanity checks on the masses of different components
+   *
+   *
+   * Some sanity checks on the masses of different components. 
    * If due to rounding error, then apply a correction;
    * otherwise print error message and exit
+   *
+   * @note ROB: Should probably make some of these for the elements
    */
-        //ROB: Should probably make some of these for the elements
-
-#ifndef MASS_CHECKS
+void perform_mass_checks(char string[], int igal)
+{
+  (void) string; /* suppress unused-parameter warning */
+  (void) igal;   /* suppress unused-parameter warning */
   return;
-#endif
   
 #ifdef STAR_FORMATION_HISTORY
   int i;
@@ -1206,7 +1206,7 @@ void mass_checks(char string[], int igal) {
   //check if the mass in metals is greater than the gas mass
   if(metals_total(Gal[igal].MetalsColdGas) > Gal[igal].ColdGas) {
     if (metals_total(Gal[igal].MetalsColdGas) < 1e-7)
-      Gal[igal].MetalsColdGas = metals_add(metals_init(),Gal[igal].MetalsColdGas,
+      Gal[igal].MetalsColdGas = metals_fraction(Gal[igal].MetalsColdGas,
                                            Gal[igal].ColdGas/metals_total(Gal[igal].MetalsColdGas));
     else {
       printf("\n*** Mass check error, called from: %s, MetalsColdGas > ColdGas ***\n",string);
@@ -1238,7 +1238,7 @@ void mass_checks(char string[], int igal) {
 
   if(metals_total(Gal[igal].MetalsHotGas) > Gal[igal].HotGas) {
     if (metals_total(Gal[igal].MetalsHotGas) < 1e-7)
-      Gal[igal].MetalsHotGas = metals_add(metals_init(),Gal[igal].MetalsHotGas,
+      Gal[igal].MetalsHotGas = metals_fraction(Gal[igal].MetalsHotGas,
                                            Gal[igal].HotGas/metals_total(Gal[igal].MetalsHotGas));
    else {
       printf("\n***  Mass check error, called from: %s, MetalsHotGas > HotGas ***\n",string);
@@ -1275,7 +1275,7 @@ void mass_checks(char string[], int igal) {
 
   if(metals_total(Gal[igal].MetalsEjectedMass) > Gal[igal].EjectedMass) {
     if (metals_total(Gal[igal].MetalsEjectedMass) < 1e-7)
-      Gal[igal].MetalsEjectedMass = metals_add(metals_init(),Gal[igal].MetalsEjectedMass,
+      Gal[igal].MetalsEjectedMass = metals_fraction(Gal[igal].MetalsEjectedMass,
                                            Gal[igal].EjectedMass/metals_total(Gal[igal].MetalsEjectedMass));
     else {
       printf("\n*** Mass check error, called from: %s, MetalsEjectedMass > EjectedMass ***\n",string);
@@ -1410,9 +1410,13 @@ double separation_halo(int p, int q)
 }
 
 
-//MATH MISC - PROBABLY SHOULD GO INTO SEPARATE FILE
-//Finds interpolation point
-//the value j so that xx[j]<x<xx[jj+1]
+/** @brief find interpolation point
+ * 
+ * Finds interpolation point
+ * the value j so that xx[j] < x < xx[jj+1]
+ * 
+ * @note  MATH MISC - PROBABLY SHOULD GO INTO SEPARATE FILE
+ */
 void locate(double *xx, int n, double x, int *j)
 {
   unsigned long ju,jm,jl;
@@ -1438,13 +1442,13 @@ void locate(double *xx, int n, double x, int *j)
 }
 
 
-
-//!*********************************************************
-//!Simpsons quadratures for the signal
-//!********************************************************
-//erg/s/A --> erg/s/Hz --> erg/s
-
-
+/** @brief numerical integration for fluxes
+ * 
+ * numerical integration for fluxes with
+ * Simpsons quadratures for the signal
+ * 
+ * erg/s/A --> erg/s/Hz --> erg/s
+ */
 double integrate(double *flux, int Grid_Length)
 {
   double sum[3], I[3], f[4];
@@ -1485,8 +1489,10 @@ double integrate(double *flux, int Grid_Length)
 
 
 
-//Find interpolation polynomial
-//given xa and ya, returns polynomial y and error dy
+/** @brief Find interpolation polynomial
+ * 
+ * given xa and ya, returns polynomial y and error dy
+ */
 void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
 {
   int i,m,ns=1;
@@ -1495,8 +1501,8 @@ void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
   double ww;
 
   dif=fabs(x-xa[1]);
-  c=vector(1,n);
-  d=vector(1,n);
+  c=new_vector(1,n);
+  d=new_vector(1,n);
   for (i=1;i<=n;i++) {
       if ( (dift=fabs(x-xa[i])) < dif) {
           ns=i;
@@ -1524,8 +1530,8 @@ void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
 }
 
 
+/** @brief Numerical Recipes standard error handler */
 void nrerror(char error_text[])
-/* Numerical Recipes standard error handler */
 {
   fprintf(stderr,"Numerical Recipes run-time error...\n");
   fprintf(stderr,"%s\n",error_text);
@@ -1533,11 +1539,13 @@ void nrerror(char error_text[])
   exit(1);
 }
 
+
 #define NREND 1
 #define FREE_ARG char*
 
-double *vector(long nl, long nh)
-/* allocate a double vector with subscript range v[nl..nh] */
+
+/** @brief allocate a double vector with subscript range v[nl..nh] */
+double *new_vector(long nl, long nh)
 {
   double *v;
 
@@ -1546,13 +1554,16 @@ double *vector(long nl, long nh)
   return v-nl+NREND;
 }
 
+
+/** @brief free a double vector allocated with vector() */
 void free_vector(double *v, long nl, long nh)
-/* free a double vector allocated with vector() */
 {
   (void)nh; /* avoid unused-parameter warning */
   free((FREE_ARG) (v+nl-NREND));
 }
 
+
+/** @brief print galaxy properties */
 void print_galaxy(char string[], int p, int halonr)
 {
 /*        printf("%s Hnr=%d firstinFOF=%d prog=%d nestprog=%d Descendant=%d gal=%d Type=%d\n",
@@ -1575,6 +1586,5 @@ void print_galaxy(char string[], int p, int halonr)
          Gal[p].DiskMass*1.e10, Gal[p].BulgeMass*1.e10, Gal[p].GasDiskRadius, Gal[p].StellarDiskRadius, Gal[p].BulgeSize);
 
   if(isnan(Gal[p].GasDiskRadius))
-    exit(0);
-
+  { exit(1); }
 }

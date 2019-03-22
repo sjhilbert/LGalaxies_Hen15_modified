@@ -399,8 +399,8 @@ void read_parameter_file(char *file_name)
   parameter_address[nt] = &BHGrowthInDiskInstabilityModel;
   parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
 
-  strcpy(parameter_tag[nt], "HotGasStrippingModel");
-  parameter_address[nt] = &HotGasStrippingModel;
+  strcpy(parameter_tag[nt], "HotGasStripingModel");
+  parameter_address[nt] = &HotGasStripingModel;
   parameter_type [nt++] = PARAMETER_TYPE_IS_INT;
 
   strcpy(parameter_tag[nt], "DisruptionModel");

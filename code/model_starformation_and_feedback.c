@@ -59,46 +59,54 @@
   *        returned to the cold gas; the fraction of gas reheated from cold to hot,
   *        ejected from hot to external and returned from ejected to hot due to
   *        SN feedback.   */
-void starformation(int p, int centralgal, double time, double dt, int nstep)
+void starformation(const int p, const int centralgal, const double time, const double dt, const int nstep)
 {
-	/*! Variables: reff-Rdisk, tdyn=Rdisk/Vmax, strdot=Mstar_dot, stars=strdot*dt*/
-  double tdyn, strdot=0., stars, cold_crit;
+        /*! Variables: reff-Rdisk, tdyn=Rdisk/Vmax, strdot=Mstar_dot, stars=strdot*dt*/
+  double tdyn, stars, cold_crit;
   
   if(Gal[p].Type == 0)
     {
       tdyn = Gal[p].GasDiskRadius / Gal[p].Vmax;
-      cold_crit = SfrColdCrit * Gal[p].Vmax/200. * Gal[p].GasDiskRadius*100.;
+//       cold_crit = SfrColdCrit * Gal[p].Vmax/200. * Gal[p].GasDiskRadius*100.;
+      cold_crit = SfrColdCrit * Gal[p].Vmax * Gal[p].GasDiskRadius * 0.5;
     }
   else
     {
       tdyn = Gal[p].GasDiskRadius / Gal[p].InfallVmax;
-      cold_crit = SfrColdCrit * Gal[p].InfallVmax/200. * Gal[p].GasDiskRadius*100.;
+//       cold_crit = SfrColdCrit * Gal[p].InfallVmax/200. * Gal[p].GasDiskRadius*100.;
+      cold_crit = SfrColdCrit * Gal[p].InfallVmax * Gal[p].GasDiskRadius * 0.5;
     }
+    
+
+   if(Gal[p].ColdGas < cold_crit)
+    return;
 
   //standard star formation law (Croton2006, Delucia2007, Guo2010)
   if(StarFormationModel == 0)
-    {
-      if(Gal[p].ColdGas > cold_crit)
-	strdot = SfrEfficiency * (Gal[p].ColdGas - cold_crit) / tdyn;
-      else
-	strdot = 0.0;
-    }
-
-  /*if(StarFormationModel == 1)
   {
-  	strdot = ALTERNATIVE STAR FORMATION LAW
-
+    stars = (Gal[p].ColdGas > cold_crit) ? SfrEfficiency * dt * (Gal[p].ColdGas - cold_crit) / tdyn : 0.;
+  }
+  /*else if(StarFormationModel == 1)
+  {
+         stars  = ALTERNATIVE STAR FORMATION LAW
   }*/
+  else /* unkown StarFormationModel */
+  {
+   terminate("***unknown StarFormationModel***\n");
+    stars = 0.; 
+  }
 
-  /* Note that Units of dynamical time are Mpc/Km/s - no conversion on dt needed */
-  stars = strdot * dt;
+/* // debugging:
   if(stars < 0.0)
     terminate("***error stars<0.0***\n");
+*/
+ 
+  /* Note that Units of dynamical time are Mpc/Km/s - no conversion on dt needed */
 
 //otherwise cold gas and stars share material in update_stars_due_to_reheat
 #ifdef FEEDBACK_COUPLED_WITH_MASS_RETURN
   if(stars > Gal[p].ColdGas)
-  	stars = Gal[p].ColdGas;
+          stars = Gal[p].ColdGas;
 #endif
 
   mass_checks("recipe_starform #1",p);
@@ -111,16 +119,12 @@ void starformation(int p, int centralgal, double time, double dt, int nstep)
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef POST_PROCESS_MAGS
   /* Store the value of the metallicity of the cold phase when SF occurs */
-  double metallicitySF;
-  if (Gal[p].ColdGas > 0.)
-  	metallicitySF= metals_total(Gal[p].MetalsColdGas)/Gal[p].ColdGas;
-  else
-    metallicitySF=0.;
+  double metallicitySF = (Gal[p].ColdGas > 0.) ? metals_total(Gal[p].MetalsColdGas)/Gal[p].ColdGas : 0.;
 #endif //NDEF POST_PROCESS_MAGS
 #endif //COMPUTE_SPECPHOT_PROPERTIES
 
   if (stars > 0.)
-  	update_stars_due_to_reheat(p, centralgal, &stars);
+  { update_stars_due_to_reheat(p, centralgal, &stars); }
 
   mass_checks("recipe_starform #2",p);
   mass_checks("recipe_starform #2.1",centralgal);
@@ -128,7 +132,6 @@ void starformation(int p, int centralgal, double time, double dt, int nstep)
   /*  update the star formation rate */
    /*Sfr=stars/(dt*steps)=strdot*dt/(dt*steps)=strdot/steps -> average over the STEPS*/
    Gal[p].Sfr += stars / (dt * STEPS);
-
 
   // update_from_star_formation can only be called
   // after SD_feeedback recipe since stars need to be re_set once the reheated mass is known
@@ -159,7 +162,6 @@ void starformation(int p, int centralgal, double time, double dt, int nstep)
 
   if (DiskRadiusModel== 0)
     get_stellar_disk_radius(p);
-
 }
 
 
@@ -187,14 +189,14 @@ void update_stars_due_to_reheat(int p, int centralgal, double *stars)
   if(FeedbackReheatingModel == 0)
     {
       if (Gal[Gal[p].CentralGal].Type == 0)
-	reheated_mass = FeedbackReheatingEpsilon * *stars *
-	(.5+1./pow(Gal[Gal[p].CentralGal].Vmax/ReheatPreVelocity,ReheatSlope));
+        reheated_mass = FeedbackReheatingEpsilon * *stars *
+        (.5+1./pow(Gal[Gal[p].CentralGal].Vmax/ReheatPreVelocity,ReheatSlope));
       else
-	reheated_mass = FeedbackReheatingEpsilon * *stars *
-	(.5+1./pow(Gal[Gal[p].CentralGal].InfallVmax/ReheatPreVelocity,ReheatSlope));
+        reheated_mass = FeedbackReheatingEpsilon * *stars *
+        (.5+1./pow(Gal[Gal[p].CentralGal].InfallVmax/ReheatPreVelocity,ReheatSlope));
 
       if (reheated_mass * Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir > *stars * (EtaSNcode * EnergySNcode))
-	reheated_mass = *stars * (EtaSNcode * EnergySNcode) / (Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir);
+        reheated_mass = *stars * (EtaSNcode * EnergySNcode) / (Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir);
     }
   /*else if(FeedbackReheatingModel == 1)
     {
@@ -314,36 +316,37 @@ void SN_feedback(int p, int centralgal, double stars, char feedback_location[])
     reheated_mass = 0.;
   else
     if (strcmp(feedback_location,"ColdGas")==0)
-	{
-// 	CentralVvir = Gal[centralgal].Vvir; // main halo Vvir
-// 	MergeCentralVvir = Gal[Gal[p].CentralGal].Vvir; //central subhalo Vvir
+        {
+//         CentralVvir = Gal[centralgal].Vvir; // main halo Vvir
+//         MergeCentralVvir = Gal[Gal[p].CentralGal].Vvir; //central subhalo Vvir
 
-	mass_checks("recipe_starform #0",p);
-	mass_checks("recipe_starform #0.1",centralgal);
+        mass_checks("recipe_starform #0",p);
+        mass_checks("recipe_starform #0.1",centralgal);
+                
 
-	// Feedback depends on the circular velocity of the host halo
-	// Guo2010 - eq 18 & 19
-	if(FeedbackReheatingModel == 0)
-	  {
-	    if (Gal[Gal[p].CentralGal].Type == 0)
-	      reheated_mass = FeedbackReheatingEpsilon * stars *
-	      (.5+1./pow(Gal[Gal[p].CentralGal].Vmax/ReheatPreVelocity,ReheatSlope));
-	    else
-	      reheated_mass = FeedbackReheatingEpsilon * stars *
-	      (.5+1./pow(Gal[Gal[p].CentralGal].InfallVmax/ReheatPreVelocity,ReheatSlope));
+        // Feedback depends on the circular velocity of the host halo
+        // Guo2010 - eq 18 & 19
+        if(FeedbackReheatingModel == 0)
+          {
+            if (Gal[Gal[p].CentralGal].Type == 0)
+              reheated_mass = FeedbackReheatingEpsilon * stars *
+              (.5+1./pow(Gal[Gal[p].CentralGal].Vmax/ReheatPreVelocity,ReheatSlope));
+            else
+              reheated_mass = FeedbackReheatingEpsilon * stars *
+              (.5+1./pow(Gal[Gal[p].CentralGal].InfallVmax/ReheatPreVelocity,ReheatSlope));
 
-	    if (reheated_mass * Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir > stars * (EtaSNcode * EnergySNcode))
-	      reheated_mass = stars * (EtaSNcode * EnergySNcode) / (Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir);
-	  }
-	/*else if(FeedbackReheatingModel == 1)
-	  {
-	    reheated_mass =  ALTERNATIVE Reheating LAW ;
-	  }*/
+            if (reheated_mass * Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir > stars * (EtaSNcode * EnergySNcode))
+              reheated_mass = stars * (EtaSNcode * EnergySNcode) / (Gal[Gal[p].CentralGal].Vvir * Gal[Gal[p].CentralGal].Vvir);
+          }
+        /*else if(FeedbackReheatingModel == 1)
+          {
+            reheated_mass =  ALTERNATIVE Reheating LAW ;
+          }*/
 
-	if(reheated_mass > Gal[p].ColdGas)
-	  reheated_mass = Gal[p].ColdGas;
+        if(reheated_mass > Gal[p].ColdGas)
+          reheated_mass = Gal[p].ColdGas;
 
-	}// end if feedback_location
+        }// end if feedback_location
 
 
   /* Determine ejection (for FeedbackEjectionModel 2 we have the dependence on Vmax)
@@ -364,8 +367,8 @@ void SN_feedback(int p, int centralgal, double stars, char feedback_location[])
   if(FeedbackEjectionModel == 0)
     {
       ejected_mass = (FeedbackEjectionEfficiency* (EtaSNcode * EnergySNcode) * stars *
-	      min(1./FeedbackEjectionEfficiency, .5+1/pow(EjectVmax/EjectPreVelocity,EjectSlope)) -
-	      reheated_mass*EjectVvir*EjectVvir) /(EjectVvir*EjectVvir);
+              min(1./FeedbackEjectionEfficiency, .5+1/pow(EjectVmax/EjectPreVelocity,EjectSlope)) -
+              reheated_mass*EjectVvir*EjectVvir) /(EjectVvir*EjectVvir);
     }
   else if(FeedbackEjectionModel == 1)//the ejected material is assumed to have V_SN
     {
@@ -376,7 +379,7 @@ void SN_feedback(int p, int centralgal, double stars, char feedback_location[])
 
       //if VSN^2<Vvir^2 nothing is ejected
       if(FeedbackEjectionEfficiency*(EtaSNcode * EnergySNcode)<EjectVvir*EjectVvir)
-	ejected_mass =0.0;
+        ejected_mass =0.0;
     }
 
   // Finished calculating mass exchanges, so just check that none are negative
@@ -412,45 +415,45 @@ void update_from_feedback(int p, int centralgal, double reheated_mass, double ej
       //some of the reheated and ejected masses goes to the type 0 and some stays in the type 1
 
       if(Gal[p].Type ==0)
-	{
-	  transfer_gas(p,"Hot",p,"Cold",((float)reheated_mass)/Gal[p].ColdGas,"update_from_feedback", __LINE__);
-	}
+        {
+          transfer_gas(p,HotGasComponent,p,ColdGasComponent,((float)reheated_mass)/Gal[p].ColdGas,"update_from_feedback", __LINE__);
+        }
       else if(Gal[p].Type <3)
-	{
-// 	  if(Gal[p].Type ==1)
-// 	    merger_centre=centralgal;
-// 	  else if(Gal[p].Type ==2)
-// 	    merger_centre=Gal[p].CentralGal;
+        {
+//           if(Gal[p].Type ==1)
+//             merger_centre=centralgal;
+//           else if(Gal[p].Type ==2)
+//             merger_centre=Gal[p].CentralGal;
 
-	  dis=separation_gal(centralgal,Gal[p].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
+          dis=separation_gal(centralgal,Gal[p].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
 
-	  //compute share of reheated mass
-	  if (dis<Gal[centralgal].Rvir && Gal[Gal[p].CentralGal].Type == 1)
-	    {
-	      //mass that remains on type1 (the rest goes to type 0) for reheat - massremain, for eject - ejected mass
-	      massremain=reheated_mass*Gal[p].HotRadius/Gal[p].Rvir;
-	      ejected_mass = ejected_mass*Gal[p].HotRadius/Gal[p].Rvir;
+          //compute share of reheated mass
+          if (dis<Gal[centralgal].Rvir && Gal[Gal[p].CentralGal].Type == 1)
+            {
+              //mass that remains on type1 (the rest goes to type 0) for reheat - massremain, for eject - ejected mass
+              massremain=reheated_mass*Gal[p].HotRadius/Gal[p].Rvir;
+              ejected_mass = ejected_mass*Gal[p].HotRadius/Gal[p].Rvir;
 
-	      if (massremain > reheated_mass)
-		massremain = reheated_mass;
-	    }
-	  else
-	    massremain=reheated_mass;
+              if (massremain > reheated_mass)
+                massremain = reheated_mass;
+            }
+          else
+            massremain=reheated_mass;
 
-	  //needed due to precision issues, since we first remove massremain and then (reheated_mass-massremain)
-	  //from the satellite into the type 0 and type 1 the fraction might not add up on the second call
-	  //since Gal[p].ColdGas is a float and reheated_mass & massremain are doubles
-	  if((massremain + reheated_mass)>Gal[p].ColdGas)
-	    massremain=Gal[p].ColdGas-reheated_mass;
+          //needed due to precision issues, since we first remove massremain and then (reheated_mass-massremain)
+          //from the satellite into the type 0 and type 1 the fraction might not add up on the second call
+          //since Gal[p].ColdGas is a float and reheated_mass & massremain are doubles
+          if((massremain + reheated_mass)>Gal[p].ColdGas)
+            massremain=Gal[p].ColdGas-reheated_mass;
 
-	  //transfer massremain
-	  transfer_gas(Gal[p].CentralGal,"Hot",p,"Cold",massremain/Gal[p].ColdGas,"update_from_feedback", __LINE__);
+          //transfer massremain
+          transfer_gas(Gal[p].CentralGal,HotGasComponent,p,ColdGasComponent,massremain/Gal[p].ColdGas,"update_from_feedback", __LINE__);
 
-	  //transfer reheated_mass-massremain from galaxy to the type 0
-	  if (reheated_mass > massremain)
-	    if(Gal[p].ColdGas > 0.) //if the reheat to itself, left cold gas below limit do not reheat to central
-	      transfer_gas(centralgal,"Hot",p,"Cold",(reheated_mass-massremain)/Gal[p].ColdGas,"update_from_feedback", __LINE__);
-	}//types
+          //transfer reheated_mass-massremain from galaxy to the type 0
+          if (reheated_mass > massremain)
+            if(Gal[p].ColdGas > 0.) //if the reheat to itself, left cold gas below limit do not reheat to central
+              transfer_gas(centralgal,HotGasComponent,p,ColdGasComponent,(reheated_mass-massremain)/Gal[p].ColdGas,"update_from_feedback", __LINE__);
+        }//types
 
   }//if(Gal[p].ColdGas > 0.)
 
@@ -460,25 +463,25 @@ void update_from_feedback(int p, int centralgal, double reheated_mass, double ej
   if (Gal[Gal[p].CentralGal].HotGas > 0.)
     {
       if (ejected_mass > Gal[Gal[p].CentralGal].HotGas)
-	ejected_mass = Gal[Gal[p].CentralGal].HotGas;  //either eject own gas or merger_centre gas for ttype 2's
+        ejected_mass = Gal[Gal[p].CentralGal].HotGas;  //either eject own gas or merger_centre gas for ttype 2's
 
       fraction=((float)ejected_mass)/Gal[Gal[p].CentralGal].HotGas;
 
       if (Gal[Gal[p].CentralGal].Type == 1)
-	{
-	  /* If type 1, or type 2 orbiting type 1 near type 0 */
-	  if (FateOfSatellitesGas == 0)
-	    transfer_gas(Gal[p].CentralGal,"Ejected",Gal[p].CentralGal,"Hot",fraction,"update_from_feedback", __LINE__);
-	  else if (FateOfSatellitesGas == 1)
-	    {
-	      if (dis < Gal[centralgal].Rvir)
-		transfer_gas(centralgal,"Hot",Gal[p].CentralGal,"Hot",fraction,"update_from_feedback", __LINE__);
-	      else
-		transfer_gas(Gal[p].CentralGal,"Ejected",Gal[p].CentralGal,"Hot",fraction,"update_from_feedback", __LINE__);
-	    }
-	}
+        {
+          /* If type 1, or type 2 orbiting type 1 near type 0 */
+          if (FateOfSatellitesGas == 0)
+            transfer_gas(Gal[p].CentralGal,EjectedGasComponent,Gal[p].CentralGal,HotGasComponent,fraction,"update_from_feedback", __LINE__);
+          else if (FateOfSatellitesGas == 1)
+            {
+              if (dis < Gal[centralgal].Rvir)
+                transfer_gas(centralgal,HotGasComponent,Gal[p].CentralGal,HotGasComponent,fraction,"update_from_feedback", __LINE__);
+              else
+                transfer_gas(Gal[p].CentralGal,EjectedGasComponent,Gal[p].CentralGal,HotGasComponent,fraction,"update_from_feedback", __LINE__);
+            }
+        }
       else // If galaxy type 0 or type 2 merging into type 0
-	transfer_gas(centralgal,"Ejected",Gal[p].CentralGal,"Hot",fraction,"update_from_feedback", __LINE__);
+        transfer_gas(centralgal,EjectedGasComponent,Gal[p].CentralGal,HotGasComponent,fraction,"update_from_feedback", __LINE__);
 
     }//(Gal[Gal[p].CentralGal].HotGas > 0.)
 
@@ -494,9 +497,9 @@ void update_massweightage(int p, double stars, double time)
     {
       age = time - NumToTime(ListOutputSnaps[outputbin]);
 #ifdef DETAILED_METALS_AND_MASS_RETURN
-	   	Gal[p].MassWeightAge[outputbin] += age * stars;
+                   Gal[p].MassWeightAge[outputbin] += age * stars;
 #else
-	   	Gal[p].MassWeightAge[outputbin] += age * stars * (1. - RecycleFraction);
+                   Gal[p].MassWeightAge[outputbin] += age * stars * (1. - RecycleFraction);
 #endif
     }
 }
@@ -522,9 +525,9 @@ void check_disk_instability(int p)
     {
       /* check stellar disk -> eq 34 Guo2010*/
       if (Gal[p].Type != 0)
-	Mcrit = Gal[p].InfallVmax * Gal[p].InfallVmax * Gal[p].StellarDiskRadius / G;
+        Mcrit = Gal[p].InfallVmax * Gal[p].InfallVmax * Gal[p].StellarDiskRadius / G;
       else
-	Mcrit = Gal[p].Vmax * Gal[p].Vmax * Gal[p].StellarDiskRadius / G;
+        Mcrit = Gal[p].Vmax * Gal[p].Vmax * Gal[p].StellarDiskRadius / G;
       diskmass = Gal[p].DiskMass;
       stars = diskmass - Mcrit;
       fraction = stars / diskmass;
@@ -537,57 +540,57 @@ void check_disk_instability(int p)
     {
       /* to calculate the bulge size */
       update_bulge_from_disk(p,stars);
-      transfer_stars(p,"Bulge",p,"Disk",fraction);
+      transfer_stars(p,BulgeComponent,p,DiskComponent,fraction);
 
       if(BHGrowthInDiskInstabilityModel == 1)
-	if(Gal[p].ColdGas > 0.)
-	  {
-	    Gal[p].BlackHoleMass += Gal[p].ColdGas*fraction;
-	    Gal[p].ColdGas -= Gal[p].ColdGas*fraction;
-	  }
+        if(Gal[p].ColdGas > 0.)
+          {
+            Gal[p].BlackHoleMass += Gal[p].ColdGas*fraction;
+            Gal[p].ColdGas -= Gal[p].ColdGas*fraction;
+          }
 
 #ifndef POST_PROCESS_MAGS
       double Lumdisk;
       int outputbin, j;
 #ifdef OUTPUT_REST_MAGS
       for(outputbin = 0; outputbin < NOUT; outputbin++)
-	{
-	  for(j = 0; j < NMAG; j++)
-	    {
-	      Lumdisk = Gal[p].Lum[j][outputbin]-Gal[p].LumBulge[j][outputbin];
-	      Gal[p].LumBulge[j][outputbin] += fraction * Lumdisk;
-	      Lumdisk = Gal[p].YLum[j][outputbin]-Gal[p].YLumBulge[j][outputbin];
-	      Gal[p].YLumBulge[j][outputbin] += fraction * Lumdisk;
-	    }
-	}
+        {
+          for(j = 0; j < NMAG; j++)
+            {
+              Lumdisk = Gal[p].Lum[j][outputbin]-Gal[p].LumBulge[j][outputbin];
+              Gal[p].LumBulge[j][outputbin] += fraction * Lumdisk;
+              Lumdisk = Gal[p].YLum[j][outputbin]-Gal[p].YLumBulge[j][outputbin];
+              Gal[p].YLumBulge[j][outputbin] += fraction * Lumdisk;
+            }
+        }
 #endif
 #ifdef COMPUTE_OBS_MAGS
       for(outputbin = 0; outputbin < NOUT; outputbin++)
-	{
-	  for(j = 0; j < NMAG; j++)
-	    {
-	      Lumdisk = Gal[p].ObsLum[j][outputbin]-Gal[p].ObsLumBulge[j][outputbin];
-	      Gal[p].ObsLumBulge[j][outputbin] += fraction * Lumdisk;
-	      Lumdisk = Gal[p].ObsYLum[j][outputbin]-Gal[p].ObsYLumBulge[j][outputbin];
-	      Gal[p].ObsYLumBulge[j][outputbin] += fraction * Lumdisk;
+        {
+          for(j = 0; j < NMAG; j++)
+            {
+              Lumdisk = Gal[p].ObsLum[j][outputbin]-Gal[p].ObsLumBulge[j][outputbin];
+              Gal[p].ObsLumBulge[j][outputbin] += fraction * Lumdisk;
+              Lumdisk = Gal[p].ObsYLum[j][outputbin]-Gal[p].ObsYLumBulge[j][outputbin];
+              Gal[p].ObsYLumBulge[j][outputbin] += fraction * Lumdisk;
 #ifdef OUTPUT_MOMAF_INPUTS
-	      Lumdisk = Gal[p].dObsLum[j][outputbin]-Gal[p].dObsLumBulge[j][outputbin];
-	      Gal[p].dObsLumBulge[j][outputbin] += fraction * Lumdisk;
-	      Lumdisk = Gal[p].dObsYLum[j][outputbin]-Gal[p].dObsYLumBulge[j][outputbin];
-	      Gal[p].dObsYLumBulge[j][outputbin] += fraction * Lumdisk;
+              Lumdisk = Gal[p].dObsLum[j][outputbin]-Gal[p].dObsLumBulge[j][outputbin];
+              Gal[p].dObsLumBulge[j][outputbin] += fraction * Lumdisk;
+              Lumdisk = Gal[p].dObsYLum[j][outputbin]-Gal[p].dObsYLumBulge[j][outputbin];
+              Gal[p].dObsYLumBulge[j][outputbin] += fraction * Lumdisk;
 #endif
-	    }
-	}
+            }
+        }
 #endif
 #endif
 
       if ((Gal[p].BulgeMass > 1e-9 && Gal[p].BulgeSize == 0.0)||
-	  (Gal[p].BulgeMass == 0.0 && Gal[p].BulgeSize >1e-9))
-	{
-	  char sbuf[1000];
-	  sprintf(sbuf, "bulgesize wrong in diskinstablility.c \n");
-	  terminate(sbuf);
-	}
+          (Gal[p].BulgeMass == 0.0 && Gal[p].BulgeSize >1e-9))
+        {
+          char sbuf[1000];
+          sprintf(sbuf, "bulgesize wrong in diskinstablility.c \n");
+          terminate(sbuf);
+        }
     }// if(stars > 0.0)
   
 }
@@ -619,10 +622,10 @@ void update_bulge_from_disk(int p, double stars)
   massfrac=stars/diskmass;
   for (j = 0; j <3 ; j++)
   {
-  	if(massfrac==1) //everything transferred to the bulge
-  		Gal[p].StellarSpin[j]=0;
-  	else
-  		Gal[p].StellarSpin[j]=Gal[p].StellarSpin[j]/(1-massfrac);
+          if(massfrac==1) //everything transferred to the bulge
+                  Gal[p].StellarSpin[j]=0;
+          else
+                  Gal[p].StellarSpin[j]=Gal[p].StellarSpin[j]/(1-massfrac);
 
   }
 
@@ -653,14 +656,14 @@ void update_bulge_from_disk(int p, double stars)
   if((Gal[p].BulgeMass + stars > 1.e-9 && Gal[p].BulgeSize == 0.0)
      || (Gal[p].BulgeMass + stars == 0 && Gal[p].BulgeSize > 1.e-9))
   {
-  	char sbuf[1000];
-  	printf("GasDiskMass=%e GasDiskSize=%e \nStellarDiskMass=%e StellarDiskSize=%e \nBulgeMass=%e Bulgesize=%e\n",
-  			Gal[p].ColdGas, Gal[p].GasDiskRadius, Gal[p].DiskMass, Gal[p].StellarDiskRadius,
-  			Gal[p].BulgeMass, Gal[p].BulgeSize);
+          char sbuf[1000];
+          printf("GasDiskMass=%e GasDiskSize=%e \nStellarDiskMass=%e StellarDiskSize=%e \nBulgeMass=%e Bulgesize=%e\n",
+                          Gal[p].ColdGas, Gal[p].GasDiskRadius, Gal[p].DiskMass, Gal[p].StellarDiskRadius,
+                          Gal[p].BulgeMass, Gal[p].BulgeSize);
 
-  	printf("TransferSize=%e, OriBulgeSize=%e\n", bulgesize, orisize);
+          printf("TransferSize=%e, OriBulgeSize=%e\n", bulgesize, orisize);
 
-  	sprintf(sbuf, "bulgesize or mass wrong in disk instablility");
+          sprintf(sbuf, "bulgesize or mass wrong in disk instablility");
       terminate(sbuf);
     }
 

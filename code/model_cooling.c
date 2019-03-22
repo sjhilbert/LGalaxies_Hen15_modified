@@ -95,7 +95,6 @@ void compute_cooling(int p, double dt)
 
   if(tot_hotMass > 1.0e-6)
   {
-
     Vvir = Gal[p].Vvir;
     Rvir = Gal[p].Rvir;
 
@@ -144,8 +143,6 @@ void compute_cooling(int p, double dt)
       coolingGas = tot_hotMass;
     else if(coolingGas < 0.0)
       coolingGas = 0.0;      
-    
-
   }
   else
   {
@@ -155,9 +152,7 @@ void compute_cooling(int p, double dt)
   Gal[p].CoolingGas = coolingGas;
 
   mass_checks("cooling_recipe #1.5",p);
-
 }   
-
 
 
 /** @brief calculates the energy released by black holes due to passive accretion,
@@ -186,7 +181,7 @@ void compute_cooling(int p, double dt)
 //might be assigned the centre of a cluster leading to huge cooling. It is therefore
 //not necessary to do the same correction for satellites of subhalos.
 
-/** @todo fix BUG: dist is used in comparison, but never set
+/** @bug dist is used in comparison, but never set
 */
 void do_AGN_heating(double dt, int ngal)
 {
@@ -379,7 +374,7 @@ void cool_gas_onto_galaxy(int p, double dt)
 
     // We already know that 0<mcool<=Gal[p].HotGas
     fraction=((float)Mcool)/Gal[p].HotGas;
-    transfer_gas(p,"Cold",p,"Hot",fraction,"cool_gas_onto_galaxy", __LINE__);
+    transfer_gas(p, ColdGasComponent, p, HotGasComponent, fraction, "cool_gas_onto_galaxy", __LINE__);
 
     if (DiskRadiusModel == 0)
     {

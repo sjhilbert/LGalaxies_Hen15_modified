@@ -139,15 +139,15 @@ void disrupt(int p)
     /* Put gas component to the central galaxy hot gas and stellar material into the ICM.
      * Note that the satellite should have no extended components. */
 
-    transfer_gas(centralgal,"Hot",p,"Cold",1.,"disrupt", __LINE__);
-    transfer_gas(centralgal,"Hot",p,"Hot",1.,"disrupt", __LINE__);
+    transfer_gas(centralgal,HotGasComponent,p,ColdGasComponent,1.,"disrupt", __LINE__);
+    transfer_gas(centralgal,HotGasComponent,p,HotGasComponent,1.,"disrupt", __LINE__);
 #ifdef TRACK_BURST
     /* Transfer burst component first */
-    transfer_stars(centralgal,"Burst",p,"Burst",
+    transfer_stars(centralgal,BurstComponent,p,BurstComponent,
 		   (Gal[p].DiskMass+Gal[p].BulgeMass)/(Gal[p].DiskMass+Gal[p].BulgeMass+Gal[p].ICM));
 #endif
-    transfer_stars(centralgal,"ICM",p,"Disk",1.);
-    transfer_stars(centralgal,"ICM",p,"Bulge",1.);
+    transfer_stars(centralgal,ICMComponent,p,DiskComponent,1.);
+    transfer_stars(centralgal,ICMComponent,p,BulgeComponent,1.);
     /* Add satellite's luminosity into the luminosity of the ICL
      * component of the central galaxy. */
 

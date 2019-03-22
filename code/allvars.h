@@ -60,6 +60,11 @@ do { size_t arr_##idx_; for(arr_##idx_ = 0; arr_##idx_ < (sizeof arr_ / sizeof *
 #define  CORRECTDBFLOAT(x) x
 #endif
 
+#ifdef MASS_CHECKS
+#define mass_checks(t, p) perform_mass_checks(t, p)
+#else  /* not defined MASS_CHECKS */
+#define mass_checks(t, p)
+#endif /* not defined MASS_CHECKS */ 
 
 //WATCH OUT! In the case of MCMC running both MR and MRII the larger value is used to "allocate" all the arrays
 //inside the code its LastDarkMatterSnapShot+1 that defines the extent of the loops
@@ -128,7 +133,11 @@ do { size_t arr_##idx_; for(arr_##idx_ = 0; arr_##idx_ < (sizeof arr_ / sizeof *
 #endif /* defined STAR_FORMATION_HISTORY */
 
 typedef enum { HotGasComponent, ColdGasComponent, EjectedGasComponent } GasComponentType;
-typedef enum { DiskComponent, BulgeComponent, ICMComponent, BurstComponent, BurstMassComponent } StellarComponentType;
+extern const char* GasComponentStr[];
+
+typedef enum { DiskComponent, BulgeComponent, ICMComponent, BurstComponent } StellarComponentType;
+extern const char* StellarComponentStr[];
+
 
 #ifdef DETAILED_METALS_AND_MASS_RETURN
 struct metals
@@ -858,7 +867,7 @@ extern int ReIncorporationModel;
 extern int AGNRadioModeModel;
 extern int DiskInstabilityModel;
 extern int BHGrowthInDiskInstabilityModel;
-extern int HotGasStrippingModel;
+extern int HotGasStripingModel;
 extern int DisruptionModel;
 extern int StarBurstModel;
 extern int BulgeFormationInMinorMergersOn;

@@ -433,9 +433,9 @@ void grow_black_hole(int merger_centralgal, double mass_ratio, double deltaT)
   }
 }
 
+
 /** @brief Adds all the components of the satellite galaxy into its
  *         central companion. */
-
 void add_galaxies_together(int t, int p)
 {
   /** @brief All the components of the satellite galaxy are added to the
@@ -460,20 +460,20 @@ void add_galaxies_together(int t, int p)
   Gal[t].MergeSat +=(Gal[p].DiskMass+Gal[p].BulgeMass);
   Gal[p].MergeSat=0.;
 
-  transfer_gas(t,"Cold",p,"Cold",1.,"add_galaxies_together", __LINE__);
-  //transfer_gas(t,"Ejected",p,"Cold",1.,"add_galaxies_together", __LINE__);
-  transfer_gas(t,"Hot",p,"Hot",1.,"add_galaxies_together", __LINE__);
-  transfer_gas(t,"Ejected",p,"Ejected",1.,"add_galaxies_together", __LINE__);
+  transfer_gas(t,ColdGasComponent,p,ColdGasComponent,1.,"add_galaxies_together", __LINE__);
+  //transfer_gas(t,EjectedGasComponent,p,ColdGasComponent,1.,"add_galaxies_together", __LINE__);
+  transfer_gas(t,HotGasComponent,p,HotGasComponent,1.,"add_galaxies_together", __LINE__);
+  transfer_gas(t,EjectedGasComponent,p,EjectedGasComponent,1.,"add_galaxies_together", __LINE__);
 #ifdef TRACK_BURST
     /* The whole burst component gets transferred */
-  transfer_stars(t,"Burst",p,"Burst",1.);
+  transfer_stars(t,BurstComponent,p,BurstComponent,1.);
 #endif
   if(BulgeFormationInMinorMergersOn)
-    transfer_stars(t,"Bulge",p,"Disk",1.);
+    transfer_stars(t,BulgeComponent,p,DiskComponent,1.);
   else
-    transfer_stars(t,"Disk",p,"Disk",1.);
-  transfer_stars(t,"Bulge",p,"Bulge",1.);
-  transfer_stars(t,"ICM",p,"ICM",1.);
+    transfer_stars(t,DiskComponent,p,DiskComponent,1.);
+  transfer_stars(t,BulgeComponent,p,BulgeComponent,1.);
+  transfer_stars(t,ICMComponent,p,ICMComponent,1.);
 
   Gal[t].BlackHoleMass += Gal[p].BlackHoleMass;
   Gal[p].BlackHoleMass=0.;
@@ -587,7 +587,7 @@ void add_galaxies_together(int t, int p)
 void make_bulge_from_burst(int p)
 {
   /* generate bulge */
-  transfer_stars(p,"Bulge",p,"Disk",1.);
+  transfer_stars(p,BulgeComponent,p,DiskComponent,1.);
 
   /*  update the star formation rate */
   Gal[p].SfrBulge  = Gal[p].Sfr;

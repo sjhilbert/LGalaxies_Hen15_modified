@@ -17,6 +17,9 @@
 #define PROTO_H
 
 #include "allvars.h"
+
+#include "metals_inline.h"
+
 #include <math.h>
 #include <stdbool.h>
 
@@ -83,15 +86,19 @@ void scale_cosmology(int nhalos);
 void un_scale_cosmology(int nhalos);
 void read_zlist_original_cosm(void);
 void read_zlist_new(void);
-double c_correction(float mass, int snapnum);
-double find_c(double c_ori, double ratio);
-double func_c(double c);
+double c_correction(const float mass, const int snapnum);
+double find_c(const double c_ori, const double ratio);
+double func_c(const double c);
+double func_c_p(const double c);
 double dgrowth_factor_dt(double a, double omega_m, double omega_l);
 double scale_v_cen(int snapnum);
 
 long long calc_big_db_offset(int filenr, int treenr);
 
 void init(void);
+void read_parameter_file(char *fname);
+void check_program_parameters();
+void check_compile_time_options();
 void set_units(void);
 #ifdef SPECIFYFILENR
 void read_file_nrs(void);
@@ -100,7 +107,6 @@ int get_nr_files_to_process(void);
 void assign_files_to_tasks(int *FileToProcess, int *TaskToProcess, int nfiles);
 void read_reionization(void);
 
-void read_parameter_file(char *fname);
 
 void load_tree_table(int filenr);
 void load_tree(int nr);
@@ -137,7 +143,7 @@ void locate(double *xx, int n, double x, int *j);
 double integrate(double *flux, int Grid_Length);
 void polint(double xa[], double ya[], int n, double x, double *y, double *dy);
 void nrerror(char error_text[]);
-double *vector(long nl, long nh);
+double* new_vector(long nl, long nh);
 void free_vector(double *v, long nl, long nh);
 
 //SPECTRO/PHOTOMETRY PROPERTIES
@@ -175,16 +181,6 @@ void find_interpolated_lum(double timenow, double timetarget, double metallicity
 
 #ifdef POST_PROCESS_MAGS
 void post_process_spec_mags(struct GALAXY_OUTPUT *o);
-/*  *>/
-void compute_post_process_lum (double mass, double age, double metals, int snap, int nlum, double *Lum, double *ObsLum,
-		                           double *dObsLum,double *dObsLum_forward,
-		                           double *YLum, double *ObsYLum, double *dObsYLum, double *dObsYLum_forward);
-
-void dust_correction_for_post_processing(int nlum, int snap, double Zg, double ColdGas, double GasDiskRadius, double CosInclination,
-		                                     double LumDisk, double ObsLumDisk, double dObsLumDisk, double dObsLumDisk_forward,
-								                         double YLumDisk, double ObsYLumDisk, double dObsYLumDisk, double dObsYLumDisk_forward,
-								                         double *LumDiskDust, double *ObsLumDiskDust, double *dObsLumDiskDust, double *dObsLumDiskDust_forward);
-/<*  */                                         
 #else /* not defined POST_PROCESS_MAGS */
 void add_to_luminosities(int p, double mstars, double time, double dt, double metallicity);
 void dust_model(int p, int snap, int halonr);
@@ -214,9 +210,9 @@ void check_disk_instability(int p);
 double slab_model(float tau, float teta);
 double get_metallicity(double gas, double metals);
 
-double get_disk_radius(int halonr, int p);
-void get_gas_disk_radius(int p);
-void get_stellar_disk_radius(int p);
+double get_disk_radius(const int halonr, const int p);
+void get_gas_disk_radius(const int p);
+void get_stellar_disk_radius(const int p);
 
 void read_output_snaps(void);
 void read_zlist(void);
@@ -236,9 +232,8 @@ double peri_radius(int p, int centralgal);
 
 
 double hot_retain_sat(int i, int centralgal);
-void check_options();
 
-double get_initial_disk_radius(int halonr, int p);
+double get_initial_disk_radius(const int halonr, const int p);
 void update_bulge_from_disk(int p, double stars);
 double bulge_from_disk(double frac);
 double func_size(double x, double a);
@@ -261,10 +256,10 @@ double separation_halo(int p, int q);
 void update_hot_frac(int p, double reincorporated, float HotGas);
 int get_merger_center(int fofhalo);
 
-void transfer_stars(int p, char cp[], int q, char cq[], double fraction);
-void transfer_gas(int p, char cp[], int q, char cq[], double fraction, char call_function[], int line);
+void transfer_stars(const int p, const StellarComponentType cp, const int q, StellarComponentType cq, const double fraction);
+void transfer_gas(const int p, const GasComponentType cp, const int q, const GasComponentType cq, const double fraction, char call_function[], int line);
 void deal_with_satellites(int centralgal, int ngal);
-void mass_checks(char string[], int igal) ;
+void perform_mass_checks(char string[], int igal) ;
 
 #ifdef STAR_FORMATION_HISTORY
 void sfh_initialise(int p);
@@ -274,22 +269,6 @@ void sfh_update_bins(int p, int snap, int step, double time);
 void create_sfh_bins();
 void write_sfh_bins();
 #endif /* defined STAR_FORMATION_HISTORY */ 
-
-#ifdef DETAILED_METALS_AND_MASS_RETURN
-struct metals metals_add(struct metals m1,
-	       struct metals m2,
-	       float fraction);
-struct metals metals_init();
-void metals_print(char s[],struct metals m);
-float metals_total(struct metals m);
-#else /* not defined DETAILED_METALS_AND_MASS_RETURN */
-float metals_add(float m1, 
-		 float m2,
-		 float fraction);
-float metals_init();
-void metals_print(char s[], float m);
-float metals_total(float m);
-#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 
 #ifdef DETAILED_METALS_AND_MASS_RETURN
 //in read_yield_tables.c:

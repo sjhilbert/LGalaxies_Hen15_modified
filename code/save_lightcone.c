@@ -38,6 +38,18 @@
 
 #ifdef LIGHTCONE_OUTPUT
 
+// // define your own output stucture
+// typedef struct 
+// {
+// 
+// 
+// 
+//   
+//   
+// }
+// lightcone_galaxy_output;
+
+
 /* if defined OUTPUT_MOMAF_INPUTS and OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT,
  * use pointer magic and fancy i_/o to avoid OUTPUT_MOMAF_INPUTS showing up on disk.
  *
@@ -567,11 +579,10 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
   if(HaloGal[galaxy_number_].BulgeMass + HaloGal[galaxy_number_].DiskMass < lightcone_lower_stellar_mass)
     return; 
   
-  struct GALAXY_OUTPUT galaxy_output_;
-#ifdef PREPARE_GALAXY_BEFORE_LIGHTCONE_TEST
-  struct GALAXY_OUTPUT prepared_galaxy_output_;
-  prepare_galaxy_for_output(output_number_, &HaloGal[galaxy_number_], &prepared_galaxy_output_);
-#endif /* defined PREPARE_GALAXY_BEFORE_LIGHTCONE_TEST */
+  /** @note prepare_galaxy_for_output() is expensive, so seems worth avoiding multiple calls to this function
+   *  by keeping a caopy after first required call for the same input galaxy */
+  struct GALAXY_OUTPUT galaxy_output_, prepared_galaxy_output_;
+  bool prepared_galaxy_output_is_valid_ = false;
   
   int box_shift_i_end_ = ceil((lightcone_slice_upper_los_distance[output_number_] + lightcone_observer_distance_from_origin) / BoxSize);
   
@@ -620,12 +631,13 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
        lightcone_galaxy_position_[1] > lightcone_upper_dec   )
       continue;  
       
-#ifdef PREPARE_GALAXY_BEFORE_LIGHTCONE_TEST
+    if(!prepared_galaxy_output_is_valid_)
+    { 
+      prepare_galaxy_for_output(output_number_, &HaloGal[galaxy_number_], &prepared_galaxy_output_);
+      prepared_galaxy_output_is_valid_ = true;
+    }
     galaxy_output_ = prepared_galaxy_output_;
-#else /* not defined PREPARE_GALAXY_BEFORE_LIGHTCONE_TEST */
-    prepare_galaxy_for_output(output_number_, &HaloGal[galaxy_number_], &galaxy_output_);
-#endif /* not defined PREPARE_GALAXY_BEFORE_LIGHTCONE_TEST */
-
+    
     /** @todo consider passing transformed position and redshifts to avoid recomputation */
     adjust_galaxy_for_lightcone(&galaxy_output_, shift_, box_shift_i_, output_number_);
 
