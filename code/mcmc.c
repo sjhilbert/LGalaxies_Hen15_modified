@@ -13,41 +13,17 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2008
- *      Author: Bruno Henriques
- */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
-#include <unistd.h>
-
-#include "allvars.h"
-#include "proto.h"
-
-#include "mcmc_vars.h"
-#include "mcmc_proto.h"
-
-#define IA 16807
-#define IM 2147483647
-#define AM (1.0/IM)
-#define IQ 127773
-#define IR 2836
-#define NTAB 32
-#define NDIV (1+(IM-1)/NTAB)
-#define RNMX (1.0-EPS)
-#define EPS 1.2e-7
-
-/**@file mcmc.c
- * @brief This is the main mcmc file, it reads in observational tests,
- *        starts a chain, proposes new sets of parameters, calls the
- *        SAM, gets the likelihood for galaxy properties obtained with
- *        the current parameters, compares the likelihood with the
- *        previous run and decides on whether or not to accept the
- *        proposed parameters.
+/** @file   mcmc.c
+ *  @date   2008, 2018
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
+ *
+ *  @brief  This is the main mcmc file, it reads in observational tests,
+ *          starts a chain, proposes new sets of parameters, calls the
+ *          SAM, gets the likelihood for galaxy properties obtained with
+ *          the current parameters, compares the likelihood with the
+ *          previous run and decides on whether or not to accept the
+ *          proposed parameters.
  *
  * To run you need to chose input_mcmc_wmp7.par and select the
  * desired sample of halos. Also choose the correct desired_output_snap
@@ -82,55 +58,76 @@
  * less parameters then the default number, given by MCMCNpar can be sampled.
  * This can be done in propose_new_parameters() by never assigning a new
  * value to a given parameter. */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#include "allvars.h"
+#include "proto.h"
+
+#include "mcmc_vars.h"
+#include "mcmc_proto.h"
+
+
+
+#ifdef HALOMODEL
+void initialize_halomodel(void);
+#endif /* defined HALOMODEL */
+
+
 #ifdef MCMC
-void Senna()
+void Senna(void)
 {
-  int ii, jj, snap, IndividualAcceptRate = 0, TotAcceptRate = 0;
-  FILE *fmcmc;
-  char buf[1000];
-  char DirNum;
-  time_t local_initial, final;
-  double lhood2, qratio, AcceptanceProbability, ran;
-  int AcceptanceLogic;
+  int parameter_number_, output_number_, N_MCMC_steps_accepted_ = 0;
+  FILE *mcmc_file_;
+  char buf_[1000];
+  char dir_num_;
+  time_t local_initial_time_, local_final_time_;
+  double proposed_likelihood_, q_ratio_, a_ratio_;
+  bool proposed_MCMC_step_is_accepted_;
 
   if(ThisTask==0)
-    {
-	  printf("\n\n\n");
-	  printf("**********************************************************\n");
-	  printf("*                                                        *\n");
-	  printf("*                   Starting Senna                       *\n");
-	  printf("*                                                        *\n");
-	  printf("*             MCMC parameter estimation                  *\n");
-	  printf("*  Applied to a Semi-Analytic Model of Galaxy Formation  *\n");
-	  printf("*                                                        *\n");
-	  printf("**********************************************************\n\n");
-    }
+  {
+        printf("\n\n\n");
+        printf("**********************************************************\n");
+        printf("*                                                        *\n");
+        printf("*                   Starting Senna                       *\n");
+        printf("*                                                        *\n");
+        printf("*             MCMC parameter estimation                  *\n");
+        printf("*  Applied to a Semi-Analytic Model of Galaxy Formation  *\n");
+        printf("*                                                        *\n");
+        printf("**********************************************************\n\n");
+  }
 
-  MCMCseed = -((ThisTask+FirstChainNumber) * 100 + 25);
+  MCMCseed = -((ThisTask + FirstChainNumber) * 100 + 25);
 
 #ifdef HALOMODEL //to compute correlation function for MCMC
   initialize_halomodel();
   printf("halo model initialized\n");
 #endif
 
-
   //This file will have the values for the parameters
   //It will be the output from the mcmc sampling used in the analysis
   //it is also where the parameters are read from, using previous chains
-  getcwd(buf, sizeof(buf));
-  DirNum=buf[strlen(buf)-1];
-  sprintf(buf, "%s/senna_g%c_%d.txt", OutputDir, DirNum, ThisTask+FirstChainNumber);
+  getcwd(buf_, sizeof(buf_));
+  dir_num_=buf_[strlen(buf_)-1];
+  sprintf(buf_, "%s/senna_g%c_%d.txt", OutputDir, dir_num_, ThisTask+FirstChainNumber);
   //open to read and write. if file doesn't exists open just to write and read from backup
-  if((fmcmc = fopen(buf, "r+")) == NULL)
-    if((fmcmc = fopen(buf, "w")) == NULL)
-      {
-	char sbuf[1000];
-	sprintf(sbuf, "can't open file `%s'\n", buf);
-	terminate(sbuf);
-      }
+  if((mcmc_file_ = fopen(buf_, "r+")) == NULL)
+    if((mcmc_file_ = fopen(buf_, "w")) == NULL)
+    {
+      char error_message_[1000];
+      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      terminate(error_message_);
+    }
 
-  //read (from previous output) and initialize mcmc parameters, also lhood1
-  initialize_mcmc_par_and_lhood (fmcmc);
+  //read (from previous output) and initialize mcmc parameters, also MCMC_Likelihood
+  initialize_mcmc_par_and_lhood (mcmc_file_);
 
   //Read observational constraints (SMF, LFs, BHBM relation, etc)
   read_observations();
@@ -138,81 +135,70 @@ void Senna()
   //open files that will contain the comparison with observations at each step (used to compute the likelihoods)
   open_files_with_comparison_to_observations();
 
-  for(ii=1;ii<ChainLength+1;ii++)
+  for(CurrentMCMCStep = 0; CurrentMCMCStep < ChainLength; ++CurrentMCMCStep, ++GlobalMCMCStep)
+  {
+    time(&local_initial_time_);
+    printf("\n\n\nMCMC %d STARTED on Task %d\n\n\n", CurrentMCMCStep, ThisTask + FirstChainNumber);
+
+    //get a new set of parameters and return q_ratio_ - the prior
+    q_ratio_ = propose_new_parameters();
+        
+    //runs the SAM with the new parameters and gives the likelyhood for them
+    proposed_likelihood_ = SAM(MCMCSampleFile);
+
+    printf("LIKELY1=%0.5e\nLIKELY2=%0.5e\n", MCMC_Likelihood, proposed_likelihood_);
+
+    if(isnan(MCMC_Likelihood))      MCMC_Likelihood      = 0.;
+    if(isnan(proposed_likelihood_)) proposed_likelihood_ = 0.;
+
+    // accepts the proposed parameters with probability=acceptance rate:
+    if(MCMCMode == 0)
     {
-      CurrentMCMCStep=ii;
-      GlobalMCMCStep+=1;
-      time(&local_initial);
-      printf("\n\n\nMCMC %d STARTED on Task %d\n\n\n", ii, ThisTask+FirstChainNumber);
-
-      IndividualAcceptRate = 0;
-
-      //get a new set of parameters and return qratio - the prior
-      qratio = propose_new_parameters();
-	  
-      //runs the SAM with the new parameters and gives the likelyhood for them
-
-      lhood2=SAM(MCMCSampleFile);
-
-      printf("LIKELY1=%0.5e\nLIKELY2=%0.5e\n",lhood1,lhood2);
-
-      if(isnan(lhood1))	lhood1=0.0;
-      if(isnan(lhood2))	lhood2=0.0;
-
-      /* By default qratio = 1, meaning we assume a flat prior. Therefore, the acceptance
+      /* By default q_ratio_ = 1, meaning we assume a flat prior. Therefore, the acceptance
        * probability is just given by the ratio of the likelihoods from two steps. */
-      if(1.0 > (qratio * (lhood2 / lhood1)))
-	AcceptanceProbability = qratio * (lhood2 / lhood1);
-      else
-	AcceptanceProbability = 1.0;
+      a_ratio_ = q_ratio_ * (proposed_likelihood_ / MCMC_Likelihood);
+      proposed_MCMC_step_is_accepted_ = (MCMC_Likelihood <= 0.) || (1. <= a_ratio_) || (ran3(&MCMCseed) < a_ratio_);
+    }
+    // only accepts new parameters if likelihood increases:
+    else if(MCMCMode == 1)
+    { proposed_MCMC_step_is_accepted_ = (proposed_likelihood_ >= MCMC_Likelihood); }
+    // don't accept in unknown mode:
+    else
+    { proposed_MCMC_step_is_accepted_ = false; }
 
-      //generate random number to assess probability
-      ran = ran3(&MCMCseed);
+    //if new set of parameters is accepted change current set of parameter and lhood
+    if(proposed_MCMC_step_is_accepted_)
+    {
+      N_MCMC_steps_accepted_++;
+      MCMC_Likelihood = proposed_likelihood_;
+      for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+        for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+          MCMC_PAR[parameter_number_].Value[output_number_] = MCMC_PAR[parameter_number_].PropValue[output_number_];
+    }
 
-      //accepts the proposed parameters with probability=acceptance rate
-      if(MCMCMode == 0)
-	AcceptanceLogic = (ran < AcceptanceProbability);
-      //only accepts new parameters if likelihood increases
-      if(MCMCMode == 1)
-	AcceptanceLogic = (lhood2 > lhood1);
+    //print the values to file and to screen (to screen only if proposed_MCMC_step_is_accepted_)
+    print_parameters(proposed_MCMC_step_is_accepted_, mcmc_file_);
 
-      //AcceptanceLogic=1;
-      //if new set of parameters is accepted change current set of parameter and lhood
-      if(AcceptanceLogic)
-	{
-	  for(jj=0;jj<MCMCNpar;++jj)
-	    for(snap=0;snap<NOUT;snap++)
-	      MCMC_PAR[jj].Value[snap] = MCMC_PAR[jj].PropValue[snap];
+    printf("\nCurrent acceptance rate of this chain=%0.2f%%\n", (N_MCMC_steps_accepted_ / (float)(CurrentMCMCStep + 1)) * 100.);
 
-	  lhood1=lhood2;
-	  IndividualAcceptRate=1;
-	}
-
-      //print the values to file and to screen (to screen only if IndividualAcceptRate=1)
-      print_parameters(IndividualAcceptRate, fmcmc);
-
-      TotAcceptRate = TotAcceptRate + IndividualAcceptRate;
-      printf("\nCurrent acceptance rate of this chain=%0.2f%%\n", ((float) TotAcceptRate / ii) * 100);
-
-      time(&final);
-      printf("Task %d chain %d (%d) took %lds\n", ThisTask+FirstChainNumber, CurrentMCMCStep, GlobalMCMCStep, final - local_initial);
-      printf("Global Time Elapsed %lds, %f hours\n", final - global_starting_time, (final - global_starting_time)/3600.);
+    time(&local_final_time_);
+    printf("Task %d chain %d (%d) took %lds\n", ThisTask+FirstChainNumber, CurrentMCMCStep, GlobalMCMCStep, local_final_time_ - local_initial_time_);
+    printf("Global Time Elapsed %lds, %f hours\n", local_final_time_ - GlobalStartingTime, (local_final_time_ - GlobalStartingTime) / 3600.);
 
 #ifdef PARALLEL
-      if(ThisTask==0)
-	if((final - global_starting_time)/3600. > MachineTimeOut)
-	  {
-	    sprintf(buf, "%s %s %s%d.bash", JobSubmitCommand, JobSubmitPipe, JobSubmitFile, FirstChainNumber);
-	    printf("resubmit command: %s\n",buf);
-	    system(buf);
-	    fflush(stdout);
-	    terminate("\n\nMachine TimeOut reached, restarting\n\n");
-	  }
-
+    if(ThisTask==0)
+      if((local_final_time_ - GlobalStartingTime)/3600. > MachineTimeOut)
+      {
+        sprintf(buf_, "%s %s %s%d.bash", JobSubmitCommand, JobSubmitPipe, JobSubmitFile, FirstChainNumber);
+        printf("resubmit command: %s\n",buf_);
+        system(buf_);
+        fflush(stdout);
+        terminate("\n\nMachine TimeOut reached, restarting\n\n");
+      }
 #endif
-    }// ChainLength (MCMC steps)
+  }// ChainLength (MCMC steps)
 
-  fclose(fmcmc);
+  fclose(mcmc_file_);
 
   /* For each set of parameters writes the semi-analytic
    * predictions used for the likelihood calculation*/
@@ -231,10 +217,8 @@ void Senna()
     gsl_spline_free(PowSpline);
 #endif
 
-
-  printf("\nFinal acceptance rate of this chain=%f%%\n", ((float) TotAcceptRate / ChainLength) * 100);
+  printf("\nFinal acceptance rate of this chain=%f%%\n", ((float) N_MCMC_steps_accepted_ / ChainLength) * 100);
   printf("\n\nMCMC OVER\n\n");
-
 }
 
 
@@ -242,346 +226,356 @@ void Senna()
 //MCMC//
 ////////
 
-
-
-/*@brief Function to print parameters whenever
- *       a step is accepted in the MCMC*/
-void print_parameters (int AcceptanceLogic, FILE *fmcmc)
+/** @brief Function to print parameters whenever
+ *       a step is accepted in the MCMC */
+void print_parameters (const bool proposed_MCMC_step_is_accepted_, FILE *mcmc_file_)
 {
-  int i, snap, chainweight=1;
+  int parameter_number_, output_number_;
+  const int chainweight_ = 1;
 
-  fprintf(fmcmc,"%d %0.8g",chainweight, -(log10(lhood1)));
+  fprintf(mcmc_file_,"%d %0.8g", chainweight_, -(log10(MCMC_Likelihood)));
 
   //print parameters into output file
-  for(i=0;i<MCMCNpar;++i)
+  for(parameter_number_=0;parameter_number_<MCMCNpar;++parameter_number_)
+  {
+    if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
     {
-      if(MCMC_PAR[i].Sampling_Switch==1)
-	{
-	  if(Time_Dependent_PhysPar==1)
-	    for(snap=0;snap<NOUT;snap++)
-	      fprintf(fmcmc," %0.6f", log10(MCMC_PAR[i].Value[snap]));
-	  else
-	    fprintf(fmcmc," %0.6f", log10(MCMC_PAR[i].Value[0]));
-	}
+      if(Time_Dependent_PhysPar==1)
+        for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+          fprintf(mcmc_file_," %0.6f", log10(MCMC_PAR[parameter_number_].Value[output_number_]));
+      else
+        fprintf(mcmc_file_," %0.6f", log10(MCMC_PAR[parameter_number_].Value[0]));
     }
-  fprintf(fmcmc,"\n");
-  fflush(fmcmc);
+  }
+  fprintf(mcmc_file_,"\n");
+  fflush(mcmc_file_);
   fflush(stdout);
 
-
   //print to screen
-  if(AcceptanceLogic==1)
-    {
-      printf("\n******************************************************\n");
-      printf("Accepted!!!\n");
-      for(i=0;i<MCMCNpar;++i)
-	if(MCMC_PAR[i].Sampling_Switch==1)
-	  {
-	    if(Time_Dependent_PhysPar==1)
-	      for(snap=0;snap<NOUT;snap++)
-		printf("%0.2g ",MCMC_PAR[i].PropValue[snap]);
-	    else
-	      printf("%0.2g ",MCMC_PAR[i].PropValue[0]);
-	  }
-      printf("\n");
+  if(proposed_MCMC_step_is_accepted_)
+  {
+    printf("\n******************************************************\n");
+    printf("Accepted!!!\n");
+    for(parameter_number_=0;parameter_number_<MCMCNpar;++parameter_number_)
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+      {
+        if(Time_Dependent_PhysPar==1)
+          for(output_number_=0;output_number_<NOUT;output_number_++)
+            printf("%0.2g ",MCMC_PAR[parameter_number_].PropValue[output_number_]);
+        else
+          printf("%0.2g ",MCMC_PAR[parameter_number_].PropValue[0]);
+      }
+    printf("\n");
 
 
-      //print log of parameters to screen
-      printf("%d %0.8g ",chainweight, -(log10(lhood1)));
-      for(i=0;i<MCMCNpar;++i)
-	if(MCMC_PAR[i].Sampling_Switch==1)
-	  {
-	    if(Time_Dependent_PhysPar==1)
-	      for(snap=0;snap<NOUT;snap++)
-		printf("%0.6f ",log10(MCMC_PAR[i].PropValue[snap]));
-	    else
-	      printf("%0.6f ",log10(MCMC_PAR[i].PropValue[0]));
-	  }
+    //print log of parameters to screen
+    printf("%d %0.8g ",chainweight_, -(log10(MCMC_Likelihood)));
+    for(parameter_number_=0;parameter_number_<MCMCNpar;++parameter_number_)
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+      {
+        if(Time_Dependent_PhysPar==1)
+          for(output_number_=0;output_number_<NOUT;output_number_++)
+            printf("%0.6f ",log10(MCMC_PAR[parameter_number_].PropValue[output_number_]));
+        else
+          printf("%0.6f ",log10(MCMC_PAR[parameter_number_].PropValue[0]));
+      }
 
-      printf("\n******************************************************\n\n\n\n");
-    } //end if(AcceptanceLogic==1) - print ot screen
+    printf("\n******************************************************\n\n\n\n");
+  } //end if(proposed_MCMC_step_is_accepted_==1) - print ot screen
 }
 
 
-
-
-/* initialize MCMC_PAR.Value and MCMC_PAR.PropValue with the same values
+/** @brief initialize MCMC_PAR.Value and MCMC_PAR.PropValue with the same values
  *
  * the number of parameters, limits and switches (whitch to sample) are
  * read from MCMCParaPriorsAndSwitchesFile while the actual values are read from
  * previous output or MCMCStartingParFile
  *  */
-void initialize_mcmc_par_and_lhood (FILE *fmcmc)
+void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
 {
-  int i, jj, snap, dumb_weight, EoF=0;
-  double aux_p;
-  char buf[1000];
-  FILE *fa;
+  int parameter_number_, output_number_, dumb_weight_;
+  double aux_p_;
+  char buf_[1000];
+  FILE *file_;
 
-  sprintf(buf, "%s", MCMCParPriorsAndSwitchesFile);
-  if(!(fa = fopen(buf, "r")))
-    {
-      char sbuf[1000];
-      sprintf(sbuf, "can't open file `%s'\n", buf);
-      terminate(sbuf);
-    }
+  sprintf(buf_, "%s", MCMCParPriorsAndSwitchesFile);
+  if(!(file_ = fopen(buf_, "r")))
+  {
+    char error_message_[1000];
+    sprintf(error_message_, "can't open file `%s'\n", buf_);
+    terminate(error_message_);
+  }
 
-  fgets(buf, 300, fa);
-  fscanf(fa,"%d\n",&MCMCNpar);
+  fgets(buf_, 300, file_);
+  fscanf(file_,"%d\n",&MCMCNpar);
 
   //initialize structure to contain parameter names, values, priors and other properties
   MCMC_PAR = mymalloc("MCMC_PAR", sizeof(struct MCMC_PAR) * MCMCNpar);
 
   //read names and switches
-  fgets(buf, 300, fa);
-  for(i=0;i<MCMCNpar;i++)
-    {
-      fscanf(fa,"%s %lg %lg %lg %d\n",MCMC_PAR[i].Name, &MCMC_PAR[i].PropValue[0],
-	     &MCMC_PAR[i].PriorMin, &MCMC_PAR[i].PriorMax, &MCMC_PAR[i].Sampling_Switch);
-    }
+  fgets(buf_, 300, file_);
+  for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+  {
+    fscanf(file_,"%s %lg %lg %lg %d\n",MCMC_PAR[parameter_number_].Name, &MCMC_PAR[parameter_number_].PropValue[0],
+           &MCMC_PAR[parameter_number_].PriorMin, &MCMC_PAR[parameter_number_].PriorMax, &MCMC_PAR[parameter_number_].Sampling_Switch);
+  }
 
-  fclose(fa);  //done reading from MCMCParPriorsAndSwitchesFile
-
+  fclose(file_);  //done reading from MCMCParPriorsAndSwitchesFile
 
   //read actual values from previous outputs and check if are inside priors
-  jj=0;
-  GlobalMCMCStep=0;
-  do
-    {
-      //read lhood1
-      if(fscanf(fmcmc,"%d %lg ", &dumb_weight, &lhood1)==EOF)
-	EoF=1;//if there is no new line to read, fscanf gives error and EoF changes to 1
-      else
-	{
-	  jj++;
-	  //read parameter values
-	  for(i=0;i<MCMCNpar;++i)
-	    if(MCMC_PAR[i].Sampling_Switch==1)
-	      fscanf(fmcmc,"%lg",&MCMC_PAR[i].Value[0]);
-	  //printf("par[%d]=%f\n",i, MCMC_PAR[i].Value[0]);
-	  GlobalMCMCStep+=1;
-	}
-    }
-  while (EoF==0);
+  GlobalMCMCStep = 0;
+  while(2 == fscanf(mcmc_file_,"%d %lg ", &dumb_weight_, &MCMC_Likelihood))
+  {
+    //read parameter values
+    for(parameter_number_=0;parameter_number_<MCMCNpar;++parameter_number_)
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+        fscanf(mcmc_file_,"%lg",&MCMC_PAR[parameter_number_].Value[0]);
+    //printf("par[%d]=%f\n",parameter_number_, MCMC_PAR[parameter_number_].Value[0]);
+    ++GlobalMCMCStep;
+  }
 
   //if there is something in that file,this is a re-start so:
-  if(jj>0)
-  MCMC_Initial_Par_Displacement=0.;
-
+  if(GlobalMCMCStep > 0)
+  { MCMC_Initial_Par_Displacement=0.; }
+  else
   //if there is nothing in that file read from backup file 00
-  if(jj==0)
   {
-      sprintf(buf, "%s", MCMCStartingParFile);
-      if((fa = fopen(buf, "r")) == NULL)
-  	{
-	  char sbuf[1000];
-	  sprintf(sbuf, "can't open file `%s'\n", buf);
-	  terminate(sbuf);
-  	}
-      fscanf(fa,"%d %lg ", &dumb_weight, &lhood1);
-      for(i=0;i<MCMCNpar;++i)
-	if(MCMC_PAR[i].Sampling_Switch==1)
-	  fscanf(fa,"%lg",&MCMC_PAR[i].Value[0]);
-      fclose(fa);
+    sprintf(buf_, "%s", MCMCStartingParFile);
+    if((file_ = fopen(buf_, "r")) == NULL)
+    {
+      char error_message_[1000];
+      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      terminate(error_message_);
+    }
+    fscanf(file_,"%d %lg ", &dumb_weight_, &MCMC_Likelihood);
+    for(parameter_number_=0;parameter_number_<MCMCNpar;++parameter_number_)
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+        fscanf(file_,"%lg",&MCMC_PAR[parameter_number_].Value[0]);
+    fclose(file_);
   }
 
   //convert from log
-  lhood1=pow(10,-lhood1);
-  for(i=0;i<MCMCNpar;++i)
-    if(MCMC_PAR[i].Sampling_Switch==1)
-      MCMC_PAR[i].Value[0]=pow(10,MCMC_PAR[i].Value[0]);
+  MCMC_Likelihood=pow(10,-MCMC_Likelihood);
+  for(parameter_number_=0;parameter_number_<MCMCNpar;++parameter_number_)
+    if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+      MCMC_PAR[parameter_number_].Value[0]=pow(10,MCMC_PAR[parameter_number_].Value[0]);
 
   printf("Initial Parameter Values:\n");
-  for(i=0;i<MCMCNpar;i++)
+  for(parameter_number_=0;parameter_number_<MCMCNpar;parameter_number_++)
   {
-      if(MCMC_PAR[i].Sampling_Switch==1)
-	printf("%0.6f ",MCMC_PAR[i].Value[0]);
-      if(MCMC_PAR[i].Sampling_Switch==1)
-	if(MCMC_PAR[i].Value[0]<MCMC_PAR[i].PriorMin ||
-	    MCMC_PAR[i].Value[0]>MCMC_PAR[i].PriorMax)
-	  {
-	    printf("value=%0.6f priormin=%0.4f priormax=%0.4f\n",MCMC_PAR[i].Value[0],MCMC_PAR[i].PriorMin,MCMC_PAR[i].PriorMax);
-	    char sbuf[1000];
-	    sprintf(sbuf, "parameter '%s' outside prior range \n", MCMC_PAR[i].Name);
-	    terminate(sbuf);
-	  }
+    if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+    { printf("%0.6f ",MCMC_PAR[parameter_number_].Value[0]); }
+    if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+      if(MCMC_PAR[parameter_number_].Value[0]<MCMC_PAR[parameter_number_].PriorMin ||
+         MCMC_PAR[parameter_number_].Value[0]>MCMC_PAR[parameter_number_].PriorMax)
+      {
+        printf("value=%0.6f priormin=%0.4f priormax=%0.4f\n",MCMC_PAR[parameter_number_].Value[0],MCMC_PAR[parameter_number_].PriorMin,MCMC_PAR[parameter_number_].PriorMax);
+        char error_message_[1000];
+        sprintf(error_message_, "parameter '%s' outside prior range \n", MCMC_PAR[parameter_number_].Name);
+        terminate(error_message_);
+      }
   }
   printf("\n");
 
   //if MCMC_Initial_Par_Displacement>0. introduce displacement in parameter values
-  for(i=0;i<MCMCNpar;++i)
-    {
-      for(snap=0;snap<NOUT;snap++)
-	{
-	  if(Time_Dependent_PhysPar==1 || snap==0)
-	    {
-	      if(MCMC_PAR[i].Sampling_Switch==1)
-		{
-		  aux_p=MCMC_PAR[i].Value[0];
-		  do
-		    MCMC_PAR[i].Value[snap] = aux_p * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed));
-		  while(MCMC_PAR[i].Value[snap] < MCMC_PAR[i].PriorMin
-		      || MCMC_PAR[i].Value[snap] > MCMC_PAR[i].PriorMax);
-		}
-	      else
-		MCMC_PAR[i].Value[snap] = MCMC_PAR[i].Value[0];
-
-	      MCMC_PAR[i].PropValue[snap] = MCMC_PAR[i].Value[snap];
-	    }
-	  else //if(Time_Dependent_PhysPar==0 || snap>0)
-	    {
-	      MCMC_PAR[i].Value[snap] = MCMC_PAR[i].Value[0];
-	      MCMC_PAR[i].PropValue[snap] = MCMC_PAR[i].Value[0];
-	    }
-	}
-  }
-
-  //LOAD INTITIAL VALUES FOR ALL PARAMETERS FROM A DIFFERENT FILE
-  if(Time_Dependent_PhysPar==1)
+  if(Time_Dependent_PhysPar==0)
   {
-      sprintf(buf, "./input/mcmc_allz_par.txt");
-      if(!(fa = fopen(buf, "r")))
-	{
-	  char sbuf[1000];
-	  sprintf(sbuf, "can't open file `%s'\n", buf);
-	  terminate(sbuf);
-	}
+    for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+    {
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+      {
+        aux_p_ = MCMC_PAR[parameter_number_].Value[0];
+        do
+        { MCMC_PAR[parameter_number_].Value[0] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed)); }
+        while(MCMC_PAR[parameter_number_].Value[0] < MCMC_PAR[parameter_number_].PriorMin
+           || MCMC_PAR[parameter_number_].Value[0] > MCMC_PAR[parameter_number_].PriorMax);
+      }
+      else
+        MCMC_PAR[parameter_number_].Value[0] = MCMC_PAR[parameter_number_].Value[0];
 
-      for(i=0;i<MCMCNpar;i++)
-	for(snap=0;snap<NOUT;snap++)
-	  if(i<1 || (i>2 && i<13))
-	    {
-	      fscanf(fa,"%lg",&MCMC_PAR[i].Value[snap]);
-	      aux_p=MCMC_PAR[i].Value[snap];
-	      do
-		MCMC_PAR[i].Value[snap] = aux_p * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed));
-	      while(MCMC_PAR[i].Value[snap] < MCMC_PAR[i].PriorMin || MCMC_PAR[i].Value[snap] > MCMC_PAR[i].PriorMax);
-	      MCMC_PAR[i].PropValue[snap] = MCMC_PAR[i].Value[snap];
-	    }
-      fclose(fa);
+      MCMC_PAR[parameter_number_].PropValue[0] = MCMC_PAR[parameter_number_].Value[0];
+
+      for(output_number_ = 1; output_number_ < NOUT; output_number_++)
+      {
+        MCMC_PAR[parameter_number_].Value    [output_number_] = MCMC_PAR[parameter_number_].Value[0];
+        MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[0];
+      }
+    }
   }
+  else if(Time_Dependent_PhysPar==1)
+  {
+    for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+    {
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+      {   
+        for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+        {
+          aux_p_=MCMC_PAR[parameter_number_].Value[0];
+          do
+          { MCMC_PAR[parameter_number_].Value[output_number_] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed)); }
+          while(MCMC_PAR[parameter_number_].Value[output_number_] < MCMC_PAR[parameter_number_].PriorMin
+             || MCMC_PAR[parameter_number_].Value[output_number_] > MCMC_PAR[parameter_number_].PriorMax);
 
+          MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[output_number_];
+        }
+      }
+      else
+      {
+        for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+        {
+          MCMC_PAR[parameter_number_].Value    [output_number_] = MCMC_PAR[parameter_number_].Value[0];
+          MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[0];
+        }
+      }
+    }
+
+    //LOAD INTITIAL VALUES FOR ALL PARAMETERS FROM A DIFFERENT FILE
+    sprintf(buf_, "./input/mcmc_allz_par.txt");
+    if(!(file_ = fopen(buf_, "r")))
+    {
+      char error_message_[1000];
+      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      terminate(error_message_);
+    }
+
+    for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+      for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+        if(parameter_number_ < 1 || (parameter_number_ > 2 && parameter_number_ < 13))
+        {
+          fscanf(file_,"%lg",&MCMC_PAR[parameter_number_].Value[output_number_]);
+          aux_p_=MCMC_PAR[parameter_number_].Value[output_number_];
+          do
+          { MCMC_PAR[parameter_number_].Value[output_number_] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed)); }
+          while(MCMC_PAR[parameter_number_].Value[output_number_] < MCMC_PAR[parameter_number_].PriorMin || MCMC_PAR[parameter_number_].Value[output_number_] > MCMC_PAR[parameter_number_].PriorMax);
+          MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[output_number_];
+        }
+    fclose(file_);
+  }
 }
-
-
-
-
 
 
 ///////////
 //PROPOSE//
 ///////////
 
-
-/*@brief Function to propose new parameters given by
+/** @brief Function to propose new parameters given by
  *       a random normal distribution gassdev*/
 
-double propose_new_parameters ()
+double propose_new_parameters(void)
 {
-  double qratio;
-  int i, snap;
-
-  for(i=0;i<MCMCNpar;++i)
-    if(MCMC_PAR[i].Sampling_Switch==1)
+  double q_ratio_;
+  int parameter_number_, output_number_;
+ 
+  if(Time_Dependent_PhysPar == 0)  // only sample for output_number_ == 0, then copy for other output_number_:
+  {
+    for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
       {
-	for(snap=0;snap<NOUT;snap++)
-	  {
-	    if(Time_Dependent_PhysPar==0 && snap>0)
-	      MCMC_PAR[i].PropValue[snap] = MCMC_PAR[i].PropValue[0];
-	    else
-	      {
-		do
-		  MCMC_PAR[i].PropValue[snap] = MCMC_PAR[i].Value[snap] * exp(MCMC_LogStep_Size * gassdev(&MCMCseed));
-		while(MCMC_PAR[i].PropValue[snap] < MCMC_PAR[i].PriorMin
-		    || MCMC_PAR[i].PropValue[snap] > MCMC_PAR[i].PriorMax);
-	      }
-	  }
-      }
+        do
+        { MCMC_PAR[parameter_number_].PropValue[0] = MCMC_PAR[parameter_number_].Value[0] * exp(MCMC_LogStep_Size * gassdev(&MCMCseed)); }
+        while(MCMC_PAR[parameter_number_].PropValue[0] < MCMC_PAR[parameter_number_].PriorMin ||
+              MCMC_PAR[parameter_number_].PropValue[0] > MCMC_PAR[parameter_number_].PriorMax);
 
-  qratio = 1;
-  //qratio= prop[0]/p[0]*prop[1]/p[1]*prop[2]/p[2]*prop[3]/p[3]*prop[4]/p[4];
-  return qratio;
+        for(output_number_ = 1; output_number_ < NOUT; output_number_++)
+        { MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].PropValue[0]; }
+      }
+  }
+  else // sample for all output_number_:
+  {
+    for(parameter_number_ = 0; parameter_number_ < MCMCNpar; parameter_number_++)
+      if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+        for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+        {
+          do
+          { MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[output_number_] * exp(MCMC_LogStep_Size * gassdev(&MCMCseed)); }
+          while(MCMC_PAR[parameter_number_].PropValue[output_number_] < MCMC_PAR[parameter_number_].PriorMin ||
+                MCMC_PAR[parameter_number_].PropValue[output_number_] > MCMC_PAR[parameter_number_].PriorMax);
+        }
+  }
+
+  q_ratio_ = 1;
+  //q_ratio_= prop[0]/p[0]*prop[1]/p[1]*prop[2]/p[2]*prop[3]/p[3]*prop[4]/p[4];
+  return q_ratio_;
 }
 
 
-
-void read_mcmc_par (int snapnum)
+void read_mcmc_par (const int snapshot_number_)
 {
-  int snap, i;
+  int output_number_, parameter_number_;
+ 
+  // //for snapshot_number_ between output_number_[i] and output_number_[i+1], parameters have the values of output_number_[i+1]
+  // for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+  //   if(snapshot_number_ < ListOutputSnaps[NOUT-output_number_-1]+1)
+  //     break;
+  // output_number_=NOUT-output_number_-1;
+  // 
+  // if(output_number_  <  0)
+  //   output_number_ = 0;
+  
+  output_number_ = ListOutputNumberOfSnapshot[snapshot_number_];
 
-  //betwenn snapnum[i] and snapnum[i+1] parameters have the values of snap[i+1]
-  for(snap=0;snap<NOUT;snap++)
-    if(snapnum < ListOutputSnaps[NOUT-snap-1]+1)
-      break;
-  snap=NOUT-snap-1;
+  for(parameter_number_=0;parameter_number_<MCMCNpar;parameter_number_++)
+    if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
+    {
+      if(strcmp(MCMC_PAR[parameter_number_].Name,"SfrEfficiency")==0)
+        SfrEfficiency = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      if(strcmp(MCMC_PAR[parameter_number_].Name,"SfrColdCrit")==0)
+        SfrColdCrit = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"SfrBurstEfficiency")==0)
+        SfrBurstEfficiency = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"SfrBurstSlope")==0)
+        SfrBurstSlope = MCMC_PAR[parameter_number_].PropValue[output_number_];
 
-  if(snap<0)
-    snap=0;
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"AgnEfficiency")==0)
+        AgnEfficiency = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"BlackHoleGrowthRate")==0)
+        BlackHoleGrowthRate = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"BlackHoleCutoffVelocity")==0)
+        BlackHoleCutoffVelocity = MCMC_PAR[parameter_number_].PropValue[output_number_];
 
-  for(i=0;i<MCMCNpar;i++)
-    if(MCMC_PAR[i].Sampling_Switch==1)
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"FeedbackReheatingEpsilon")==0)
+        FeedbackReheatingEpsilon = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"ReheatPreVelocity")==0)
+        ReheatPreVelocity = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"ReheatSlope")==0)
+        ReheatSlope = MCMC_PAR[parameter_number_].PropValue[output_number_];
+
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"FeedbackEjectionEfficiency")==0)
+        FeedbackEjectionEfficiency = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"EjectPreVelocity")==0)
+        EjectPreVelocity = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"EjectSlope")==0)
+        EjectSlope = MCMC_PAR[parameter_number_].PropValue[output_number_];
+
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"Yield")==0)
+        Yield = MCMC_PAR[parameter_number_].PropValue[output_number_];
+
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"ThreshMajorMerger")==0)
+        ThreshMajorMerger = MCMC_PAR[parameter_number_].PropValue[output_number_];
+
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"MergerTimeMultiplier")==0)
+        MergerTimeMultiplier = MCMC_PAR[parameter_number_].PropValue[output_number_];
+
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"RamPressureStrip_CutOffMass")==0)
+        RamPressureStrip_CutOffMass = MCMC_PAR[parameter_number_].PropValue[output_number_];
+
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"Reionization_z0")==0)
+        Reionization_z0 = MCMC_PAR[parameter_number_].PropValue[output_number_];
+      else if(strcmp(MCMC_PAR[parameter_number_].Name,"Reionization_zr")==0)
       {
-	if(strcmp(MCMC_PAR[i].Name,"SfrEfficiency")==0)
-	  SfrEfficiency = MCMC_PAR[i].PropValue[snap];
-	if(strcmp(MCMC_PAR[i].Name,"SfrColdCrit")==0)
-	  SfrColdCrit = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"SfrBurstEfficiency")==0)
-	  SfrBurstEfficiency = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"SfrBurstSlope")==0)
-	  SfrBurstSlope = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"AgnEfficiency")==0)
-	  AgnEfficiency = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"BlackHoleGrowthRate")==0)
-	  BlackHoleGrowthRate = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"BlackHoleCutoffVelocity")==0)
-	  BlackHoleCutoffVelocity = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"FeedbackReheatingEpsilon")==0)
-	  FeedbackReheatingEpsilon = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"ReheatPreVelocity")==0)
-	  ReheatPreVelocity = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"ReheatSlope")==0)
-	  ReheatSlope = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"FeedbackEjectionEfficiency")==0)
-	  FeedbackEjectionEfficiency = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"EjectPreVelocity")==0)
-	  EjectPreVelocity = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"EjectSlope")==0)
-	  EjectSlope = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"Yield")==0)
-	  Yield = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"ThreshMajorMerger")==0)
-	  ThreshMajorMerger = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"MergerTimeMultiplier")==0)
-	  MergerTimeMultiplier = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"RamPressureStrip_CutOffMass")==0)
-	  RamPressureStrip_CutOffMass = MCMC_PAR[i].PropValue[snap];
-
-	else if(strcmp(MCMC_PAR[i].Name,"Reionization_z0")==0)
-	  Reionization_z0 = MCMC_PAR[i].PropValue[snap];
-	else if(strcmp(MCMC_PAR[i].Name,"Reionization_zr")==0)
-	  {
-	    Reionization_zr = MCMC_PAR[i].PropValue[snap];
-	    if(Reionization_zr>(Reionization_z0-0.5))
-	      {
-		Reionization_zr=Reionization_z0-0.5;
-		MCMC_PAR[i].PropValue[snap]=Reionization_z0-0.5;
-	      }
-	  }
-
-			//printf("EjectSlope=%g\n",EjectSlope);
+        Reionization_zr = MCMC_PAR[parameter_number_].PropValue[output_number_];
+        if(Reionization_zr>(Reionization_z0-0.5))
+        {
+          Reionization_zr=Reionization_z0-0.5;
+          MCMC_PAR[parameter_number_].PropValue[output_number_]=Reionization_z0-0.5;
+        }
       }
+                      //printf("EjectSlope=%g\n",EjectSlope);
+    }
 }
 
 
-
-/*@brief Read in the IDs and Weights of the FOFs groups that
+/** @brief Read in the IDs and Weights of the FOFs groups that
  *       constitute the sample for which galaxies will be
  *       compared with observations
  *
@@ -593,314 +587,307 @@ void read_mcmc_par (int snapnum)
  *       looped over that number of trees the necessary variables are changed to MRII.*/
 void read_sample_info (void)
 {
-  int DumbTreeNrColector, DumbFileNrColector, MaxFoFNr;
-  int i, snap;
-  FILE *fa;
-  char buf[1000];
+  int DumbTreeNrColector_, DumbFileNrColector_, max_n_fof_in_sample_;
+  int fof_number_, output_number_;
+  FILE *file_;
+  char buf_[1000];
 
-  MaxFoFNr=0;
-
+  max_n_fof_in_sample_ = 0;
 
 #ifdef MR_PLUS_MRII
   if(Switch_MR_MRII==1)
+  {
+    sprintf(buf_, "%s/%ssample_allz_nh_Switch_MR_MRII_%d.dat", MCMCSampleDir, MCMCSampleFilePrefix, MCMCSampleFile);
+    if(!(file_ = fopen(buf_, "r")))
     {
-      sprintf(buf, "%s/%ssample_allz_nh_Switch_MR_MRII_%d.dat", MCMCSampleDir, MCMCSampleFilePrefix, MCMCSampleFile);
-      if(!(fa = fopen(buf, "r")))
-	{
-	  char sbuf[1000];
-	  sprintf(sbuf, "can't open file `%s'\n", buf);
-	  terminate(sbuf);
-	}
-      fscanf(fa, "%d \n", &NTrees_Switch_MR_MRII);
-      fclose(fa);
+      char error_message_[1000];
+      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      terminate(error_message_);
     }
+    fscanf(file_, "%d \n", &NTrees_Switch_MR_MRII);
+    fclose(file_);
+  }
 #endif
 
-  for(snap=0;snap<NOUT;snap++)
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+  {
+    sprintf(buf_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
+            MCMCSampleFile, ListOutputSnaps[output_number_]);
+    if(!(file_ = fopen(buf_, "r")))
     {
-      sprintf(buf, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
-	      MCMCSampleFile, ListOutputSnaps[snap]);
-      if(!(fa = fopen(buf, "r")))
-	{
-	  char sbuf[1000];
-	  sprintf(sbuf, "can't open file `%s'\n", buf);
-	  terminate(sbuf);
-	}
-
-      fscanf(fa, "%d \n", &NFofsInSample[snap]);
-
-      if(MaxFoFNr<NFofsInSample[snap])
-	MaxFoFNr=NFofsInSample[snap];
-      //printf("reading sample %s\n",buf);
-      fclose(fa);
+      char error_message_[1000];
+      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      terminate(error_message_);
     }
 
+    fscanf(file_, "%d \n", &NFofsInSample[output_number_]);
+
+    if(max_n_fof_in_sample_<NFofsInSample[output_number_])
+      max_n_fof_in_sample_=NFofsInSample[output_number_];
+    //printf("reading sample %s\n",buf_);
+    fclose(file_);
+  }
 
   //structure as the size of highest number of halos in a given snapshot
   //for all the other snapshot it will not be full
-  MCMC_FOF = malloc(sizeof(struct MCMC_FOF_struct) * MaxFoFNr);
+  MCMC_FOF = malloc(sizeof(struct MCMC_FOF_struct) * max_n_fof_in_sample_);
 
-  for(snap=0;snap<NOUT;snap++)
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+  {
+
+    sprintf(buf_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
+            MCMCSampleFile, ListOutputSnaps[output_number_]);
+    if(!(file_ = fopen(buf_, "r")))
     {
-
-      sprintf(buf, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
-	      MCMCSampleFile, ListOutputSnaps[snap]);
-      if(!(fa = fopen(buf, "r")))
-	{
-	  char sbuf[1000];
-	  sprintf(sbuf, "can't open file `%s'\n", buf);
-	  terminate(sbuf);
-	}
-
-      fscanf(fa, "%d \n", &NFofsInSample[snap]);
-      
-      for(i=0;i<NFofsInSample[snap];i++)
-	{
-	  fscanf(fa, "%lld %d %d %lg\n", &MCMC_FOF[i].FoFID[snap], &DumbTreeNrColector, &DumbFileNrColector, &MCMC_FOF[i].Weight[snap]);
-	  MCMC_FOF[i].Weight[snap]/=BoxSize*BoxSize*BoxSize;
-#ifdef HALOMODEL
-	  MCMC_FOF[i].NGalsInFoF[snap]=0;
-	  MCMC_FOF[i].IndexOfCentralGal[snap]=-1;
-#endif
-	}
-
-      fclose(fa);
+      char error_message_[1000];
+      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      terminate(error_message_);
     }
-}
 
+    fscanf(file_, "%d \n", &NFofsInSample[output_number_]);
+    
+    for(fof_number_=0;fof_number_<NFofsInSample[output_number_];fof_number_++)
+    {
+      fscanf(file_, "%lld %d %d %lg\n", &MCMC_FOF[fof_number_].FoFID[output_number_], &DumbTreeNrColector_, &DumbFileNrColector_, &MCMC_FOF[fof_number_].Weight[output_number_]);
+      MCMC_FOF[fof_number_].Weight[output_number_]/=BoxSize*BoxSize*BoxSize;
+#ifdef HALOMODEL
+      MCMC_FOF[fof_number_].NGalsInFoF[output_number_]=0;
+      MCMC_FOF[fof_number_].IndexOfCentralGal[output_number_]=-1;
+#endif
+    }
+
+    fclose(file_);
+  }
+}
 
 
 /*@brief Read in the arrays of observational data. They will be compared
  *       with the outputs from the SAM On the get_likelihood routine*/
 void read_observations (void)
 {
-  int i, j, kk, snap, number_of_tests, n_snaps;
+  int constraint_number_, bin_number_, output_number_, mcmc_constraints_output_number_, number_of_tests, n_mcmc_constraints_outputs_;
   //FILE *f[MCMCNConstraints];
-  FILE *fa;
-  float BinValueColector;
-  char buf[1000],	sbuf[1000], aux_testName[1000], aux_testType[1000];
+  FILE *file_;
+  float BinValueColector_;
+  char buf_[1000], error_message_[1000], aux_test_name_[1000], aux_test_type_[1000];
+  bool match_found_;
 
   //allocate structure to contain observational data
   MCMC_Obs = mymalloc("MCMC_Obs", sizeof(struct MCMC_OBSCONSTRAINTS) * MCMCNConstraints);
 
-
   /*Read file MCMCObsConstraints.txt that contains a header with
    * number_of_tests, number_of_chi_tests, number_of_binom_tests,
-   * n_snaps and the redshifts that will be used to constrain the MCMC
+   * n_mcmc_constraints_outputs_ and the redshifts that will be used to constrain the MCMC
    * Then there is a list of all the observational constraints, with
    * the type of test to be used and a switch controlling which redshifts
    * will be used for each constraint */
-  sprintf(buf, "%s", MCMCObsConstraints);
-  if(!(fa = fopen(buf, "r")))
-    {
-      sprintf(sbuf, "can't open file `%s'\n", buf);
-      terminate(sbuf);
-    }
+  sprintf(buf_, "%s", MCMCObsConstraints);
+  if(!(file_ = fopen(buf_, "r")))
+  {
+    sprintf(error_message_, "can't open file `%s'\n", buf_);
+    terminate(error_message_);
+  }
 
-
-  fgets(buf, 500, fa);
-  fscanf(fa,"%d\n",&number_of_tests);
+  fgets(buf_, 500, file_);
+  fscanf(file_,"%d\n",&number_of_tests);
 
   if(number_of_tests!=MCMCNConstraints)
-    {
-      sprintf(sbuf, "check MCMCNConstraints, NChiTests & NBinomTests\n");
-      terminate(sbuf);
-    }
+  {
+    sprintf(error_message_, "check MCMCNConstraints, NChiTests & NBinomTests\n");
+    terminate(error_message_);
+  }
 
-  fgets(buf, 500, fa);
-  fgets(buf, 500, fa);
-  fscanf(fa,"%d\n",&n_snaps);
-  if(n_snaps > NOUT)
-    {
-      sprintf(sbuf, "n_snaps > NOUT\n");
-      terminate(sbuf);
-    }
+  fgets(buf_, 500, file_);
+  fgets(buf_, 500, file_);
+  fscanf(file_,"%d\n",&n_mcmc_constraints_outputs_);
+  if(n_mcmc_constraints_outputs_ > NOUT)
+  {
+    sprintf(error_message_, "n_mcmc_constraints_outputs_ > NOUT\n");
+    terminate(error_message_);
+  }
 
    //Check if all the required snaps are in the current ListOutputSnaps
-  for(i=0;i<n_snaps;i++)
-   {
-      fscanf(fa,"%lg\n",&MCMCConstraintsZZ[i]);
-      kk=0;
-      for(j=0;j<NOUT;j++)
-	{
-	  if(MCMCConstraintsZZ[i] >= (double)((int)((ZZ[ListOutputSnaps[j]]*10)+0.5)/10.)-0.1 &&
-	      MCMCConstraintsZZ[i] <= (double)((int)((ZZ[ListOutputSnaps[j]]*10)+0.5)/10.)+0.1)
-	    kk+=1;
-	}
-      if(kk==0)
-	{
-	  sprintf(sbuf, "redshift %0.2f required for MCMC not in outputlist \n",MCMCConstraintsZZ[i]);
-	  terminate(sbuf);
-	}
-   }
+  for(mcmc_constraints_output_number_ = 0; mcmc_constraints_output_number_ < n_mcmc_constraints_outputs_; mcmc_constraints_output_number_++)
+  {
+    fscanf(file_,"%lg\n",&MCMCConstraintsZZ[mcmc_constraints_output_number_]);
+    match_found_ = false;
+    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    {
+      if(MCMCConstraintsZZ[mcmc_constraints_output_number_] >= (double)((int)((ZZ[ListOutputSnaps[output_number_]]*10)+0.5)/10.)-0.1 &&
+         MCMCConstraintsZZ[mcmc_constraints_output_number_] <= (double)((int)((ZZ[ListOutputSnaps[output_number_]]*10)+0.5)/10.)+0.1)
+      {
+        match_found_ = true;
+        break;
+      }
+    }
+    if(!match_found_)
+    {
+      sprintf(error_message_, "redshift %0.2f required for MCMC not in outputlist \n", MCMCConstraintsZZ[mcmc_constraints_output_number_]);
+      terminate(error_message_);
+    }
+  }
 
-  fgets(buf, 500, fa);
+  fgets(buf_, 500, file_);
 
   //Scan test names, types and redshift switches
-  for(i=0;i<MCMCNConstraints;i++)
-    {
-      fscanf(fa,"%s %s",MCMC_Obs[i].Name, MCMC_Obs[i].TestType);
-      for(j=0;j<NOUT;j++)
-	fscanf(fa,"%d",&MCMC_Obs[i].ObsTest_Switch_z[j]);
-    }
-  fclose(fa);
-
-
-
+  for(constraint_number_ = 0; constraint_number_ < MCMCNConstraints; constraint_number_++)
+  {
+    fscanf(file_,"%s %s",MCMC_Obs[constraint_number_].Name, MCMC_Obs[constraint_number_].TestType);
+    for(output_number_=0;output_number_<NOUT;output_number_++)
+      fscanf(file_,"%d",&MCMC_Obs[constraint_number_].ObsTest_Switch_z[output_number_]);
+  }
+  fclose(file_);
 
   //now read weights for different constraints
-  sprintf(buf, "%s", MCMCWeightsObsConstraints);
-  if(!(fa = fopen(buf, "r")))
-    {
-      sprintf(sbuf, "can't open file `%s'\n", buf);
-      terminate(sbuf);
-    }
+  sprintf(buf_, "%s", MCMCWeightsObsConstraints);
+  if(!(file_ = fopen(buf_, "r")))
+  {
+    sprintf(error_message_, "can't open file `%s'\n", buf_);
+    terminate(error_message_);
+  }
 
-  fgets(buf, 500, fa);
-  fscanf(fa,"%d\n",&number_of_tests);
+  fgets(buf_, 500, file_);
+  fscanf(file_,"%d\n",&number_of_tests);
 
   if(number_of_tests!=MCMCNConstraints)
-   {
-      sprintf(sbuf, "check MCMCNConstraints, NChiTests & NBinomTests\n");
-      terminate(sbuf);
-   }
-  fgets(buf, 500, fa);
-  for(i=0;i<MCMCNConstraints;i++)
-    {
-      fscanf(fa,"%s %s",aux_testName, aux_testType);
-      for(j=0;j<NOUT;j++)
-	fscanf(fa,"%lf",&MCMC_Obs[i].ObsTest_Weight_z[j]);
-    }
-  fclose(fa);
+  {
+    sprintf(error_message_, "check MCMCNConstraints, NChiTests & NBinomTests\n");
+    terminate(error_message_);
+  }
+  fgets(buf_, 500, file_);
+  for(constraint_number_=0;constraint_number_<MCMCNConstraints;constraint_number_++)
+  {
+    fscanf(file_,"%s %s",aux_test_name_, aux_test_type_);
+    for(output_number_=0;output_number_<NOUT;output_number_++)
+      fscanf(file_,"%lf",&MCMC_Obs[constraint_number_].ObsTest_Weight_z[output_number_]);
+  }
+  fclose(file_);
 
   //now read the observations
-  for(snap=0;snap<NOUT;snap++)
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+  {
+    //the round of ZZ[] is to assure that independently of the cosmology used you still
+    //round to z=1.0 or 2.0,etc...
+    for(constraint_number_=0;constraint_number_<MCMCNConstraints;++constraint_number_)
     {
-      //the round of ZZ[] is to assure that independently of the cosmology used you still
-      //round to z=1.0 or 2.0,etc...
-      for(i=0;i<MCMCNConstraints;++i)
-	{
-	  if(MCMC_Obs[i].ObsTest_Switch_z[snap]==1)
-	    {
-	      sprintf(buf, "%s/%s_z%1.2f.txt",ObsConstraintsDir,MCMC_Obs[i].Name,
-		      (double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.) );
-	      if((fa=fopen(buf,"r"))==NULL)
-		{
-		  sprintf(sbuf, "can't open file `%s'\n", buf);
-		  terminate(sbuf);
-		}
+      if(MCMC_Obs[constraint_number_].ObsTest_Switch_z[output_number_]==1)
+      {
+        sprintf(buf_, "%s/%s_z%1.2f.txt",ObsConstraintsDir,MCMC_Obs[constraint_number_].Name,
+                (double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.) );
+        if((file_=fopen(buf_,"r"))==NULL)
+        {
+          sprintf(error_message_, "can't open file `%s'\n", buf_);
+          terminate(error_message_);
+        }
 
-	      /* This values will give the size of the observational arrays
-	       * They will be used in get_likelihood. */
-	      fscanf(fa, "%d", &Nbins[snap][i]);
-	      if(Nbins[snap][i]>MCMCMaxObsBins)
-		{
-		  sprintf(sbuf, "NBins for Obs[%d] Snap[%d] > MCMCMaxObsBins", i,snap);
-		  terminate(sbuf);
-		}
+        /* This values will give the size of the observational arrays
+         * They will be used in get_likelihood. */
+        fscanf(file_, "%d", &Nbins[output_number_][constraint_number_]);
+        if(Nbins[output_number_][constraint_number_]>MCMCMaxObsBins)
+        {
+          sprintf(error_message_, "NBins for Obs[%d] Snap[%d] > MCMCMaxObsBins", constraint_number_,output_number_);
+          terminate(error_message_);
+        }
 
-	      //Read observational data
-	      for(j = 0; j < Nbins[snap][i]; j++)
-		{
-		  //Chi_Sq and Maximum Likelihood TESTS
-		  if(strcmp(MCMC_Obs[i].TestType,"chi_sq")==0 || strcmp(MCMC_Obs[i].TestType,"maxlike")==0)
-		    fscanf(fa, "%lg %lg %lg %lg", &MCMC_Obs[i].Bin_low[snap][j], &MCMC_Obs[i].Bin_high[snap][j],
-			   &MCMC_Obs[i].Obs[snap][j], &MCMC_Obs[i].Error[snap][j]);
-		  //Binomial TESTS
-		  else if(strcmp(MCMC_Obs[i].TestType,"binomial")==0)
-		    fscanf(fa, "%f %lg %lg", &BinValueColector, &MCMC_Obs[i].ObsUp[snap][j], &MCMC_Obs[i].ObsDown[snap][j]);
-		}
-	      fclose(fa);
+        //Read observational data
+        for(bin_number_ = 0; bin_number_ < Nbins[output_number_][constraint_number_]; bin_number_++)
+        {
+          //Chi_Sq and Maximum Likelihood TESTS
+          if(strcmp(MCMC_Obs[constraint_number_].TestType,"chi_sq")==0 || strcmp(MCMC_Obs[constraint_number_].TestType,"maxlike")==0)
+            fscanf(file_, "%lg %lg %lg %lg", &MCMC_Obs[constraint_number_].Bin_low[output_number_][bin_number_], &MCMC_Obs[constraint_number_].Bin_high[output_number_][bin_number_],
+                   &MCMC_Obs[constraint_number_].Obs[output_number_][bin_number_], &MCMC_Obs[constraint_number_].Error[output_number_][bin_number_]);
+          //Binomial TESTS
+          else if(strcmp(MCMC_Obs[constraint_number_].TestType,"binomial")==0)
+            fscanf(file_, "%f %lg %lg", &BinValueColector_, &MCMC_Obs[constraint_number_].ObsUp[output_number_][bin_number_], &MCMC_Obs[constraint_number_].ObsDown[output_number_][bin_number_]);
+        }
+        fclose(file_);
 
-	    }//end if(MCMC_Obs[i].ObsTest_Switch_z[snap]==1)
-	}//end loop on tests
-    }//end loop on snaps
-
+      }//end if(MCMC_Obs[constraint_number_].ObsTest_Switch_z[output_number_]==1)
+    }//end loop on tests
+  }//end loop on snaps
 }
 
 
 /* A different file is written for each observational constraint and for each redshift
  * Each file as the following structure: *
  * int ChainLength+1
- * int Nbins[snap][constraint]
- * phi[0],phi[1],phi[Nbins[snap][constraint]],likelihood(of this constraint),likelihood(of this step)
+ * int Nbins[snapshot_number_][constraint]
+ * phi[0],phi[1],phi[Nbins[snapshot_number_][constraint]],likelihood(of this constraint),likelihood(of this step)
  *
  * Plus one file to contain the total likelihood at each step*/
 void open_files_with_comparison_to_observations()
 {
-  int constraint, snap;
-  char buf[1000], sbuf[1000];
+  int constraint_number_, snapshot_number_;
+  char buf_[1000], error_message_[1000];
 
-  sprintf(buf, "%sMCMC_LIKELIHOOD_%d.txt", OutputDir, ThisTask+FirstChainNumber);
-  if((FILE_MCMC_LIKELIHOOD = fopen(buf, "w")) == NULL)
+  sprintf(buf_, "%sMCMC_LIKELIHOOD_%d.txt", OutputDir, ThisTask+FirstChainNumber);
+  if((FILE_MCMC_LIKELIHOOD = fopen(buf_, "w")) == NULL)
+  {
+    sprintf(error_message_, "can't open file `%s'\n", buf_);
+    terminate(error_message_);
+  }
+
+  for(constraint_number_ = 0; constraint_number_ < MCMCNConstraints; constraint_number_++)
+    for(snapshot_number_=0;snapshot_number_<NOUT;snapshot_number_++)
     {
-      char sbuf[1000];
-      sprintf(sbuf, "can't open file `%s'\n", buf);
-      terminate(sbuf);
-    }
-
-  for(constraint = 0; constraint < MCMCNConstraints; constraint++)
-    for(snap=0;snap<NOUT;snap++)
+      if(MCMC_Obs[constraint_number_].ObsTest_Switch_z[snapshot_number_]==1)
       {
-	if(MCMC_Obs[constraint].ObsTest_Switch_z[snap]==1)
-	  {
-	    sprintf(buf, "%sPredictionsPerStep_%s_z%1.2f_%d.txt", OutputDir, MCMC_Obs[constraint].Name,
-		    (double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.), ThisTask+FirstChainNumber);
-	    if((FILE_MCMC_PredictionsPerStep[snap][constraint] = fopen(buf, "w")) == NULL)
-	      {
-		char sbuf[1000];
-		sprintf(sbuf, "can't open file `%s'\n", buf);
-		terminate(sbuf);
-	      }
-	    fprintf(FILE_MCMC_PredictionsPerStep[snap][constraint], " %d\n", ChainLength+1);
-	    fprintf(FILE_MCMC_PredictionsPerStep[snap][constraint], " %d\n", Nbins[snap][constraint]);
-	  }
+        sprintf(buf_, "%sPredictionsPerStep_%s_z%1.2f_%d.txt", OutputDir, MCMC_Obs[constraint_number_].Name,
+                (double)((int)((MCMCConstraintsZZ[snapshot_number_]*10)+0.5)/10.), ThisTask+FirstChainNumber);
+        if((FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_] = fopen(buf_, "w")) == NULL)
+        {
+          sprintf(error_message_, "can't open file `%s'\n", buf_);
+          terminate(error_message_);
+        }
+        fprintf(FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_], " %d\n", ChainLength+1);
+        fprintf(FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_], " %d\n", Nbins[snapshot_number_][constraint_number_]);
       }
+    }
 }
+
 
 void close_files_with_comparison_to_observations()
 {
-  int constraint, snap;
+  int constraint_number_, snapshot_number_;
 
   fclose(FILE_MCMC_LIKELIHOOD);
 
-  for(constraint = 0; constraint < MCMCNConstraints; constraint++)
-    for(snap=0;snap<NOUT;snap++)
-      if(MCMC_Obs[constraint].ObsTest_Switch_z[snap]==1)
-	fclose(FILE_MCMC_PredictionsPerStep[snap][constraint]);
+  for(constraint_number_ = 0; constraint_number_ < MCMCNConstraints; constraint_number_++)
+    for(snapshot_number_=0;snapshot_number_<NOUT;snapshot_number_++)
+      if(MCMC_Obs[constraint_number_].ObsTest_Switch_z[snapshot_number_]==1)
+        fclose(FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_]);
 }
 
 
 #ifdef MR_PLUS_MRII
-void change_dark_matter_sim(char SimName[])
+void change_dark_matter_sim(const char SimName[])
 {
   if (strcmp(SimName,"MR")==0)
-    {
-      Switch_MR_MRII=1;
-      sprintf(FileWithZList, "%s", FileWithZList_MR);
-      PartMass=PartMass_MR;
-      BoxSize=BoxSize_MR;
+  {
+    Switch_MR_MRII=1;
+    sprintf(FileWithZList, "%s", FileWithZList_MR);
+    PartMass=PartMass_MR;
+    BoxSize=BoxSize_MR;
 
-      sprintf(FileWithZList_OriginalCosm, "%s", FileWithZList_OriginalCosm_MR);
-      PartMass_OriginalCosm=PartMass_OriginalCosm_MR;
-      BoxSize_OriginalCosm=BoxSize_OriginalCosm_MR;
+    sprintf(FileWithZList_OriginalCosm, "%s", FileWithZList_OriginalCosm_MR);
+    PartMass_OriginalCosm=PartMass_OriginalCosm_MR;
+    BoxSize_OriginalCosm=BoxSize_OriginalCosm_MR;
 
-      LastDarkMatterSnapShot=LastDarkMatterSnapShot_MR;
-    }
+    LastDarkMatterSnapShot=LastDarkMatterSnapShot_MR;
+  }
   else if (strcmp(SimName,"MRII")==0)
-    {
-      Switch_MR_MRII=2;
-      sprintf(FileWithZList, "%s", FileWithZList_MRII);
-      PartMass=PartMass_MRII;
-      BoxSize=BoxSize_MRII;
+  {
+    Switch_MR_MRII=2;
+    sprintf(FileWithZList, "%s", FileWithZList_MRII);
+    PartMass=PartMass_MRII;
+    BoxSize=BoxSize_MRII;
 
-      sprintf(FileWithZList_OriginalCosm, "%s", FileWithZList_OriginalCosm_MRII);
-      PartMass_OriginalCosm=PartMass_OriginalCosm_MRII;
-      BoxSize_OriginalCosm=BoxSize_OriginalCosm_MRII;
+    sprintf(FileWithZList_OriginalCosm, "%s", FileWithZList_OriginalCosm_MRII);
+    PartMass_OriginalCosm=PartMass_OriginalCosm_MRII;
+    BoxSize_OriginalCosm=BoxSize_OriginalCosm_MRII;
 
-      LastDarkMatterSnapShot=LastDarkMatterSnapShot_MRII;
-    }
-
+    LastDarkMatterSnapShot=LastDarkMatterSnapShot_MRII;
+  }
 
   //do part of init() again.
   //Can't do the all functions because of metallicity arrays in read_cooling_functions()
@@ -931,50 +918,48 @@ void change_dark_matter_sim(char SimName[])
   /*After all the millennium trees have been done read sample for MRII trees
    * from treenr=NTrees_MR to NTrees_MR+NTrees_MRII=Ntrees */
   if (strcmp(SimName,"MR")==0)
-    {
-      sprintf(MCMCSampleFilePrefix,"%s",MCMCSampleFilePrefix_MR);
-      MCMCSampleFile=MCMCSampleFile_MR;
-    }
+  {
+    sprintf(MCMCSampleFilePrefix,"%s",MCMCSampleFilePrefix_MR);
+    MCMCSampleFile=MCMCSampleFile_MR;
+  }
   else if (strcmp(SimName,"MRII")==0)
-    {
-      sprintf(MCMCSampleFilePrefix,"%s",MCMCSampleFilePrefix_MRII);
-      MCMCSampleFile=MCMCSampleFile_MRII;
-    }
+  {
+    sprintf(MCMCSampleFilePrefix,"%s",MCMCSampleFilePrefix_MRII);
+    MCMCSampleFile=MCMCSampleFile_MRII;
+  }
 
   if (strcmp(SimName,"MRII")==0)
-    {
-      free(MCMC_FOF);
-    }
+  { free(MCMC_FOF); }
 
   read_sample_info();
-
 }
 #endif
 
-#ifdef HALOMODEL
-void assign_FOF_masses(snapnum, treenr)
-{
-  int fof,snap, halonr;
 
-  for(halonr = 0; halonr < TreeNHalos[treenr]; halonr++)
-    if(HaloAux[halonr].DoneFlag == 0 && Halo[halonr].SnapNum == snapnum)
+#ifdef HALOMODEL
+void assign_FOF_masses(const int snapshot_number_, const int tree_number_)
+{
+  int fof_group_number_, output_number_, halo_number_;
+
+  for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+    if(HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
+    {
+      for(output_number_=0;output_number_<NOUT;output_number_++)
       {
-        for(snap=0;snap<NOUT;snap++)
-          {
-            if(snapnum==ListOutputSnaps[snap])
-              {
-                for(fof=0;fof<NFofsInSample[snap]; fof++)
-                  if(HaloIDs[halonr].FirstHaloInFOFgroup == MCMC_FOF[fof].FoFID[snap])
-                    {
-                      MCMC_FOF[fof].M_Crit200[snap] = log10(Halo[halonr].M_Crit200*1.e10);
-                      MCMC_FOF[fof].M_Mean200[snap] = log10(Halo[halonr].M_Mean200*1.e10);
+        if(snapshot_number_==ListOutputSnaps[output_number_])
+        {
+          for(fof_group_number_=0;fof_group_number_<NFofsInSample[output_number_]; fof_group_number_++)
+            if(HaloIDs[halo_number_].FirstHaloInFOFgroup == MCMC_FOF[fof_group_number_].FoFID[output_number_])
+            {
+              MCMC_FOF[fof_group_number_].M_Crit200[output_number_] = log10(Halo[halo_number_].M_Crit200*1.e10);
+              MCMC_FOF[fof_group_number_].M_Mean200[output_number_] = log10(Halo[halo_number_].M_Mean200*1.e10);
 #ifdef MCRIT
-                      MCMC_FOF[fof].M_Mean200[snap] = log10(Halo[halonr].M_Crit200*1.e10);
+              MCMC_FOF[fof_group_number_].M_Mean200[output_number_] = log10(Halo[halo_number_].M_Crit200*1.e10);
 #endif
-                    }
-              }
-          }
+            }
+        }
       }
+    }
 
 }
 #endif
@@ -986,7 +971,6 @@ void assign_FOF_masses(snapnum, treenr)
 
 //Gives a random normal deviate using ran3 (ran1 NR)
 
-
 double gassdev(long *idum)
 {
   static int iset = 0;
@@ -994,37 +978,41 @@ double gassdev(long *idum)
   double fac, r, v1, v2;
 
   if(iset == 0)
+  {
+    do
     {
-      do
-	{
-	  v1 = 2.0 * ran3(idum) - 1.0;
-	  v2 = 2.0 * ran3(idum) - 1.0;
-	  r = v1 * v1 + v2 * v2;
-	}
-      while(r >= 1.0 || r == 0.0);
-      fac = sqrt(-2.0 * log(r) / r);
-
-      //Box Muller deviates to get two normal deviates
-      gset = v1 * fac;
-      iset = 1;
-      return v2 * fac;
+      v1 = 2.0 * ran3(idum) - 1.0;
+      v2 = 2.0 * ran3(idum) - 1.0;
+      r = v1 * v1 + v2 * v2;
     }
+    while(r >= 1.0 || r == 0.0);
+    fac = sqrt(-2.0 * log(r) / r);
 
+    //Box Muller deviates to get two normal deviates
+    gset = v1 * fac;
+    iset = 1;
+    return v2 * fac;
+  }
   else
-    {
-      iset = 0;
-      return gset;
-    }
+  {
+    iset = 0;
+    return gset;
+  }
 }
-
-
-
-
 
 
 ////////
 //RAN3//
 ////////
+#define IA 16807
+#define IM 2147483647
+#define AM (1.0/IM)
+#define IQ 127773
+#define IR 2836
+#define NTAB 32
+#define NDIV (1+(IM-1)/NTAB)
+#define RNMX (1.0-EPS)
+#define EPS 1.2e-7  
 
 double ran3(long *idum)
 {
@@ -1037,18 +1025,18 @@ double ran3(long *idum)
   if(*idum <= 0 || !iy)
     {
       if(-(*idum) < 1)
-	*idum = 1;
+        *idum = 1;
       else
-	*idum = -(*idum);
+        *idum = -(*idum);
       for(j = NTAB + 7; j >= 0; j--)
-	{
-	  k = (*idum) / IQ;
-	  *idum = IA * (*idum - k * IQ) - IR * k;
-	  if(*idum < 0)
-	    *idum += IM;
-	  if(j < NTAB)
-	    iv[j] = *idum;
-	}
+        {
+          k = (*idum) / IQ;
+          *idum = IA * (*idum - k * IQ) - IR * k;
+          if(*idum < 0)
+            *idum += IM;
+          if(j < NTAB)
+            iv[j] = *idum;
+        }
 
       iy = iv[0];
     }
@@ -1065,10 +1053,8 @@ double ran3(long *idum)
     return RNMX;
   else
     return temp;
+
 }
-#endif //MCMC
-
-
 
 #undef IA
 #undef IM
@@ -1078,4 +1064,6 @@ double ran3(long *idum)
 #undef NTAB
 #undef NDIV
 #undef RNMX
-#undef EPS
+#undef EPS  
+
+#endif /* defined MCMC */

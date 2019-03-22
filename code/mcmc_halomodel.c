@@ -39,6 +39,7 @@
 #include <gsl/gsl_multifit.h>
 
 #include "allvars.h"
+#include "proto.h"
 #include "mcmc_vars.h"
 #include "mcmc_halomodel.h"
 #include "mcmc_mpfit.h"
@@ -273,7 +274,7 @@ double pconv_W_func(double lq,void *p) {
   else if (arg<=-1) thetamax=PI;
   else thetamax=0.;
   gsl_function F;
-  int status;
+  // int status;
   struct conv_W_P_params params2={ k,q,censat };
   F.function=&pconv_W_P_func;
   F.params=&params2;
@@ -353,18 +354,18 @@ double NewPowerSpec(double k) {
 
 double corr_qawo_func(double k,void *params) {
   return k*NewPowerSpec(k)*exp(-k*k/1e7); //exponential needed for convergence
+  (void)params; /* suppress unused-parameter warning */
 } //corr_qawo_func
 
 double corr_qawo(double r,double a,double L) {
   double result=0,abserr;
   gsl_function F;
-  int status;
+  //int status;
   F.function=&corr_qawo_func;
   F.params=0;
   gsl_integration_workspace *w=gsl_integration_workspace_alloc(WORKSIZE);
-  gsl_integration_qawo_table
-*t=gsl_integration_qawo_table_alloc(r,L,GSL_INTEG_SINE,40);
-  status=gsl_integration_qawo(&F,a,0,1.0e-3,WORKSIZE,w,t,&result,&abserr);
+  gsl_integration_qawo_table *t=gsl_integration_qawo_table_alloc(r,L,GSL_INTEG_SINE,40);
+  /* status = */ gsl_integration_qawo(&F,a,0,1.0e-3,WORKSIZE,w,t,&result,&abserr);
   gsl_integration_qawo_table_free(t);
   gsl_integration_workspace_free(w);
   return result/(2.*PI*PI*r);
@@ -445,29 +446,33 @@ double nbargal(double m) {
   } //else
 } //nbargal
 
-double b(double m,int i) {
-  double nu2,delta_c2,b1;
-  delta_c2=delta_c*delta_c;
-  nu2=delta_c2/Sigma2(m);
-  //Tinker et al. (2010)
-  double AT,aT,BT,bT,CT,cT;
-  double y=log10(Delta);
-  AT=1.0+0.24*y*exp(-pow(4./y,4));
-  aT=0.44*y-0.88;
-  BT=0.183;
-  bT=1.5;
-  CT=0.019+0.107*y+0.19*exp(-pow(4./y,4));
-  cT=2.4;
-  b1=1-AT*pow(nu2,0.5*aT)/(pow(nu2,0.5*aT)+pow(delta_c2,0.5*aT))+BT*pow(nu2,0.5*bT)+CT*pow(nu2,0.5*cT);
-  switch(i) {
-  case 0:
-    return 1.0;
-    break;
-  case 1:
-    return b1;
-    break;
+
+double b(double m,int i)
+{
+  switch(i) 
+  {
+    // case 0: 
+    // { return 1.0; }
+    case 1:
+    {
+      double nu2,delta_c2,b1;
+      delta_c2=delta_c*delta_c;
+      nu2=delta_c2/Sigma2(m);
+      //Tinker et al. (2010)
+      double AT,aT,BT,bT,CT,cT;
+      double y=log10(Delta);
+      AT=1.0+0.24*y*exp(-pow(4./y,4));
+      aT=0.44*y-0.88;
+      BT=0.183;
+      bT=1.5;
+      CT=0.019+0.107*y+0.19*exp(-pow(4./y,4));
+      cT=2.4;
+      b1=1-AT*pow(nu2,0.5*aT)/(pow(nu2,0.5*aT)+pow(delta_c2,0.5*aT))+BT*pow(nu2,0.5*bT)+CT*pow(nu2,0.5*cT);
+      return b1;
+    }
+    default:
+    { return 1.0; }
   } //switch
-  return 1.0;
 } //b
 
 double mugal_qawo_func(double r,void *p) {
@@ -490,13 +495,13 @@ norm=pc/(rvir3*4*PI*exp(gsl_sf_lngamma(pa/pc)+log(gsl_sf_gamma_inc_P(pa/pc,pow(x
   struct mugal_qawo_params params={ pa,pb,pc };
   double result=0,abserr;
   gsl_function F;
-  int status;
+  // int status;
   F.function=&mugal_qawo_func;
   F.params=&params;
   gsl_integration_workspace *w=gsl_integration_workspace_alloc(WORKSIZE);
   gsl_integration_qawo_table
 *t=gsl_integration_qawo_table_alloc(k*rvir,xmax,GSL_INTEG_SINE,25);
-  status=gsl_integration_qawo(&F,0.0,0,1.0e-3,WORKSIZE,w,t,&result,&abserr);
+  /*status=*/ gsl_integration_qawo(&F,0.0,0,1.0e-3,WORKSIZE,w,t,&result,&abserr);
   gsl_integration_qawo_table_free(t);
   gsl_integration_workspace_free(w);
   return norm*4*PI*rvir*rvir*result/k;
@@ -529,15 +534,17 @@ value=gsl_spline_eval(pbSpline,min(max(m,parscutoff_low),parscutoff_high),pbAcc)
   else return pb_high;
 } //pb_eval
 
-double pc_eval(double m) {
-  double
-value=gsl_spline_eval(pcSpline,min(max(m,parscutoff_low),parscutoff_high),pcAcc);
+double pc_eval(double m)
+{
+  double value=gsl_spline_eval(pcSpline,min(max(m,parscutoff_low),parscutoff_high),pcAcc);
   if (value>=pc_low && value<=pc_high) return value;
   else if (value<pc_low) return pc_low;
   else return pc_high;
 } //pc_eval
 
-double Mcensat_func(double lm,void *p) {
+
+double Mcensat_func(double lm,void *p)
+{
   struct M_params *params=(struct M_params *) p;
   double k=(params->k);
   int i=(params->i);
@@ -561,7 +568,9 @@ nbargal(m)*NgalF(m,5)/pow(ngal_mean,2)*(pow(mugal_qawo(k,m),2)-pow(TopHatWindow(
   } //else
 } //Mcensat_func
 
-double Mcensat(double k,int i,int j) { //k=wavenumber, i=which haloterm [0/1], j=central/satellite [0/1/2]
+
+double Mcensat(double k,int i,int j)
+{ //k=wavenumber, i=which haloterm [0/1], j=central/satellite [0/1/2]
   double result=0,abserr;
   struct M_params params={ k,i,j };
   gsl_function F;
@@ -573,14 +582,18 @@ double Mcensat(double k,int i,int j) { //k=wavenumber, i=which haloterm [0/1], j
   return result;
 } //Mcensat
 
-double ngal_mean_func(double lm,void *p) {
+
+double ngal_mean_func(double lm,void *p)
+{
   struct N_params *params=(struct N_params *) p;
   int j=(params->j);
   double m=exp(lm);
   return nbargal(m)*NgalF(m,j)*m; //extra m for logarithmic integration
 } //ngal_mean_func
 
-double ngal_mean_calc(int j) {
+
+double ngal_mean_calc(int j)
+{
   double result=0,abserr;
   struct N_params params={ j };
   gsl_function F;
@@ -592,7 +605,9 @@ double ngal_mean_calc(int j) {
   return result;
 } //ngal_mean_calc
 
-void init_power() {
+
+void init_power()
+{
   FILE *fd;
   char buf[500];
   double k,p;
@@ -707,7 +722,9 @@ void init_sigma() {
   gsl_spline_init(SigmaSpline,MSigmaTable,SigmaTable,NSigmaTable);
 } //init_sigma
 
-void init_numgal(float masslimit_low, float masslimit_high, int snap) {
+
+void init_numgal(float masslimit_low, float masslimit_high, int snap)
+{
   int i,j,jj;
   int mbin,mbin2,k,found,ncen,nsat;
   int nsat_tot=0;
@@ -988,7 +1005,9 @@ MCMC_FOF2[j].M_Mean200[snap]<minfofmass+(mbin+1)*(maxfofmass-minfofmass)/(double
   free(borders);
 } //init_numgal
 
-void initialize_halomodel() {
+
+void initialize_halomodel(void)
+ {
   int i,NnuTable=100;
   double res;
   double MnuTable[100],nuTable[100];
@@ -1060,7 +1079,9 @@ void initialize_halomodel() {
   gsl_spline_init(FofSpline,FofmassTable,FofnumTable,massbins);
 } //initialize_halomodel
 
-double my_f(const gsl_vector *v,void *params) {
+
+double my_f(const gsl_vector *v,void *params)
+ {
   int i;
   double a,b,c,tot;
   double *p=(double *)params;
@@ -1078,8 +1099,10 @@ double my_f(const gsl_vector *v,void *params) {
   return -tot;
 } //my_f
 
+
 /* The gradient of f, df = (df/dx, df/dy). */
-void my_df(const gsl_vector *v,void *params,gsl_vector *df) {
+void my_df(const gsl_vector *v,void *params,gsl_vector *df)
+ {
   int i;
   double a,b,c,tot;
   double *p=(double *)params;
@@ -1103,13 +1126,17 @@ void my_df(const gsl_vector *v,void *params,gsl_vector *df) {
   gsl_vector_set(df,2,-tot);
 } //my_df
 
+
 /* Compute both f and df together. */
-void my_fdf(const gsl_vector *x,void *params,double *f,gsl_vector *df) {
+void my_fdf(const gsl_vector *x,void *params,double *f,gsl_vector *df)
+ {
   *f=my_f(x,params); 
   my_df(x,params,df);
 } //my_fdf
 
-void paramerror(double *x,double *p,double *perror) {
+
+void paramerror(double *x,double *p,double *perror)
+ {
   int i;
   double a=pow(10.,p[0]);
   double b=pow(10.,p[1]);
@@ -1127,7 +1154,11 @@ dblderiv+=pow(1-c*log(x[i]/b)*pow(x[i]/b,c)+a/c*polygamma0,2);
   perror[2]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
 } //paramerror
 
-int poissonfit(int m,int n,double *p,double *dy,double **dvec,void *vars) {
+
+int poissonfit(int m,int n,double *p,double *dy,double **dvec,void *vars)
+ {
+  (void) m; /* suppress unused-parameter warning */
+  (void) dvec; /* suppress unused-parameter warning */
   int i;
   double a=pow(10.,p[0]);
   double b=pow(10.,p[1]);

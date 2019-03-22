@@ -31,11 +31,14 @@ void assert_flat_LCDM(void);
 #endif /* defined ASSUME_FLAT_LCDM */
 
 void init_redshift_for_comoving_distance(void);
+
+#ifndef ASSUME_FLAT_LCDM
 void init_cosmology_gsl_integration(void);
+#endif /* defined ASSUME_FLAT_LCDM */
+
 void init_cosmology(void);
 
 double comoving_los_distance_for_redshift(const double redshift_);
-double luminosity_distance_for_redshift(const double redshift_);
 double redshift_for_comoving_los_distance(const double distance_);
 double redshift_for_radial_velocity(const double velocity_);
 double combine_redshifts(const double redshift_1_, const double redshift_2_);
@@ -43,24 +46,40 @@ double redshift_for_comoving_los_distance_and_radial_velocity(const double dista
 double time_to_present(const double redshift_);
 
 
-/** @brief snapshot number to cosmic time */
-#define NumToTime(snapshot_number_) Age[snapshot_number_]
+/** @brief comoving transverse distance for given cosmological redshift */
+#ifdef ASSUME_FLAT_LCDM
+#define comoving_transverse_distance_for_redshift(redshift_) comoving_los_distance_for_redshift(redshift_)
+#else  /* not defined ASSUME_FLAT_LCDM */
+double comoving_transverse_distance_for_redshift(const double redshift_);
+#endif /* not defined ASSUME_FLAT_LCDM */
+
+
+/** @brief angular diameter distance for given cosmological redshift */
+static inline double
+angular_diameter_distance_for_redshift(const double redshift_)
+{ return comoving_transverse_distance_for_redshift(redshift_) / (1. + redshift_); }
+
+
+/** @brief luminosity distance for given cosmological redshift */
+static inline double
+luminosity_distance_for_redshift(const double redshift_)
+{ return comoving_transverse_distance_for_redshift(redshift_) * (1. + redshift_); }
 
 
 /** @brief Converts luminosities into magnitudes 
- *         (unless #defined FULL_SPECTRA).
+ *         (unless #defined FULL_SPECTRA):
  *
- * Converts luminosities into magnitudes:
  * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
+#ifdef FULL_SPECTRA  
+#define lum_to_mag(lum_) lum_
+#else  /* not defined FULL_SPECTRA */
 static inline double 
 lum_to_mag(const double lum_)
-{
-#ifdef FULL_SPECTRA  
-  return lum_;
-#else  /* not defined FULL_SPECTRA */
-  return (lum_ > 2.511886431509581e-40) ? -2.5 * log10(lum_) : 99.0; 
+{ return (lum_ > 2.511886431509581e-40) ? -2.5 * log10(lum_) : 99.0; }
 #endif /* not defined FULL_SPECTRA */
-}
+
+/** @brief snapshot number to cosmic time */
+#define NumToTime(snapshot_number_) Age[snapshot_number_]
 
 
 /* init.c */
@@ -179,9 +198,6 @@ void setup_LumTables_precomputed(const char sim_name_[]);
 
 void init_SSP_log_age_jump_index(void);
 
-// static inline int get_SSP_log_age_jump_index(const double log10_age_)
-// { return SSP_log_age_jump_table[(int) ((log10_age_ - SSP_logAgeTab[1]) * SSP_log_age_jump_factor)]; }
-
 #define get_SSP_log_age_jump_index(log10_age_) \
 SSP_log_age_jump_table[(int) ((log10_age_ - SSP_logAgeTab[1]) * SSP_log_age_jump_factor)]
 
@@ -191,7 +207,7 @@ locate_interpolation_index_and_fraction_bf(age_index_, 0, SSP_NAGES, log10_age_,
 #define find_metallicity_luminosity_interpolation_parameters(log10_metallicity_, met_index_, f_met_1_, f_met_2_) \
 locate_interpolation_index_and_fraction(met_index_, 0, SSP_NMETALLICITES, log10_metallicity_, SSP_logMetalTab, f_met_1_, f_met_2_, <, linear)
 
-#ifndef  POST_PROCESS_MAGS
+#ifndef POST_PROCESS_MAGS
 void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double time_, double dt_, const double metallicity_);
 #endif /* POST_PROCESS_MAGS */
 

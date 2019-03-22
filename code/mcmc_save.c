@@ -31,133 +31,125 @@
 
 
 #ifdef MCMC
-/** @brief Writes galaxies into a structure to be used by the MCMC */
 
-void save_galaxy_for_mcmc(int gal_index)
+
+/** @brief Writes galaxies into a structure to be used by the MCMC */
+void save_galaxy_for_mcmc(const int gal_index_)
 {
-  int snap, fof, j, aa;
-  float low_mass_limit, high_mass_limit, StellarMass;
-  double log10_Hubble_h, PMass;
+  int output_number_, fof;
+  
+#ifdef COMPUTE_SPECPHOT_PROPERTIES
+#ifdef POST_PROCESS_MAGS
+  struct GALAXY_OUTPUT galaxy_output;
+#endif //POST_PROCESS_MAGS
+#endif //COMPUTE_SPECPHOT_PROPERTIES 
 
 #ifdef MR_PLUS_MRII
-  if(Switch_MR_MRII==1)
-    {
-      low_mass_limit=9.5;
-      high_mass_limit=14.0;
-    }
-  else
-    if(Switch_MR_MRII==2)
-      {
-	low_mass_limit=6.0;
-	high_mass_limit=9.5;
-      }
+  const float log10_stellar_mass_lower_limit_ = (Switch_MR_MRII==1) ?  9.5 : 6.0;
+  const float log10_stellar_mass_upper_limit_ = (Switch_MR_MRII==1) ? 14.0 : 9.5;
 #else
-  low_mass_limit=7.27;
-  high_mass_limit=13.0;
+  const float log10_stellar_mass_lower_limit_ = 7.27;
+  const float log10_stellar_mass_upper_limit_ = 13.0;
 #ifdef MRII
-  low_mass_limit=6.0;
-  high_mass_limit=11.27;
+  const float log10_stellar_mass_lower_limit_ = 6.0;
+  const float log10_stellar_mass_upper_limit_ = 11.27;
 #endif
 #endif
-
-
-  log10_Hubble_h=log10(Hubble_h);
-
-  for(snap=0;snap<NOUT;snap++)
-    {
+ 
+  //THE ERROR IS NOW INCLUDED IN mcmc_likelihood.c
+  //StellarMass+=gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[output_number_]);
 #ifndef HALOMODEL
-      StellarMass=log10(1E10 * (HaloGal[gal_index].DiskMass+HaloGal[gal_index].BulgeMass)*Hubble_h);
+  const float log10_stellar_mass_ = log10(1E10 * (HaloGal[gal_index_].DiskMass + HaloGal[gal_index_].BulgeMass) * Hubble_h);
 #else
-      //no h factor in masses for OPT+=DHALOMODEL
-      StellarMass=log10(1E10 * (HaloGal[gal_index].DiskMass+HaloGal[gal_index].BulgeMass) * inv_Hubble_h);
+    //no h factor in masses for OPT+=DHALOMODEL
+  const float log10_stellar_mass_ = log10(1E10 * (HaloGal[gal_index_].DiskMass + HaloGal[gal_index_].BulgeMass) * inv_Hubble_h);
 #endif
-      //THE ERROR IS NOW INCLUDED IN mcmc_likelihood.c
-      //StellarMass+=gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[snap]);
 
-      for(fof=0;fof<NFofsInSample[snap]; fof++)
-	if( StellarMass > low_mass_limit &&  StellarMass < high_mass_limit &&
-	    HaloIDs[HaloGal[gal_index].HaloNr].FirstHaloInFOFgroup == MCMC_FOF[fof].FoFID[snap])
-	  {
-	    MCMC_GAL[TotMCMCGals[snap]].StellarMass[snap] = StellarMass;
-	    MCMC_GAL[TotMCMCGals[snap]].ColdGas[snap] = log10(1E10 * (HaloGal[gal_index].ColdGas*Hubble_h));
-	    MCMC_GAL[TotMCMCGals[snap]].BulgeMass[snap] = log10(1E10 * HaloGal[gal_index].BulgeMass*Hubble_h);
-	    MCMC_GAL[TotMCMCGals[snap]].BlackHoleMass[snap] = log10(1E10 * HaloGal[gal_index].BlackHoleMass); //black hole in units of h^-1
-	    //in units of Solar Masses yr^-1 h-2
-	    MCMC_GAL[TotMCMCGals[snap]].Sfr[snap]= log10(HaloGal[gal_index].Sfr * UNITMASS_IN_G / UnitTime_in_s * SEC_PER_YEAR / SOLAR_MASS*Hubble_h*Hubble_h);
+  if(log10_stellar_mass_lower_limit_ < log10_stellar_mass_ && log10_stellar_mass_ < log10_stellar_mass_upper_limit_)
+  {
+    const double    log10_Hubble_h_ = log10(Hubble_h);
+    
+    const long long first_halo_in_fof_group_number_ = HaloIDs[HaloGal[gal_index_].HaloNr].FirstHaloInFOFgroup;
+
+    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    {
+      for(fof = 0; fof < NFofsInSample[output_number_]; fof++)
+        if(first_halo_in_fof_group_number_ == MCMC_FOF[fof].FoFID[output_number_])
+        {
+          MCMC_GAL[TotMCMCGals[output_number_]].StellarMass  [output_number_] = log10_stellar_mass_;
+          MCMC_GAL[TotMCMCGals[output_number_]].ColdGas      [output_number_] = log10(1E10 * (HaloGal[gal_index_].ColdGas*Hubble_h));
+          MCMC_GAL[TotMCMCGals[output_number_]].BulgeMass    [output_number_] = log10(1E10 * HaloGal[gal_index_].BulgeMass*Hubble_h);
+          MCMC_GAL[TotMCMCGals[output_number_]].BlackHoleMass[output_number_] = log10(1E10 * HaloGal[gal_index_].BlackHoleMass); //black hole in units of h^-1
+          //in units of Solar Masses yr^-1 h-2
+          MCMC_GAL[TotMCMCGals[output_number_]].Sfr          [output_number_] = log10(HaloGal[gal_index_].Sfr * (UNITMASS_IN_G / UnitTime_in_s * SEC_PER_YEAR / SOLAR_MASS) * Hubble_h * Hubble_h);
 
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifdef POST_PROCESS_MAGS
-	    struct GALAXY_OUTPUT galaxy_output;
 
-	    //in case of postprocess magnitudes they are only calculates here, inside prepare
-	    prepare_galaxy_for_output(snap, &HaloGal[gal_index], &galaxy_output);
+          //in case of postprocess magnitudes they are only calculates here, inside prepare
+          prepare_galaxy_for_output(output_number_, &HaloGal[gal_index_], &galaxy_output);
 
-	    MCMC_GAL[TotMCMCGals[snap]].MagU[snap] = galaxy_output.MagDust[0]-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagB[snap] = galaxy_output.MagDust[1]-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagV[snap] = galaxy_output.MagDust[2]-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagJ[snap] = galaxy_output.MagDust[3]-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagK[snap] = galaxy_output.MagDust[4]-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].Magu[snap] = galaxy_output.MagDust[5]-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].Magr[snap] = galaxy_output.MagDust[6]-5.*log10_Hubble_h;
-
-
+          MCMC_GAL[TotMCMCGals[output_number_]].MagU[output_number_] = galaxy_output.MagDust[0]-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagB[output_number_] = galaxy_output.MagDust[1]-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagV[output_number_] = galaxy_output.MagDust[2]-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagJ[output_number_] = galaxy_output.MagDust[3]-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagK[output_number_] = galaxy_output.MagDust[4]-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].Magu[output_number_] = galaxy_output.MagDust[5]-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].Magr[output_number_] = galaxy_output.MagDust[6]-5.*log10_Hubble_h_;
 #else
-	    MCMC_GAL[TotMCMCGals[snap]].MagU[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][0])-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagB[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][1])-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagV[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][2])-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagJ[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][3])-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].MagK[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][4])-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].Magu[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][5])-5.*log10_Hubble_h;
-	    MCMC_GAL[TotMCMCGals[snap]].Magr[snap] = lum_to_mag(HaloGal[gal_index].LumDust[snap][6])-5.*log10_Hubble_h;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagU[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][0])-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagB[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][1])-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagV[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][2])-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagJ[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][3])-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].MagK[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][4])-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].Magu[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][5])-5.*log10_Hubble_h_;
+          MCMC_GAL[TotMCMCGals[output_number_]].Magr[output_number_] = lum_to_mag(HaloGal[gal_index_].LumDust[output_number_][6])-5.*log10_Hubble_h_;
 #endif //POST_PROCESS_MAGS
 #endif //COMPUTE_SPECPHOT_PROPERTIES
 
 #ifdef HALOMODEL
-	    if(snap==0)
-	      {
-		MCMC_GAL[TotMCMCGals[snap]].fofid[snap] = fof;
-		//MCMC_GAL[TotMCMCGals[snap]].M_Crit200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].Len*PartMass*1.e10);
-		MCMC_GAL[TotMCMCGals[snap]].M_Crit200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].M_Crit200*1.e10);
-		MCMC_GAL[TotMCMCGals[snap]].M_Mean200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].M_Mean200*1.e10);
+          if(output_number_ == 0)
+          {
+            MCMC_GAL[TotMCMCGals[output_number_]].fofid    [output_number_] = fof;
+            //MCMC_GAL[TotMCMCGals[output_number_]].M_Crit200[output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].Len*PartMass*1.e10);
+            MCMC_GAL[TotMCMCGals[output_number_]].M_Crit200[output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].M_Crit200*1.e10);
+            MCMC_GAL[TotMCMCGals[output_number_]].M_Mean200[output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].M_Mean200*1.e10);
 #ifdef MCRIT
-		MCMC_GAL[TotMCMCGals[snap]].M_Mean200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].M_Crit200*1.e10);
+            MCMC_GAL[TotMCMCGals[output_number_]].M_Mean200[output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].M_Crit200*1.e10);
 #endif
-		MCMC_GAL[TotMCMCGals[snap]].x[snap] = HaloGal[gal_index].Pos[0];
-		MCMC_GAL[TotMCMCGals[snap]].y[snap] = HaloGal[gal_index].Pos[1];
-		MCMC_GAL[TotMCMCGals[snap]].z[snap] = HaloGal[gal_index].Pos[2];
-		MCMC_GAL[TotMCMCGals[snap]].Type[snap] = HaloGal[gal_index].Type;
-		MCMC_GAL[TotMCMCGals[snap]].ngal[snap] = 0;
-	      }
+            MCMC_GAL[TotMCMCGals[output_number_]].x        [output_number_] = HaloGal[gal_index_].Pos[0];
+            MCMC_GAL[TotMCMCGals[output_number_]].y        [output_number_] = HaloGal[gal_index_].Pos[1];
+            MCMC_GAL[TotMCMCGals[output_number_]].z        [output_number_] = HaloGal[gal_index_].Pos[2];
+            MCMC_GAL[TotMCMCGals[output_number_]].Type     [output_number_] = HaloGal[gal_index_].Type;
+            MCMC_GAL[TotMCMCGals[output_number_]].ngal     [output_number_] = 0;
+          }
 #endif
 
-	    MCMC_GAL[TotMCMCGals[snap]].Weight[snap] = MCMC_FOF[fof].Weight[snap];
+          MCMC_GAL[TotMCMCGals[output_number_]].Weight     [output_number_] = MCMC_FOF[fof].Weight[output_number_];
 
 #ifdef HALOMODEL
-	    //NOW GET PROPERTIES FOR FOF GROUPS - done for the particular fof that current galaxy resides in
-	    ++MCMC_FOF[fof].NGalsInFoF[snap];
+          //NOW GET PROPERTIES FOR FOF GROUPS - done for the particular fof that current galaxy resides in
+          ++MCMC_FOF[fof].NGalsInFoF[output_number_];
 
-	    if(HaloGal[gal_index].Type==0)
-	      {
-		MCMC_FOF[fof].IndexOfCentralGal[snap]=TotMCMCGals[snap];
-		//MCMC_FOF[fof].M_Crit200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].Len*PartMass*1.e10);
-		MCMC_FOF[fof].M_Crit200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].M_Crit200*1.e10);
-		MCMC_FOF[fof].M_Mean200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].M_Mean200*1.e10);
-#ifdef MCRIT
-		MCMC_FOF[fof].M_Mean200[snap] = log10(Halo[HaloGal[gal_index].HaloNr].M_Crit200*1.e10);
+          if(HaloGal[gal_index_].Type==0)
+          {
+            MCMC_FOF[fof].IndexOfCentralGal[output_number_] = TotMCMCGals[output_number_];
+            //MCMC_FOF[fof].M_Crit200        [output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].Len*PartMass*1.e10);
+            MCMC_FOF[fof].M_Crit200        [output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].M_Crit200*1.e10);
+            MCMC_FOF[fof].M_Mean200        [output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].M_Mean200*1.e10);
+#ifdef MCRIT                               
+            MCMC_FOF[fof].M_Mean200        [output_number_] = log10(Halo[HaloGal[gal_index_].HaloNr].M_Crit200*1.e10);
 #endif
-    		  }
+          }
 #endif //HALOMODEL
 
+          ++TotMCMCGals[output_number_];
 
-
-	    ++TotMCMCGals[snap];
-
-	    if(TotMCMCGals[snap] > MCMCAllocFactor)
-	      terminate("Maximum number of galaxies in MCMC structure reached. Increase MCMCSmartFactor\n");
-    	  }
-      }
-
-    return;
+          if(TotMCMCGals[output_number_] > MCMCAllocFactor)
+            terminate("Maximum number of galaxies in MCMC structure reached. Increase MCMCSmartFactor\n");
+        }
+    }
+  }
 }
 #endif
 

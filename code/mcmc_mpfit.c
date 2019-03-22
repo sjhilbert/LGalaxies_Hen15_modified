@@ -294,7 +294,8 @@ int mpfit(mp_func funct, int m, int npar,
 {
   mp_config conf;
   int i, j, info, iflag, nfree, npegged, iter;
-  int qanylim = 0, qanypegged = 0;
+  int qanylim = 0;
+  // int qanypegged = 0;
 
   int ij,jj,l;
   double actred,delta,dirder,fnorm,fnorm1,gnorm, orignorm;
@@ -509,7 +510,7 @@ int mpfit(mp_func funct, int m, int npar,
   }
 
   /* Determine if any of the parameters are pegged at the limits */
-  qanypegged = 0;
+  // qanypegged = 0;
   if (qanylim) {
     for (j=0; j<nfree; j++) {
       int lpegged = (qllim[j] && (x[j] == llim[j]));
@@ -517,7 +518,7 @@ int mpfit(mp_func funct, int m, int npar,
       sum = 0;
       
       if (lpegged || upegged) {
-	qanypegged = 1;
+	// qanypegged = 1;
 	ij = j*ldfjac;
 	for (i=0; i<m; i++, ij++) {
 	  sum += fvec[i] * fjac[ij];
@@ -960,7 +961,6 @@ int mpfit(mp_func funct, int m, int npar,
     }
   }
 
-
  CLEANUP:
   if (fvec) free(fvec);
   if (qtf)  free(qtf);
@@ -985,7 +985,6 @@ int mpfit(mp_func funct, int m, int npar,
   if (qulim) free(qulim);
   if (llim)  free(llim);
   if (ulim)  free(ulim);
-
 
   return info;
 }
@@ -1090,7 +1089,7 @@ int mp_fdjac2(mp_func funct,
   temp = mp_dmax1(epsfcn,MP_MACHEP0);
   eps = sqrt(temp);
   ij = 0;
-  ldfjac = 0; /* Prevents compiler warning */
+  (void) ldfjac; /* Prevents compiler warning */
 
   dvec = (double **) malloc(sizeof(double **)*npar);
   if (dvec == 0) return MP_ERR_MEMORY;
@@ -1325,8 +1324,8 @@ void mp_qrfac(int m, int n, double *a, int lda,
   static double one = 1.0;
   static double p05 = 0.05;
 
-  lda = 0;   /* Prevent compiler warning */
-  lipvt = 0; /* Prevent compiler warning */
+  (void)lda;   /* Prevent compiler warning */
+  (void)lipvt; /* Prevent compiler warning */
 
   /*
    *     compute the initial column norms and initialize several arrays.

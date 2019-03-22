@@ -32,7 +32,7 @@
 /** initial buffer capacity */
 #ifndef OUTPUT_BUFFERING_INIT_CAPACITY
 #if OUTPUT_BUFFERING == 1
-#define OUTPUT_BUFFERING_INIT_CAPACITY 10 * BYTES_PER_MB
+#define OUTPUT_BUFFERING_INIT_CAPACITY 200 * BYTES_PER_MB
 #else /* OUTPUT_BUFFERING == 2 */
 #define OUTPUT_BUFFERING_INIT_CAPACITY 1000 * BYTES_PER_MB
 #endif /* OUTPUT_BUFFERING == 2 */
@@ -138,83 +138,52 @@ void save_galaxy_tree_append(const int galaxy_number_)
   */
 void save_galaxy_tree_finalize(const int file_number_, const int tree_number_)
 {
-  // order GalTree by current order of storage in file (IndexStored)
-  qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_galaxy_tree_compare);
-  
-#ifdef OUTPUT_BUFFERING
-
-  //debugging:
-  if(galaxy_output_buffer.size < NGalTree * sizeof(struct GALAXY_OUTPUT))
+  if(NGalTree > 0)
   {
-    printf("error: in save_galaxy_tree_finalize(): galaxy_output_buffer.size = %lu < %lu = NGalTree * sizeof(struct GALAXY_OUTPUT).\n"
-           "NGalTree = %d, sizeof(struct GALAXY_OUTPUT) = %lu\n",
-           galaxy_output_buffer.size, NGalTree * sizeof(struct GALAXY_OUTPUT), NGalTree, sizeof(struct GALAXY_OUTPUT));
-    terminate("error: in save_galaxy_tree_finalize(): galaxy_output_buffer.size < NGalTree * sizeof(struct GALAXY_OUTPUT).\n");
-  }
-
-  struct GALAXY_OUTPUT *galaxy_output_ = (struct GALAXY_OUTPUT*) (galaxy_output_buffer.data + galaxy_output_buffer.size - NGalTree * sizeof(struct GALAXY_OUTPUT));
-
-  int galaxy_number_;
-  for(galaxy_number_ = 0; galaxy_number_ < NGalTree; galaxy_number_++)
-    prepare_galaxy_tree_info_for_output(file_number_, tree_number_, &GalTree[galaxy_number_], &galaxy_output_[galaxy_number_]);
-  
-#ifdef SORT_GALAXY_OUTPUT
-  qsort(galaxy_output_, NGalTree, sizeof(struct GALAXY_OUTPUT), output_galaxy_compare);
-#endif /* not defined SORT_GALAXY_OUTPUT */  
-
-#else  /* not defined OUTPUT_BUFFERING */
-#ifdef UPDATE_GALAXY_OUTPUT_IN_MEM
-
-  struct GALAXY_OUTPUT *galaxy_output_ = (struct GALAXY_OUTPUT*) mymalloc("tree_file_gal", sizeof(struct GALAXY_OUTPUT) * NGalTree);
+    // order GalTree by current order of storage in file (IndexStored)
+    qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_galaxy_tree_compare);
     
-  myfseek(FdGalTree, (1 + TotGalCount) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
-  myfread(&(galaxy_output_[0]), sizeof(struct GALAXY_OUTPUT), NGalTree, FdGalTree);
+#ifdef OUTPUT_BUFFERING
+    // //debugging:
+    // if(galaxy_output_buffer.size < NGalTree * sizeof(struct GALAXY_OUTPUT))
+    // {
+    //   printf("error: in save_galaxy_tree_finalize(): galaxy_output_buffer.size = %lu < %lu = NGalTree * sizeof(struct GALAXY_OUTPUT).\n"
+    //          "NGalTree = %d, sizeof(struct GALAXY_OUTPUT) = %lu\n",
+    //          galaxy_output_buffer.size, NGalTree * sizeof(struct GALAXY_OUTPUT), NGalTree, sizeof(struct GALAXY_OUTPUT));
+    //   terminate("error: in save_galaxy_tree_finalize(): galaxy_output_buffer.size < NGalTree * sizeof(struct GALAXY_OUTPUT).\n");
+    // }
 
-  int galaxy_number_;
-  for(galaxy_number_ = 0; galaxy_number_ < NGalTree; galaxy_number_++)
-    prepare_galaxy_tree_info_for_output(file_number_, tree_number_, &GalTree[galaxy_number_], &galaxy_output_[galaxy_number_]);
+    struct GALAXY_OUTPUT *galaxy_output_ = (struct GALAXY_OUTPUT*) (galaxy_output_buffer.data + galaxy_output_buffer.size - NGalTree * sizeof(struct GALAXY_OUTPUT));
 
-  
+#else  /* not defined OUTPUT_BUFFERING */  
+    struct GALAXY_OUTPUT *galaxy_output_ = (struct GALAXY_OUTPUT*) mymalloc("tree_file_gal", sizeof(struct GALAXY_OUTPUT) * NGalTree);
+    myfseek(FdGalTree, (1 + TotGalCount) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
+    myfread(&(galaxy_output_[0]), sizeof(struct GALAXY_OUTPUT), NGalTree, FdGalTree);
+#endif /* not defined OUTPUT_BUFFERING */  
+    
+    int galaxy_number_;
+    for(galaxy_number_ = 0; galaxy_number_ < NGalTree; galaxy_number_++)
+      prepare_galaxy_tree_info_for_output(file_number_, tree_number_, &GalTree[galaxy_number_], &galaxy_output_[galaxy_number_]);
+    
 #ifdef SORT_GALAXY_OUTPUT
-  qsort(galaxy_output_, NGalTree, sizeof(struct GALAXY_OUTPUT), output_galaxy_compare);
+    qsort(galaxy_output_, NGalTree, sizeof(struct GALAXY_OUTPUT), output_galaxy_compare);
 #endif /* not defined SORT_GALAXY_OUTPUT */  
 
-  myfseek(FdGalTree, (1 + TotGalCount) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
-  myfwrite(&galaxy_output_[0], sizeof(struct GALAXY_OUTPUT), NGalTree, FdGalTree);
-  myfree(galaxy_output_);
-
-#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */
-  
-  struct GALAXY_OUTPUT galaxy_output_;
-  
-  int galaxy_number_;
-  for(galaxy_number_ = 0; galaxy_number_ < NGalTree; galaxy_number_++)
-  { 
-    myfseek(FdGalTree, (1 + TotGalCount + galaxy_number_) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
-    myfread(&galaxy_output_, sizeof(struct GALAXY_OUTPUT), 1, FdGalTree);
-
-    prepare_galaxy_tree_info_for_output(file_number_, tree_number_, &GalTree[galaxy_number_], &galaxy_output_);
-
-    myfseek(FdGalTree, (1 + TotGalCount + galaxy_number_) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
-    myfwrite(&galaxy_output_, sizeof(struct GALAXY_OUTPUT), 1, FdGalTree);
-  }
-  
-#ifdef SORT_GALAXY_OUTPUT
-  save_galaxy_tree_reorder_on_disk();
-#endif /* defined SORT_GALAXY_OUTPUT */
-#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */
+#ifndef OUTPUT_BUFFERING
+    myfseek(FdGalTree, (1 + TotGalCount) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
+    myfwrite(&galaxy_output_[0], sizeof(struct GALAXY_OUTPUT), NGalTree, FdGalTree);
+    myfree(galaxy_output_);
 #endif /* not defined OUTPUT_BUFFERING */
+  }
 }
 
 
 static int GalCount; /* used to assign galaxy ids via walking galaxy tree */
 
-/** @brief walks galaxy tree_number_ to compute foreign gal ID keys */
+/** @brief walks galaxy tree to compute foreign gal ID keys */
 int walk_galaxy_tree(const int galaxy_number_)
 {
-  int last_galaxy_number_;
-
-  last_galaxy_number_ = galaxy_number_;
+  int last_galaxy_number_ = galaxy_number_;
 
   if(GalTree[galaxy_number_].Done == 0)
   {
@@ -260,10 +229,10 @@ void update_galaxy_tree_ids(void)
 
   for(galaxy_number_ = 0; galaxy_number_ < NGalTree; galaxy_number_++)
   {
-    GalTree[galaxy_number_].Done = 0;
+    GalTree[galaxy_number_].Done         = 0;
     GalTree[galaxy_number_].LastProgGal = -1;
-    GalTree[galaxy_number_].MainLeaf = -1;
-    GalTree[galaxy_number_].TreeRoot = -1;
+    GalTree[galaxy_number_].MainLeaf    = -1;
+    GalTree[galaxy_number_].TreeRoot    = -1;
   }
 
   GalCount = 0;

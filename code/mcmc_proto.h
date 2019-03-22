@@ -20,18 +20,22 @@
 
 // Routines used in the MCMC sampling
 void Senna (void);
-void print_parameters (int AcceptanceLogic, FILE *fmcmc);
-double SAM(int filenr);
+void print_parameters (const bool current_MCMC_step_is_accepted_, FILE *fmcmc);
+// double SAM(int filenr);
 void initialize_mcmc_par_and_lhood (FILE *fmcmc);
-void read_mcmc_par (int snapnum);
+void read_mcmc_par (const int snapshot_number_);
 void read_sample_info(void);
 void read_observations(void);
 void open_files_with_comparison_to_observations(void);
 void close_files_with_comparison_to_observations(void);
 double propose_new_parameters(void);
-void save_galaxy_for_mcmc(int gal_index);
+void save_galaxy_for_mcmc(const int gal_index);
 #ifdef MR_PLUS_MRII
-void change_dark_matter_sim(char SimName[]);
+void change_dark_matter_sim(const char SimName[]);
+#endif
+
+#ifdef HALOMODEL
+void assign_FOF_masses(const int snapshot_number_, const int tree_number_);
 #endif
 
 double get_likelihood (void);

@@ -381,7 +381,7 @@ void read_output_snaps(void)
       }
 
 #ifdef MCMC
-        if (ThisTask == 0 && CurrentMCMCStep==1)
+        if (ThisTask == 0 && CurrentMCMCStep == 0)
 #else /* not defined MCMC */
         if (ThisTask == 0)
 #endif /* not defined MCMC */
@@ -401,7 +401,7 @@ void read_output_snaps(void)
   }
   
 // #ifdef MCMC
-//   if (ThisTask == 0 && CurrentMCMCStep==1)
+//   if (ThisTask == 0 && CurrentMCMCStep == 0)
 // #else /* not defined MCMC */
 //   if (ThisTask == 0)
 // #endif /* not defined MCMC */

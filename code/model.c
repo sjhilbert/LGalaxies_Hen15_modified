@@ -22,7 +22,7 @@
  * */
 
  
- /* library headers: */
+/* library headers: */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +35,7 @@
 #endif /* defined PARALLEL */
  
  
- /* other program headers: */
+/* other program headers: */
 #include "allvars.h"
 #include "proto.h"
 
@@ -45,7 +45,12 @@
 #endif /* defined MCMC */
 
 
-/**@brief SAM() loops on trees and calls construct_galaxies.*/
+/** @brief SAM() loops on trees and calls construct_galaxies. 
+  *
+  *
+  * @bug possible bug: if PRELOAD_TREES but not MCMC,
+  *      scale_cosmology() is called every time
+ */
 double SAM(const int tree_file_number_)
 {
 #ifdef MCMC
@@ -59,7 +64,7 @@ double SAM(const int tree_file_number_)
 #ifdef MR_PLUS_MRII
   change_dark_matter_sim("MR");
 #else /* not defined MR_PLUS_MRII */
-  if(CurrentMCMCStep==1)
+  if(CurrentMCMCStep == 0)
   { read_sample_info(); }
 #ifdef HALOMODEL
   else
@@ -97,7 +102,6 @@ double SAM(const int tree_file_number_)
  
 #endif /* not defined MCMC */
 
-
 //***************************************************************************************
 //***************************************************************************************
   TotGalCount = 0;
@@ -115,7 +119,7 @@ double SAM(const int tree_file_number_)
     load_tree(tree_number_);
 #ifdef MCMC
 #ifdef PRELOAD_TREES
-    if(CurrentMCMCStep==1)
+    if(CurrentMCMCStep == 0)
 #endif /* defined PRELOAD_TREES */
 #endif /* defined MCMC */
     { scale_cosmology(TreeNHalos[tree_number_]); }
@@ -223,9 +227,9 @@ double SAM(const int tree_file_number_)
 #ifndef MCMC
 #ifndef PARALLEL
 #ifdef LIGHTCONE_OUTPUT
-    if(0 == tree_number_ % 100) printf("tree_number_=%d  TotGalCount=%d   TotLightconeGalCount=%lld\n", tree_number_, TotGalCount, TotLightconeGalCount);
+    if(0 == non_roundness(tree_number_)) printf("tree_number_=%d  TotGalCount=%d   TotLightconeGalCount=%lld\n", tree_number_, TotGalCount, TotLightconeGalCount);
 #else /* not defined LIGHTCONE_OUTPUT */
-    if(0 == tree_number_ % 100) printf("tree_number_=%d  TotGalCount=%d\n", tree_number_, TotGalCount);
+    if(0 == non_roundness(tree_number_)) printf("tree_number_=%d  TotGalCount=%d\n", tree_number_, TotGalCount);
 #endif /* not defined LIGHTCONE_OUTPUT */
 #endif /* not defined PARALLEL */
 #endif /* not defined MCMC */
@@ -429,8 +433,9 @@ void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_ha
 #endif /* defined LIGHTCONE_MAY_SKIP_CONSTRUCT_GALAXY */
 #endif /* defined LIGHTCONE_OUTPUT_ONLY */
 
-//  for(same_fof_halo_number_ = first_in_fof_halo_number_; same_fof_halo_number_ >= 0; same_fof_halo_number_ = Halo[same_fof_halo_number_].NextHaloInFOFgroup)
-//  { HaloAux[same_fof_halo_number_].DoneFlag = 1; }
+  for(same_fof_halo_number_ = first_in_fof_halo_number_; same_fof_halo_number_ >= 0; same_fof_halo_number_ = Halo[same_fof_halo_number_].NextHaloInFOFgroup)
+  { HaloAux[same_fof_halo_number_].DoneFlag = 1; }
+
 //  HaloAux[first_in_fof_halo_number_].HaloFlag = 1;  /* mark as to do */
 
 //   /* check that have constructed all galaxies in all progenitors of all the halos in the
@@ -455,7 +460,7 @@ void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_ha
    * ahead and construct all galaxies for the subhalos in this FOF halo, and
    * evolve them in time. */
 
-//   HaloAux[first_in_fof_halo_number_].HaloFlag = 2;
+  HaloAux[first_in_fof_halo_number_].HaloFlag = 2;
 
   /*For all the halos in the current FOF join all the progenitor galaxies together
     * n_galaxies_in_fof_group_ will be the total number of galaxies in the current FOF*/

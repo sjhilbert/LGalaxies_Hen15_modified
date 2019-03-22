@@ -78,8 +78,8 @@
 /* These are new values for phys. constants and basic unit conversions,
  * updated from recent meaurements and/or provided with increased precision
  * compared to the values used by the public version of Henriques et al. (2015).
- * (I would not hold my breath to wait for observations and models becoming 
- * accurate enough for the differences between old and updated values to matter.) */
+ * Please don't hold your breath while waiting for observations and models becoming 
+ * accurate enough for the differences between old and updated values to matter. */
 
 /* physical constants: in external (CGS or astron.) units: */
 #define GRAVITY                           6.67408e-8        /* in cgs */
@@ -101,9 +101,17 @@
 #define SEC_PER_GIGAYEAR                  3.1557600e16      /* Julian Giga year in cgs */
 #define LENGTH_10_PC_IN_CM                3.08567758e19     /* 10 parsec (standard distance for abs. mag.) in cgs */
 
-#define BYTES_PER_KB                      1024ull
-#define BYTES_PER_MB                      1048576ull
-#define BYTES_PER_GB                      1073741824ull
+#define BYTES_PER_KB                      1024ull           /* number of bytes in KB (using powers of 1024) */
+#define BYTES_PER_MB                      1048576ull        /* number of bytes in MB (using powers of 1024) */
+#define BYTES_PER_GB                      1073741824ull     /* number of bytes in GB (using powers of 1024) */
+
+#define DEGREE                            M_PI /    180     /* degree in radians */
+#define ARC_MINUTE                        M_PI /  10800     /* arc minute in radians */
+#define ARC_SECOND                        M_PI / 648000     /* arc second in radians */
+
+#define RADIAN_IN_DEGREES                    180 / M_PI     /* radian in degrees */
+#define RADIAN_IN_ARC_MINUTES              10800 / M_PI     /* radian in arc minutes */
+#define RADIAN_IN_ARC_SECONDS             648000 / M_PI     /* radian in arc seconds */
 
 /* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
 #define UNITLENGTH_IN_CM                  3.08567758e+24    /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
@@ -134,9 +142,17 @@
 #define SEC_PER_GIGAYEAR                  3.155e16          /* Julian Giga year in cgs */
 #define LENGTH_10_PC_IN_CM                3.08567758e19     /* 10 parsec (standard distance for abs. mag.) in cgs */
 
-#define BYTES_PER_KB                      1024ull
-#define BYTES_PER_MB                      1048576ull
-#define BYTES_PER_GB                      1073741824ull
+#define BYTES_PER_KB                      1024ull           /* number of bytes in KB (using powers of 1024) */
+#define BYTES_PER_MB                      1048576ull        /* number of bytes in MB (using powers of 1024) */
+#define BYTES_PER_GB                      1073741824ull     /* number of bytes in GB (using powers of 1024) */
+
+#define DEGREE                            M_PI /    180     /* degree in radians */
+#define ARC_MINUTE                        M_PI /  10800     /* arc minute in radians */
+#define ARC_SECOND                        M_PI / 648000     /* arc second in radians */
+
+#define RADIAN_IN_DEGREES                    180 / M_PI     /* radian in degrees */
+#define RADIAN_IN_ARC_MINUTES              10800 / M_PI     /* radian in arc minutes */
+#define RADIAN_IN_ARC_SECONDS             648000 / M_PI     /* radian in arc seconds */
 
 /* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
 #define UNITLENGTH_IN_CM                   3.08568e+24      /* Mpc - WATCH OUT, distances in the code are in Mpc/h */

@@ -29,6 +29,8 @@ struct halo_aux_data		/* auxiliary halo data */
 
 struct halo_ids_data *HaloIDs, *HaloIDs_Data;
 
+time_t GlobalStartingTime;
+
 int FirstFile;			/* first and last file for processing */
 int LastFile;
 

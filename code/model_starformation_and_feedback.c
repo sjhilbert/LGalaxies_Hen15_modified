@@ -27,7 +27,7 @@
 #include "proto.h"
 
 /** @file recipe_starformation_and_feedback.c
- *  @brief recipe_starformation_and_feedback.c computes the amount of stars_
+ *  @brief recipe_starformation_and_feedback.c computes the amount of stars
  *         formed from the cold gas, the amount of gas reheated from cold to hot
  *         and the amount of gas ejected from hot to external.
  *
@@ -36,8 +36,8 @@
  *
  *
  *  0 -\f$M_{\rm{crit}}=3.8\times 10^9
- *     \left(\fraction_{V_{\rm{max}}}{200\,\rm{km s}^{-1}}\right)
- *     \left(\fraction_{r_{\rm{disk}}}{10\,\rm{kpc}}\right)M_{\odot}\f$
+ *     \left(\frac{V_{\rm{max}}}{200\,\rm{km s}^{-1}}\right)
+ *     \left(\frac{r_{\rm{disk}}}{10\,\rm{kpc}}\right)M_{\odot}\f$
  *     (Eq. 16 Guo2010) (StarFormationModel = 0), \n
  *        - same as 1 but using \f$V_{\rm{max}}\f$ or \f$V_{\rm{max,infall}}\f$
  *          instead of \f$V_{\rm{vir}}\f$ and allowing SF in satellites. *
@@ -46,9 +46,9 @@
  * There are 2 options for the <B>SN Feedback Recipe</B>:
  *
  * 0 - \f$\epsilon_{\rm{disk}}=\epsilon
- *      \biggl[0.5+\left(\fraction_{V_{\rm{max}}}{70km/s}\right)^{-\beta_1}\biggr]\f$,
+ *      \biggl[0.5+\left(\frac{V_{\rm{max}}}{70km/s}\right)^{-\beta_1}\biggr]\f$,
  *     \f$\epsilon_{\rm{halo}}=\eta
- *      \biggl[0.5+\left(\fraction_{V_{\rm{max}}}{70km/s}\right)^{-\beta_2}\biggr]\f$
+ *      \biggl[0.5+\left(\frac{V_{\rm{max}}}{70km/s}\right)^{-\beta_2}\biggr]\f$
  *     (Eqs. 19 & 21 Guo2010)(FeedbackEjectionModel = 2)
  *     same as FeedbackEjectionModel = 1 * Vmax dependence.
  *
@@ -518,8 +518,8 @@ void check_disk_instability(const int galaxy_number_)
         {
           lum_disk_ = Gal[galaxy_number_].Lum[output_number_][filter_number_]-Gal[galaxy_number_].LumBulge[output_number_][filter_number_];
           Gal[galaxy_number_].LumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
-          lum_disk_ = Gal[galaxy_number_].YLum[output_number_][filter_number_]-Gal[galaxy_number_].YLumBulge[output_number_][filter_number_];
-          Gal[galaxy_number_].YLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
+          lum_disk_ = Gal[galaxy_number_].LumY[output_number_][filter_number_]-Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_];
+          Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_] += fraction_ * lum_disk_;
         }
       }
 #endif
@@ -530,8 +530,8 @@ void check_disk_instability(const int galaxy_number_)
         {
           lum_disk_ = Gal[galaxy_number_].ObsLum[output_number_][filter_number_]-Gal[galaxy_number_].ObsLumBulge[output_number_][filter_number_];
           Gal[galaxy_number_].ObsLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
-          lum_disk_ = Gal[galaxy_number_].ObsYLum[output_number_][filter_number_]-Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_];
-          Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
+          lum_disk_ = Gal[galaxy_number_].ObsLumY[output_number_][filter_number_]-Gal[galaxy_number_].ObsLumBulgeY[output_number_][filter_number_];
+          Gal[galaxy_number_].ObsLumBulgeY[output_number_][filter_number_] += fraction_ * lum_disk_;
         }
       }
 #ifdef OUTPUT_FB_OBS_MAGS
@@ -541,8 +541,8 @@ void check_disk_instability(const int galaxy_number_)
         {
           lum_disk_ = Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_]-Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_];
           Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
-          lum_disk_ = Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_]-Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_];
-          Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
+          lum_disk_ = Gal[galaxy_number_].backward_ObsLumY[output_number_][filter_number_]-Gal[galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_];
+          Gal[galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_] += fraction_ * lum_disk_;
         }
       }
       for(output_number_ = 0; output_number_ < NOUT; output_number_++)
@@ -551,8 +551,8 @@ void check_disk_instability(const int galaxy_number_)
         {
           lum_disk_ = Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_];
           Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
-          lum_disk_ = Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_];
-          Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] += fraction_ * lum_disk_;
+          lum_disk_ = Gal[galaxy_number_].forward_ObsLumY[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_];
+          Gal[galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_] += fraction_ * lum_disk_;
         }
       }      
 #endif /* defined OUTPUT_FB_OBS_MAGS */

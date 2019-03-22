@@ -75,6 +75,15 @@
 #define convert_3d_index_to_1d_index(i_0_, i_1_, i_2_, base_) \
 ((base_) * (base_) * modulo((i_0_), (base_)) + (base_) * modulo((i_1_), (base_)) + modulo((i_2_), (base_)))
 
+static inline int
+non_roundness(long long int n_)
+{
+  int res_ = 0;
+  while ((0 != n_) && (0 == n_ % 10)) { n_ /= 10; }
+  while (n_ /= 10) res_++;
+  return res_;
+}
+
 
 /* MPI for large data: */
 #ifdef PARALLEL

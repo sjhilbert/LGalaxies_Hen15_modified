@@ -21,8 +21,7 @@
 #define SQR(a) ((a)*(a))
 #define CUB(a) ((a)*(a)*(a))
 
-void halomodel(double* r_arr,double* proj_arr,float masslimit_low,float
-masslimit_high,int snap);
+void halomodel(double* r_arr,double* proj_arr,float masslimit_low,float masslimit_high,int snap);
 double TwoPowerSpec(double k,int censat);
 double pconv_W_P_func(double theta,void *p);
 double pconv_W_func(double lq,void *p);
@@ -54,10 +53,10 @@ double Mcensat_func(double lm,void *p);
 double Mcensat(double k,int i,int j);
 double ngal_mean_func(double lm,void *p);
 double ngal_mean_calc(int j);
-void init_power();
-void init_sigma();
+void init_power(void);
+void init_sigma(void);
 void init_numgal(float masslimit_low,float masslimit_high,int snap);
-void initialize_halomodel();
+void initialize_halomodel(void);
 double my_f(const gsl_vector *v,void *params);
 void my_df(const gsl_vector *v,void *params,gsl_vector *df);
 void my_fdf(const gsl_vector *x,void *params,double *f,gsl_vector *df);

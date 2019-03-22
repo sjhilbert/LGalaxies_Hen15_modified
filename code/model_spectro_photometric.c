@@ -245,14 +245,6 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
 #endif /* not defined OUTPUT_OBS_MAGS */
 #endif /* not defined OUTPUT_REST_MAGS */
 
-#ifdef OUTPUT_REST_MAGS
-  /** @bug  filter_number_ = 17 is not necessarily r-band, since filters are assigned from info in parameter file
-   *
-   *  @todo  parametrize filter band number for computing weighted stellar age_
-   */
-  const int r_band_filter_number_ = 17;
-#endif /* defined OUTPUT_REST_MAGS */         
-
   int output_number_, filter_number_;
   double luminosity_to_add_;
    
@@ -338,9 +330,9 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
 
         /*luminosity used for extinction due to young birth clouds */
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].YLum[output_number_][filter_number_] += luminosity_to_add_;
+          Gal[galaxy_number_].LumY[output_number_][filter_number_] += luminosity_to_add_;
         
-        if(filter_number_ == r_band_filter_number_)
+        if(filter_number_ == R_BAND_FILTER_NUMBER)
           Gal[galaxy_number_].rbandWeightAge[output_number_] += age_ * luminosity_to_add_;
       }
 #endif /* defined OUTPUT_REST_MAGS */
@@ -360,7 +352,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
         Gal[galaxy_number_].ObsLum[output_number_][filter_number_] += luminosity_to_add_;
   
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
+          Gal[galaxy_number_].ObsLumY[output_number_][filter_number_] += luminosity_to_add_;
       }
       
 #ifdef OUTPUT_FB_OBS_MAGS
@@ -375,7 +367,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
         Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
+          Gal[galaxy_number_].backward_ObsLumY[output_number_][filter_number_] += luminosity_to_add_;
       }
       
       redshift_index_ = (ListOutputSnaps[output_number_] < LastDarkMatterSnapShot ? LastDarkMatterSnapShot - ListOutputSnaps[output_number_] + 1 : 0);
@@ -389,7 +381,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
         Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
+          Gal[galaxy_number_].forward_ObsLumY[output_number_][filter_number_] += luminosity_to_add_;
       }
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */

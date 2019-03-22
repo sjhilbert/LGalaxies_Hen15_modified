@@ -387,9 +387,9 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
     {
 #ifdef OUTPUT_REST_MAGS
       Gal[galaxy_number_].Lum[output_number_][filter_number_]         = 0.0;
-      Gal[galaxy_number_].YLum[output_number_][filter_number_]        = 0.0;
+      Gal[galaxy_number_].LumY[output_number_][filter_number_]        = 0.0;
       Gal[galaxy_number_].LumBulge[output_number_][filter_number_]    = 0.0;
-      Gal[galaxy_number_].YLumBulge[output_number_][filter_number_]   = 0.0;
+      Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_]   = 0.0;
       Gal[galaxy_number_].LumDust[output_number_][filter_number_]     = 0.0;
 #ifdef ICL
       Gal[galaxy_number_].LumICL[output_number_][filter_number_]      = 0.0;
@@ -398,9 +398,9 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
 
 #ifdef OUTPUT_OBS_MAGS
       Gal[galaxy_number_].ObsLum[output_number_][filter_number_]        = 0.0;
-      Gal[galaxy_number_].ObsYLum[output_number_][filter_number_]       = 0.0;
+      Gal[galaxy_number_].ObsLumY[output_number_][filter_number_]       = 0.0;
       Gal[galaxy_number_].ObsLumBulge[output_number_][filter_number_]   = 0.0;
-      Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_]  = 0.0;
+      Gal[galaxy_number_].ObsLumBulgeY[output_number_][filter_number_]  = 0.0;
       Gal[galaxy_number_].ObsLumDust[output_number_][filter_number_]    = 0.0;
 #ifdef ICL
       Gal[galaxy_number_].ObsLumICL[output_number_][filter_number_]     = 0.0;
@@ -408,18 +408,18 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
           
 #ifdef OUTPUT_FB_OBS_MAGS
       Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_]       = 0.0;
-      Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_]      = 0.0;
+      Gal[galaxy_number_].backward_ObsLumY[output_number_][filter_number_]      = 0.0;
       Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  = 0.0;
-      Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] = 0.0;
+      Gal[galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_] = 0.0;
       Gal[galaxy_number_].backward_ObsLumDust[output_number_][filter_number_]   = 0.0;
 #ifdef ICL
       Gal[galaxy_number_].backward_ObsLumICL[output_number_][filter_number_]    = 0.0;
 #endif /* defined ICL */
 
       Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_]       = 0.0;
-      Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_]      = 0.0;
+      Gal[galaxy_number_].forward_ObsLumY[output_number_][filter_number_]      = 0.0;
       Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  = 0.0;
-      Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] = 0.0;
+      Gal[galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_] = 0.0;
       Gal[galaxy_number_].forward_ObsLumDust[output_number_][filter_number_]   = 0.0;
 #ifdef ICL
       Gal[galaxy_number_].forward_ObsLumICL[output_number_][filter_number_]    = 0.0;

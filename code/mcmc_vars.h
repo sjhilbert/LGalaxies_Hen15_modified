@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016+>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,9 +13,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2008
- *      Author: Bruno Henriques
+/** @file   mcmc_vars.h
+ *  @date   2008, 2018
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
  */
 
 #include <gsl/gsl_rng.h>
@@ -32,7 +33,6 @@
 #include <gsl/gsl_deriv.h>
 
 
-
 // Variables for the MCMC sampling
 
 int MCMCNpar; //Number of parameters to sample
@@ -47,7 +47,7 @@ int TotMCMCGals[NOUT];
 //#define MCMCAllocFactor 1000000
 long MCMCseed;
 int Nbins[NOUT][MCMCNConstraints]; //bins on each obs test
-double lhood1;
+double MCMC_Likelihood;
 
 int NFofsInSample[NOUT];
 int UsedFofsInSample[NOUT];
@@ -58,8 +58,6 @@ int Switch_MR_MRII;
 #endif
 int CurrentMCMCStep;
 int GlobalMCMCStep;
-
-time_t global_starting_time;
 
 FILE *FILE_MCMC_LIKELIHOOD;
 FILE *FILE_MCMC_PredictionsPerStep[NOUT][MCMCNConstraints];
@@ -99,8 +97,8 @@ char JobSubmitFile[512];
 //Structures for the MCMC
 struct MCMC_OBSCONSTRAINTS
 {
-	char Name[1000];
-	char TestType[1000];
+	char Name[256];
+	char TestType[256];
 	//for chi-square like tests
 	double Bin_low[NOUT][MCMCMaxObsBins];
 	double Bin_high[NOUT][MCMCMaxObsBins];
@@ -146,12 +144,12 @@ struct MCMC_GALAXY
 
 struct MCMC_PAR
 {
-    char   Name[1000];
-  	double Value[NOUT];
-  	double PropValue[NOUT];
-  	double PriorMin;
-  	double PriorMax;
-    int    Sampling_Switch;
+  char   Name[256];
+  double Value[NOUT];
+  double PropValue[NOUT];
+  double PriorMin;
+  double PriorMax;
+  int    Sampling_Switch;
 } *MCMC_PAR;
 
 struct MCMC_FOF_struct
@@ -181,7 +179,7 @@ int NR;
 #define minfofmass 9.5
 #define maxfofmass 16.
 
-int NTasks,ThisTask;
+// int NTasks,ThisTask;
 int* numbymass;
 int** indexbymass;
 

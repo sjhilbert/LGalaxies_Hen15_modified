@@ -564,80 +564,80 @@ void read_parameter_file(char *file_name_)
   parameter_type_ [n_parameters_++] = PARAMETER_TYPE_IS_DOUBLE;
 
   if((file_ = fopen(file_name_, "r")))
+  {
+    while(!feof(file_))
     {
-      while(!feof(file_))
+      *buf_0_ = 0;
+      fgets(buf_0_, 200, file_);
+      if(sscanf(buf_0_, "%s%s%s", buf_1_, buf_2_, buf_3_) < 2)
+        continue;
+
+      if(buf_1_[0] == '%')
+        continue;
+
+      for(i_ = 0, j_ = -1; i_ < n_parameters_; i_++)
+        if(strcmp(buf_1_, parameter_tag_[i_]) == 0)
         {
-          *buf_0_ = 0;
-          fgets(buf_0_, 200, file_);
-          if(sscanf(buf_0_, "%s%s%s", buf_1_, buf_2_, buf_3_) < 2)
-            continue;
-
-          if(buf_1_[0] == '%')
-            continue;
-
-          for(i_ = 0, j_ = -1; i_ < n_parameters_; i_++)
-            if(strcmp(buf_1_, parameter_tag_[i_]) == 0)
-              {
-                j_ = i_;
-                parameter_tag_[i_][0] = 0;
-                break;
-              }
-
-          if(j_ >= 0)
-            {
-#ifdef PARALLEL
-              if(ThisTask == 0)
-                printf("%35s\t%10s\n", buf_1_, buf_2_);
-#else
-              printf("%35s\t%10s\n", buf_1_, buf_2_);
-#endif
-              switch (parameter_type_[j_])
-                {
-                case PARAMETER_TYPE_IS_DOUBLE:
-                  *((double *) parameter_address_[j_]) = atof(buf_2_);
-                  break;
-                case PARAMETER_TYPE_IS_FLOAT:
-                  *((float *) parameter_address_[j_]) = atof(buf_2_);
-                  break;
-                case PARAMETER_TYPE_IS_STRING:
-                  strcpy(parameter_address_[j_], buf_2_);
-                  break;
-                case PARAMETER_TYPE_IS_INT:
-                  *((int *) parameter_address_[j_]) = atoi(buf_2_);
-                  break;
-                default:
-                  printf("Error: unrecognized parameter type for parameter %s\n", parameter_tag_[i_]);
-                  terminate("Error: unrecognized parameter type for parameter\n");
-                }
-            }
-          else
-            {
-              printf("Warning in file %s:   Tag '%s' not recognized or multiply defined.\n", file_name_, buf_1_);
-              warning_flag_ = 1;
-            }
+          j_ = i_;
+          parameter_tag_[i_][0] = 0;
+          break;
         }
-      fclose(file_);
 
-      i_ = strlen(OutputDir);
-      if(i_ > 0)
-        if(OutputDir[i_ - 1] != '/')
-          strcat(OutputDir, "/");
+      if(j_ >= 0)
+      {
+#ifdef PARALLEL
+        if(ThisTask == 0)
+          printf("%35s\t%10s\n", buf_1_, buf_2_);
+#else
+        printf("%35s\t%10s\n", buf_1_, buf_2_);
+#endif
+        switch (parameter_type_[j_])
+        {
+          case PARAMETER_TYPE_IS_DOUBLE:
+            *((double *) parameter_address_[j_]) = atof(buf_2_);
+            break;
+          case PARAMETER_TYPE_IS_FLOAT:
+            *((float *) parameter_address_[j_]) = atof(buf_2_);
+            break;
+          case PARAMETER_TYPE_IS_STRING:
+            strcpy(parameter_address_[j_], buf_2_);
+            break;
+          case PARAMETER_TYPE_IS_INT:
+            *((int *) parameter_address_[j_]) = atoi(buf_2_);
+            break;
+          default:
+            printf("Error: unrecognized parameter type for parameter %s\n", parameter_tag_[i_]);
+            terminate("Error: unrecognized parameter type for parameter\n");
+        }
+      }
+      else
+      {
+        printf("Warning in file %s:   Tag '%s' not recognized or multiply defined.\n", file_name_, buf_1_);
+        warning_flag_ = 1;
+      }
     }
+    fclose(file_);
+
+    i_ = strlen(OutputDir);
+    if(i_ > 0)
+      if(OutputDir[i_ - 1] != '/')
+        strcat(OutputDir, "/");
+  }
   else
-    {
-      printf("Parameter file %s not found.\n", file_name_);
-      error_flag_ = 1;
-    }
+  {
+    printf("Parameter file %s not found.\n", file_name_);
+    error_flag_ = 1;
+  }
 
 
   for(i_ = 0; i_ < n_parameters_; i_++)
+  {
+    if(*parameter_tag_[i_])
     {
-      if(*parameter_tag_[i_])
-        {
-          printf("Error. I miss a value for parameter_tag_ '%s' in parameter file '%s'.\n", parameter_tag_[i_], file_name_);
-          error_flag_ = 1;
-        }
+      printf("Error. I miss a value for parameter_tag_ '%s' in parameter file '%s'.\n", parameter_tag_[i_], file_name_);
+      error_flag_ = 1;
     }
+  }
 
   if(warning_flag_)
     printf("Warning: parameter file %s: encountered unrecognized or multiply defined parameter_tags\n", file_name_);
@@ -809,4 +809,3 @@ void compute_derived_program_parameters(void)
   EnergySNcode = EnergySN / UnitEnergy_in_cgs * Hubble_h;
   EtaSNcode    = EtaSN * (UNITMASS_IN_G / SOLAR_MASS) * inv_Hubble_h;
 }
-

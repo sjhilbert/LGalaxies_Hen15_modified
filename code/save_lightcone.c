@@ -56,7 +56,7 @@
 /** initial buffer capacity */
 #ifndef OUTPUT_BUFFERING_INIT_CAPACITY
 #if OUTPUT_BUFFERING == 1
-#define OUTPUT_BUFFERING_INIT_CAPACITY 10 * BYTES_PER_MB
+#define OUTPUT_BUFFERING_INIT_CAPACITY 50 * BYTES_PER_MB
 #else /* OUTPUT_BUFFERING == 2 */
 #ifdef GALAXYTREE
 #define OUTPUT_BUFFERING_INIT_CAPACITY 1000 * BYTES_PER_MB
@@ -648,23 +648,28 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
   {
     // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
     qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
-    
-#ifdef OUTPUT_BUFFERING      
 
     const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
     const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
     const long long N_galaxies_                  = galaxy_in_file_number_end_ - galaxy_in_file_number_begin_;
 
-    //debugging:
-    if(galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type))
-    {
-      printf("error: in save_lightcone_galaxy_finalize(): galaxy_output_buffer.size = %lu < %llu = N_galaxies_ * sizeof(lightcone_galaxy_output_type).\n"
-             "N_galaxies_ = %llu, sizeof(lightcone_galaxy_output_type) = %lu\n",
-             galaxy_output_buffer.size, N_galaxies_ * sizeof(lightcone_galaxy_output_type), N_galaxies_, sizeof(lightcone_galaxy_output_type));
-      terminate("error: in save_lightcone_galaxy_finalize(): galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type).\n");
-    }
+#ifdef OUTPUT_BUFFERING      
+    // //debugging:
+    // if(galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type))
+    // {
+    //   printf("error: in save_lightcone_galaxy_finalize(): galaxy_output_buffer.size = %lu < %llu = N_galaxies_ * sizeof(lightcone_galaxy_output_type).\n"
+    //          "N_galaxies_ = %llu, sizeof(lightcone_galaxy_output_type) = %lu\n",
+    //          galaxy_output_buffer.size, N_galaxies_ * sizeof(lightcone_galaxy_output_type), N_galaxies_, sizeof(lightcone_galaxy_output_type));
+    //   terminate("error: in save_lightcone_galaxy_finalize(): galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type).\n");
+    // }
 
     lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) (galaxy_output_buffer.data + galaxy_output_buffer.size - N_galaxies_ * sizeof(lightcone_galaxy_output_type));
+
+#else  /* not defined OUTPUT_BUFFERING */ 
+    lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
+    myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
+    myfread_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
+#endif /* not defined OUTPUT_BUFFERING */
 
     int galaxy_in_tree_number_;
     long long galaxy_in_file_number_;
@@ -676,53 +681,10 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
     qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
 #endif /* not defined SORT_GALAXY_OUTPUT */  
 
-#else  /* not defined OUTPUT_BUFFERING */ 
-#if defined UPDATE_GALAXY_OUTPUT_IN_MEM || defined SORT_GALAXY_OUTPUT
-/* updating/sorting done in memory */
-
-    const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
-    const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
-    const long long N_galaxies_                  = galaxy_in_file_number_end_ - galaxy_in_file_number_begin_;
-
-    lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
-    
-    myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
-    myfread_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
-
-    int galaxy_in_tree_number_;
-    long long galaxy_in_file_number_;
-    for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
-      for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
-      { prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_[galaxy_in_file_number_ - galaxy_in_file_number_begin_]); }
-
-#ifdef SORT_GALAXY_OUTPUT
-    qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
-#endif /* not defined SORT_GALAXY_OUTPUT */  
- 
+#ifndef OUTPUT_BUFFERING 
     myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
     myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
-
     myfree(galaxy_output_);
-
-#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM && not defined SORT_GALAXY_OUTPUT */
- /* updating done on disk with little memory overhead */
-
-    lightcone_galaxy_output_type galaxy_output_;
-    int galaxy_in_tree_number_;
-    long long galaxy_in_file_number_;
-    for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
-    { 
-      for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
-      {
-        myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
-        myfread_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
-        prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_);
-        myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
-        myfwrite_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
-      }
-    }
-
-#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM && not defined SORT_GALAXY_OUTPUT */  
 #endif /* not defined OUTPUT_BUFFERING */
 
    /* after updating tree info in file, make sure that file position indicator is put back to end of file.

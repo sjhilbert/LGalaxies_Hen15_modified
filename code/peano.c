@@ -23,7 +23,7 @@
 #include "proto.h"
 
 
-static char quadrants[24][2][2][2] = {
+static const char quadrants[24][2][2][2] = {
   /* rotx=0, roty=0-3 */
   {{{0, 7}, {1, 6}}, {{3, 4}, {2, 5}}},
   {{{7, 4}, {6, 5}}, {{0, 3}, {1, 2}}},
@@ -57,18 +57,18 @@ static char quadrants[24][2][2][2] = {
 };
 
 
-static char rotxmap_table[24] = { 4, 5, 6, 7, 8, 9, 10, 11,
+static const char rotxmap_table[24] = { 4, 5, 6, 7, 8, 9, 10, 11,
   12, 13, 14, 15, 0, 1, 2, 3, 17, 18, 19, 16, 23, 20, 21, 22
 };
 
-static char rotymap_table[24] = { 1, 2, 3, 0, 16, 17, 18, 19,
+static const char rotymap_table[24] = { 1, 2, 3, 0, 16, 17, 18, 19,
   11, 8, 9, 10, 22, 23, 20, 21, 14, 15, 12, 13, 4, 5, 6, 7
 };
 
-static char rotx_table[8] = { 3, 0, 0, 2, 2, 0, 0, 1 };
-static char roty_table[8] = { 0, 1, 1, 2, 2, 3, 3, 0 };
+static const char rotx_table[8] = { 3, 0, 0, 2, 2, 0, 0, 1 };
+static const char roty_table[8] = { 0, 1, 1, 2, 2, 3, 3, 0 };
 
-static char sense_table[8] = { -1, -1, -1, +1, +1, -1, -1, -1 };
+static const char sense_table[8] = { -1, -1, -1, +1, +1, -1, -1, -1 };
 
 
 int peano_hilbert_key(const int x, const int y, const int z, const int bits)

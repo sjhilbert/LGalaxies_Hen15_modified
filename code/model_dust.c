@@ -38,7 +38,7 @@
  *  Both were introduced in Delucia2007.
 
  *  The optical depth of dust in each component
- *  \f$\tau_^z_{\lambda}\f$(ISM)
+ *  \f$\tau^z_{\lambda}\f$(ISM)
  *  and \f$\tau_{\lambda}^{\rm{BC}}\f$(YS)
  *  is used to compute extinction assuming a slab geometry for the dust and
  *  a random inclination of the disk to the line of sight.
@@ -63,7 +63,7 @@
  *  The optical depth for YS (\f$\tau_{\lambda}^{\rm{BC}}\f$) is calibrated
  *  from the ISM optical depth in the V-band:
  *
- *  \f$\tau_{\lambda}^{BC}=\tau_{\rm{v}}^{\rm{ISM}}\left(\frac{1}{\mu_}-1\right)
+ *  \f$\tau_{\lambda}^{BC}=\tau_{\rm{v}}^{\rm{ISM}}\left(\frac{1}{\mu}-1\right)
  *  \left(\frac{\lambda}{5500 \AA}\right)^{-0.7}\f$,
  */
 
@@ -131,21 +131,21 @@ void dust_model(const int galaxy_number_, const int output_number_)
 
       // now remove light from young stars absorbed by birth clouds
 
-      dly_ = (Gal[galaxy_number_].YLum     [output_number_][filter_number_] - Gal[galaxy_number_].YLumBulge[output_number_][filter_number_]) * alam_ * a_bc_  +
-              Gal[galaxy_number_].YLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
+      dly_ = (Gal[galaxy_number_].LumY     [output_number_][filter_number_] - Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_]) * alam_ * a_bc_  +
+              Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_] * (1. - ExpTauBCBulge);
 
       Gal[galaxy_number_].LumDust[output_number_][filter_number_] -= dly_;
       
     /*
       Gal[galaxy_number_].LumDust[output_number_][filter_number_] = 
       Gal[galaxy_number_].LumBulge[output_number_][filter_number_] + (Gal[galaxy_number_]. Lum[output_number_][filter_number_] - Gal[galaxy_number_]. LumBulge[output_number_][filter_number_]) * alam_
-             -                                                       (Gal[galaxy_number_].YLum[output_number_][filter_number_] - Gal[galaxy_number_].YLumBulge[output_number_][filter_number_]) * alam_ * a_bc_
-             - Gal[galaxy_number_].YLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge)
+             -                                                       (Gal[galaxy_number_].LumY[output_number_][filter_number_] - Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_]) * alam_ * a_bc_
+             - Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_] * (1. - ExpTauBCBulge)
              
      = Gal[galaxy_number_]. Lum     [output_number_][filter_number_] * alam_
      + Gal[galaxy_number_]. LumBulge[output_number_][filter_number_] * (1 - alam_)
-     - Gal[galaxy_number_].YLum     [output_number_][filter_number_] * alam_ * a_bc_
-     - Gal[galaxy_number_].YLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge - alam_ * a_bc_)
+     - Gal[galaxy_number_].LumY     [output_number_][filter_number_] * alam_ * a_bc_
+     - Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_] * (1. - ExpTauBCBulge - alam_ * a_bc_)
         */     
     }
 #endif /* defined OUTPUT_REST_MAGS */
@@ -162,8 +162,8 @@ void dust_model(const int galaxy_number_, const int output_number_)
 
       // now remove light from young stars absorbed by birth clouds
 
-      dly_ = (Gal[galaxy_number_].ObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_]) * alam_ * a_bc_  +
-                      Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
+      dly_ = (Gal[galaxy_number_].ObsLumY[output_number_][filter_number_] - Gal[galaxy_number_].ObsLumBulgeY[output_number_][filter_number_]) * alam_ * a_bc_  +
+                      Gal[galaxy_number_].ObsLumBulgeY[output_number_][filter_number_] * (1. - ExpTauBCBulge);
 
       Gal[galaxy_number_].ObsLumDust[output_number_][filter_number_] -= dly_;
     }
@@ -179,8 +179,8 @@ void dust_model(const int galaxy_number_, const int output_number_)
       Lum_disk_ = Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_] - Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_];
       Gal[galaxy_number_].backward_ObsLumDust[output_number_][filter_number_] = Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_] + Lum_disk_ * alam_;
 
-      dly_ = (Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_]) * alam_ * a_bc_ +
-                      Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
+      dly_ = (Gal[galaxy_number_].backward_ObsLumY[output_number_][filter_number_] - Gal[galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_]) * alam_ * a_bc_ +
+                      Gal[galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_] * (1. - ExpTauBCBulge);
 
       Gal[galaxy_number_].backward_ObsLumDust[output_number_][filter_number_] -= dly_;
     }
@@ -195,8 +195,8 @@ void dust_model(const int galaxy_number_, const int output_number_)
       Lum_disk_ = Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_];
       Gal[galaxy_number_].forward_ObsLumDust[output_number_][filter_number_] = Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_] + Lum_disk_ * alam_;
 
-      dly_ = (Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_]) * alam_ * a_bc_ +
-                      Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
+      dly_ = (Gal[galaxy_number_].forward_ObsLumY[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_]) * alam_ * a_bc_ +
+                      Gal[galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_] * (1. - ExpTauBCBulge);
 
       Gal[galaxy_number_].forward_ObsLumDust[output_number_][filter_number_] -= dly_;
     }

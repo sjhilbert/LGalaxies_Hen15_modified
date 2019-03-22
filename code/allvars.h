@@ -61,7 +61,9 @@
 
 
 #ifdef GALAXYTREE
-#undef  NOUT
+#ifdef NOUT
+#undef NOUT
+#endif /* defined NOUT */
 #define NOUT MAXSNAPS
 #endif /* defined GALAXYTREE */
 
@@ -78,6 +80,21 @@
 
 #endif /* defined STAR_FORMATION_HISTORY */
 
+
+/** @brief r-band filter number for computing rbandWeightAge
+ *
+ * @warning filter_number_==17 or 6 is not necessarily r-band,
+ *          since filters are assigned from info in parameter file.
+ *
+ * @todo turn macro into program parameter read from file
+ */
+#ifndef R_BAND_FILTER_NUMBER
+#ifdef MCMC
+#define R_BAND_FILTER_NUMBER 6
+#else  /* not defined MCMC */
+#define R_BAND_FILTER_NUMBER 17
+#endif /* not defined MCMC */
+#endif /* not defined R_BAND_FILTER_NUMBER */
 
 /* currently three levels of output buffering are recognized (0 = no, 1 = per tree, and 2 = per tree file): */
 #ifdef OUTPUT_BUFFERING
@@ -565,9 +582,9 @@ extern struct GALAXY
 #ifndef POST_PROCESS_MAGS
 #ifdef OUTPUT_REST_MAGS
   float Lum      [NOUT][NMAG];
-  float YLum     [NOUT][NMAG];
+  float LumY     [NOUT][NMAG];
   float LumBulge [NOUT][NMAG];
-  float YLumBulge[NOUT][NMAG];
+  float LumBulgeY[NOUT][NMAG];
   float LumDust  [NOUT][NMAG];
 #ifdef ICL             
   float LumICL   [NOUT][NMAG];
@@ -576,9 +593,9 @@ extern struct GALAXY
 
 #ifdef OUTPUT_OBS_MAGS
   float ObsLum      [NOUT][NMAG];
-  float ObsYLum     [NOUT][NMAG];
+  float ObsLumY     [NOUT][NMAG];
   float ObsLumBulge [NOUT][NMAG];
-  float ObsYLumBulge[NOUT][NMAG];
+  float ObsLumBulgeY[NOUT][NMAG];
   float ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                
   float ObsLumICL   [NOUT][NMAG];
@@ -586,18 +603,18 @@ extern struct GALAXY
 
 #ifdef OUTPUT_FB_OBS_MAGS
   float backward_ObsLum      [NOUT][NMAG];
-  float backward_ObsYLum     [NOUT][NMAG];
+  float backward_ObsLumY     [NOUT][NMAG];
   float backward_ObsLumBulge [NOUT][NMAG];
-  float backward_ObsYLumBulge[NOUT][NMAG];
+  float backward_ObsLumBulgeY[NOUT][NMAG];
   float backward_ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                 
   float backward_ObsLumICL  [NOUT][NMAG];
 #endif /* defined ICL */
 
   float forward_ObsLum      [NOUT][NMAG];
-  float forward_ObsYLum     [NOUT][NMAG];
+  float forward_ObsLumY     [NOUT][NMAG];
   float forward_ObsLumBulge [NOUT][NMAG];
-  float forward_ObsYLumBulge[NOUT][NMAG];
+  float forward_ObsLumBulgeY[NOUT][NMAG];
   float forward_ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                         
   float forward_ObsLumICL   [NOUT][NMAG];
@@ -683,25 +700,26 @@ extern struct halo_data
 #ifndef MCMC
 extern struct halo_ids_data
 {
- long long HaloID;
- long long FileTreeNr;
- long long FirstProgenitor;
- long long LastProgenitor;
- long long NextProgenitor;
- long long Descendant;
- long long FirstHaloInFOFgroup;
- long long NextHaloInFOFgroup;
+  long long HaloID;
+  long long FileTreeNr;
+  long long FirstProgenitor;
+  long long LastProgenitor;
+  long long NextProgenitor;
+  long long Descendant;
+  long long FirstHaloInFOFgroup;
+  long long NextHaloInFOFgroup;
 #ifdef MRII
- long long MainLeafID; 
+  long long MainLeafID; 
 #endif /* defined MRII */
- double    Redshift;
- int       PeanoKey;
- int       dummy;      /* need to use this padding for 64bit alignment */
+  double    Redshift;
+  int       PeanoKey;
+  int       dummy;      /* need to use this padding for 64bit alignment */
 } *HaloIDs, *HaloIDs_Data;
 #else  /* defined MCMC */
 extern struct  halo_ids_data
 {
- long long FirstHaloInFOFgroup;
+  long long FirstHaloInFOFgroup;
+  int       MCMC_FOF_number[NOUT];
 } *HaloIDs, *HaloIDs_Data;
 #endif /* defined MCMC */
 
@@ -724,6 +742,7 @@ extern struct halo_aux_data  /* auxiliary halo data */
 }
  *HaloAux;
 
+extern time_t GlobalStartingTime;
 
 extern int FirstFile;		/* first and last file for processing */
 extern int LastFile;

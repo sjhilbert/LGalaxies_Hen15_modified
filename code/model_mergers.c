@@ -23,14 +23,14 @@
 #include "allvars.h"
 #include "proto.h"
 
-/** @file model_mergers.c_
- *  @brief Calculates the merging time_, the central galaxy (for type_ 1's),
+/** @file model_mergers.c
+ *  @brief Calculates the merging time_, the central galaxy (for type 1's),
  *         adds galaxies together, calculates SF from bursts and grows
  *         black holes.
  *
  *
- *       <B>set_merger_center</B> - calculates the central galaxy for type_ 1's,
- *       since type_ 1's can also merge. Therefore,
+ *       <B>set_merger_center</B> - calculates the central galaxy for type 1's,
+ *       since type 1's can also merge. Therefore,
  *       they need a merger central galaxy and will also have a merger clock
  *       (needed for millennium two, since due to the high resolution, haloes
  *       are very difficult to disrupt and orbit around forever).
@@ -38,33 +38,30 @@
  *
  *
  *       <B>estimate_merging_time</B> sets up a merger clock. Originally this
- *       was done only for type_ 2 galaxies. The positions of galaxies in the
+ *       was done only for type 2 galaxies. The positions of galaxies in the
  *       model are normally given by the position of their dark matter halo.
  *       However, when galaxies become satellites, their dark matter haloes
  *       are stripped by the central object to the point where there is none
  *       left. At this point, the dark matter of the satellite becomes part of
  *       the main halo, but the galaxy's position should continue to evolve
  *       due to the dynamical friction force caused by the dark matter around
- *       it. \n
+ *       it.\n
  *       The code does keep track of the position of the most bounded particle
  *       when the satellite's halo was disrupted, but this is not used to track
  *       the galaxy position. Instead a clock is set, giving the time_ left until
  *       the satellite mergers with the central galaxy. Before, this was only
- *       done for type_ 2's (satellites that lost a halo). Guo2010 included the
- *       option to set the clock also for type_ 1's (satellites with
+ *       done for type 2's (satellites that lost a halo). Guo2010 included the
+ *       option to set the clock also for type 1's (satellites with
  *       a halo), since for the highest resolution millennium 2, their haloes
  *       can be very small and orbit forever around the central companion.\n
  *       This time_ is computed using the Chandrasekhar's formula for dynamical
  *       friction, as in Binney & Tremaine 1987:
  *
- *       \f$F_{\rm{df}}=
- *               -\fraction_{4\pi {\rm{G}}^2 m^2_{\rm{sat}} \ln(\Lambda) \rho B(x)}
- *                     {v^2_{\rm{rel}}}.\f$
+ *       \f$F_{\rm{df}}= -\frac{4\pi{\rm{G}}^2 m^2_{\rm{sat}} \ln(\Lambda) \rho B(x)}{v^2_{\rm{rel}}}.\f$
  *
  *       Which gives (B&T Eq. 7.26):
  *
- *       \f$t_{df}\approx1.17\fraction_{V_{\rm{vir}}r^2_{\rm{sat}}}
- *                                {{\rm{G}}\,m_{\rm{sat}}\ln(\Lambda)},\f$
+ *       \f$t_{df}\approx1.17\frac{V_{\rm{vir}}r^2_{\rm{sat}}}{{\rm{G}}\,m_{\rm{sat}}\ln(\Lambda)},\f$
  *
  *       that is afterwards multiplied by 2 (after Delucia2007 to fit the
  *       data). When the merging time_ reaches zero, the satellite is assumed to
@@ -73,7 +70,7 @@
  *
  *
  *       <B>deal_with_galaxy_merger</B> deals with the process, according to
- *       the mass fraction_ of the merger. Major if
+ *       the mass fraction of the merger. Major if
  *       \f$M_{\rm{sat}}/M_{\rm{central}}>0.3\f$ and minor otherwise. It calls
  *       - add_galaxies_together - Add the cold and stellar phase of the merged
  *       galaxy to the central one. Also form a bulge at the central galaxy
@@ -85,26 +82,26 @@
  *       mode, main responsible for the black hole growth. After Croton2006 this
  *       mode is active even in minor mergers:
  *       \f$\Delta m_{\rm BH,Q}=M_{\rm{BH,min}}
- *          \fraction_{f_{\rm BH}(m_{\rm sat}/m_{\rm central})\,m_{\rm cold}}
+ *          \frac{f_{\rm BH}(m_{\rm sat}/m_{\rm central})\,m_{\rm cold}}
  *           {1+(280\,\mathrm{km\,s}^{-1}/V_{\rm vir})^2}.\f$
 
  *       - Finally the burst of star formation due to the merger is treated.
  *           - If StarBurstModel = 0 (since Croton2006), the Somerville 2001
  *           model of bursts is used collisional_starburst_recipe(). The burst
- *           can happen for both major and minor mergers, with a fraction_ of
+ *           can happen for both major and minor mergers, with a fraction of
  *           the added cold gas from the satellite and central being consumed:
  *           \f$\dot{m}_{\star}^{\rm{burst}}
- *             = 0.56 \left(\fraction_{m_{\rm{sat}}}{m_{\rm{central}}}\right)^{0.7}
+ *             = 0.56 \left(\frac{m_{\rm{sat}}}{m_{\rm{central}}}\right)^{0.7}
  *               m_{\rm{gas}}\f$.
  *           SN Feedback from starformation is computed and the sizes of bulge
  *           and disk followed.
  *
  *       - When a major merger occurs, the disk of both merging galaxies is
- *       completely destroyed to form a bulge. In either type_ of mergers, the
+ *       completely destroyed to form a bulge. In either type of mergers, the
  *       bulge size is updated using Eq. 33 in Guo2010:
- *       \f$C\fraction_{GM^2_{\rm{new,bulge}}}{R_{\rm{new,bulge}}}=
- *          C\fraction_{GM^2_1}{R_1}+C\fraction_{GM^2_2}{R_2}+\alpha_{\rm{inter}}
- *          \fraction_{GM_1M_2}{R_1+R_2}\f$*/
+ *       \f$C\frac{GM^2_{\rm{new,bulge}}}{R_{\rm{new,bulge}}}=
+ *          C\frac{GM^2_1}{R_1}+C\frac{GM^2_2}{R_2}+\alpha_{\rm{inter}}
+ *          \frac{GM_1M_2}{R_1+R_2}\f$*/
 
 /** @brief Calculates the central galaxies for type_ 1's. */
 
@@ -482,7 +479,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[central_galaxy_number_]. Lum[output_number_][filter_number_] += Gal[satellite_galaxy_number_]. Lum[output_number_][filter_number_];
-      Gal[central_galaxy_number_].YLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].YLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].LumY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].LumY[output_number_][filter_number_];
 #ifdef ICL
       Gal[central_galaxy_number_].LumICL[output_number_][filter_number_] += Gal[satellite_galaxy_number_].LumICL[output_number_][filter_number_];
 #endif /* defined ICL */
@@ -494,7 +491,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         Gal[central_galaxy_number_].LumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].Lum[output_number_][filter_number_];
-        Gal[central_galaxy_number_].YLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].YLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].LumBulgeY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].LumY[output_number_][filter_number_];
       }
   }
   else
@@ -503,7 +500,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         Gal[central_galaxy_number_].LumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].LumBulge[output_number_][filter_number_];
-        Gal[central_galaxy_number_].YLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].YLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].LumBulgeY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].LumBulgeY[output_number_][filter_number_];
       }
   }
 #endif /* defined OUTPUT_REST_MAGS */
@@ -513,7 +510,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[central_galaxy_number_].ObsLum[output_number_][filter_number_]   += Gal[satellite_galaxy_number_].ObsLum[output_number_][filter_number_];
-      Gal[central_galaxy_number_].ObsYLum[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsYLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].ObsLumY[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsLumY[output_number_][filter_number_];
 #ifdef ICL
       Gal[central_galaxy_number_].ObsLumICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsLumICL[output_number_][filter_number_];
 #endif /* defined ICL */
@@ -525,7 +522,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++) 
       {
         Gal[central_galaxy_number_].ObsLumBulge[output_number_][filter_number_]   += Gal[satellite_galaxy_number_].ObsLum[output_number_][filter_number_];
-        Gal[central_galaxy_number_].ObsYLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsYLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].ObsLumBulgeY[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsLumY[output_number_][filter_number_];
       }
   }
   else
@@ -534,7 +531,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         Gal[central_galaxy_number_].ObsLumBulge[output_number_][filter_number_]   += Gal[satellite_galaxy_number_].ObsLumBulge[output_number_][filter_number_];
-        Gal[central_galaxy_number_].ObsYLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsYLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].ObsLumBulgeY[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsLumBulgeY[output_number_][filter_number_];
       }
   }
       
@@ -543,7 +540,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[central_galaxy_number_].backward_ObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsLum[output_number_][filter_number_];
-      Gal[central_galaxy_number_].backward_ObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].backward_ObsLumY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsLumY[output_number_][filter_number_];
 #ifdef ICL
       Gal[central_galaxy_number_].backward_ObsLumICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsLumICL[output_number_][filter_number_];
 #endif /* defined ICL */
@@ -555,7 +552,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++) 
       {
         Gal[central_galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsLum[output_number_][filter_number_];
-        Gal[central_galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsLumY[output_number_][filter_number_];
       }
   }
   else
@@ -564,14 +561,14 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         Gal[central_galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_];
-        Gal[central_galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_];
       }
   }
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[central_galaxy_number_].forward_ObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsLum[output_number_][filter_number_];
-      Gal[central_galaxy_number_].forward_ObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].forward_ObsLumY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsLumY[output_number_][filter_number_];
 #ifdef ICL
       Gal[central_galaxy_number_].forward_ObsLumICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsLumICL[output_number_][filter_number_];
 #endif /* defined ICL */
@@ -583,7 +580,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++) 
       {
         Gal[central_galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsLum[output_number_][filter_number_];
-        Gal[central_galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsLumY[output_number_][filter_number_];
       }
   }
   else
@@ -592,7 +589,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         Gal[central_galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_];
-        Gal[central_galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_];
       }
   }
 #endif /* defined OUTPUT_FB_OBS_MAGS */
@@ -622,7 +619,7 @@ void make_bulge_from_burst(const int galaxy_number_)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++) 
     {
       Gal[galaxy_number_].LumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].Lum[output_number_][filter_number_];
-      Gal[galaxy_number_].YLumBulge[output_number_][filter_number_] = Gal[galaxy_number_].YLum[output_number_][filter_number_];
+      Gal[galaxy_number_].LumBulgeY[output_number_][filter_number_] = Gal[galaxy_number_].LumY[output_number_][filter_number_];
     }
   }
 #endif /* defined OUTPUT_REST_MAGS */
@@ -632,7 +629,7 @@ void make_bulge_from_burst(const int galaxy_number_)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[galaxy_number_].ObsLumBulge[output_number_][filter_number_]   = Gal[galaxy_number_].ObsLum[output_number_][filter_number_];
-      Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].ObsYLum[output_number_][filter_number_];
+      Gal[galaxy_number_].ObsLumBulgeY[output_number_][filter_number_]  = Gal[galaxy_number_].ObsLumY[output_number_][filter_number_];
     }
   }
 #ifdef OUTPUT_FB_OBS_MAGS
@@ -641,7 +638,7 @@ void make_bulge_from_burst(const int galaxy_number_)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_];
-      Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] = Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
+      Gal[galaxy_number_].backward_ObsLumBulgeY[output_number_][filter_number_] = Gal[galaxy_number_].backward_ObsLumY[output_number_][filter_number_];
     }
   }
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
@@ -649,7 +646,7 @@ void make_bulge_from_burst(const int galaxy_number_)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
       Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_];
-      Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] = Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
+      Gal[galaxy_number_].forward_ObsLumBulgeY[output_number_][filter_number_] = Gal[galaxy_number_].forward_ObsLumY[output_number_][filter_number_];
     }
   }
 #endif /* defined OUTPUT_FB_OBS_MAGS */

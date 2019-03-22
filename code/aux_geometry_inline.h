@@ -91,13 +91,19 @@ apply_rotation_3d(/* const */ float rot_m_[3][3], float (*v_)[3])
 static inline void
 apply_cartesian_to_ra_dec_r(float (*pos_)[3])
 {
-  const float r   = euclidian_norm_3d(*pos_);
-  const float ra  = atan2((*pos_)[1], (*pos_)[0]);
-  const float dec = asin((*pos_)[2] / r);
-
-  (*pos_)[0] = ra;
-  (*pos_)[1] = dec;
-  (*pos_)[2] = r;
+  const float r_   = euclidian_norm_3d(*pos_);
+  const float ra_  = atan2((*pos_)[1], (*pos_)[0]);
+  const float dec_ = asin((*pos_)[2] / r_);
+  
+#ifdef RA_DEC_IN_DEGREES
+  (*pos_)[0] = (ra_ < 0 ? ra_ + 2. * M_PI : ra_) * RADIAN_IN_DEGREES;
+  (*pos_)[1] = dec_ * RADIAN_IN_DEGREES;
+  (*pos_)[2] = r_;
+#else  /* not defined RA_DEC_IN_DEGREES */
+  (*pos_)[0] = ra_ < 0 ? ra_ + 2. * M_PI : ra_;
+  (*pos_)[1] = dec_;
+  (*pos_)[2] = r_;
+#endif /* not defined RA_DEC_IN_DEGREES */
 }
 
 

@@ -43,6 +43,11 @@
 static inline void 
 check_compile_time_options(void)
 {
+#if !(NOUT > 0)
+#error "Makefile option NOUT must be an integer > 0"
+/*   terminate("\n\n> Error : Makefile option NOUT must be an integer > 0\n"); */
+#endif /* !(NOUT > 0) */ 
+  
 #ifdef OUTPUT_FB_OBS_MAGS
 #ifndef OUTPUT_OBS_MAGS 
 #error "Makefile option OUTPUT_FB_OBS_MAGS requires option OUTPUT_OBS_MAGS"

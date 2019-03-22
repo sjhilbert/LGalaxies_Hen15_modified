@@ -72,8 +72,10 @@
 /**@brief Main routine of L-Galaxies*/
 int main(int argc_, char **argv_)
 {
+#ifndef MCMC
   char buffer_[1000];
   time_t start_time_, current_time_;
+#endif /* not defined MCMC */
 
 #ifdef PARALLEL
   MPI_Init(&argc_, &argv_);
@@ -82,7 +84,7 @@ int main(int argc_, char **argv_)
 #endif /* defined PARALLEL */
 
 #ifdef MCMC
-  time(&global_starting_time);
+  time(&GlobalStartingTime);
 #endif /* defined MCMC */
 
   if(ThisTask==0)
@@ -164,21 +166,9 @@ int main(int argc_, char **argv_)
   /* In MCMC mode only one file is loaded into memory
    * and the sampling for all the steps is done on it */
   sprintf(SimulationDir, "%s/", SimulationDir);
-  time(&start_time_);
+  // time(&start_time_);
   load_tree_table(MCMCTreeSampleFile);
   Senna(); // run the model in MCMC MODE
-  free_tree_table();
-
-  //if temporary directory given as argument
-  if(argc_ == 3)
-  {
-#ifdef GALAXYTREE
-    sprintf(buffer_, "mv %s/%s_galtree_%d %s", OutputDir,FileNameGalaxies, MCMCTreeSampleFile, FinalOutputDir);
-#else /* not defined GALAXYTREE */
-    sprintf(buffer_, "mv %s/%s_z*_%d %s", OutputDir,FileNameGalaxies, MCMCTreeSampleFile, FinalOutputDir);
-#endif /* not defined GALAXYTREE */
-    system(buffer_);
-  }
 
 #else  /* not defined MCMC */
 
