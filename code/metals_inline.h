@@ -168,9 +168,9 @@ float metals_total(struct metals m)
 static inline
 void metals_print(char s[], const struct metals m)
 {
-  printf("%s.type1a [Msun] = %.2f\n",s,m.type1a*1.0e10/Hubble_h);
-  printf("%s.type2 [Msun]  = %.2f\n",s,m.type2*1.0e10/Hubble_h);
-  printf("%s.agb  [Msun]   = %.2f\n",s,m.agb*1.0e10/Hubble_h);
+  printf("%s.type1a [Msun] = %.2f\n",s,m.type1a*1.0e10 * inv_Hubble_h);
+  printf("%s.type2 [Msun]  = %.2f\n",s,m.type2*1.0e10 * inv_Hubble_h);
+  printf("%s.agb  [Msun]   = %.2f\n",s,m.agb*1.0e10 * inv_Hubble_h);
 }
 
 #else /* not defined DETAILED_METALS_AND_MASS_RETURN */

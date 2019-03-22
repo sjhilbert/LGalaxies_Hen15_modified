@@ -38,7 +38,7 @@
  *  Both were introduced in Delucia2007.
 
  *  The optical depth of dust in each component
- *  \f$\tau^z_{\lambda}\f$(ISM)
+ *  \f$\tau_^z_{\lambda}\f$(ISM)
  *  and \f$\tau_{\lambda}^{\rm{BC}}\f$(YS)
  *  is used to compute extinction assuming a slab geometry for the dust and
  *  a random inclination of the disk to the line of sight.
@@ -63,7 +63,7 @@
  *  The optical depth for YS (\f$\tau_{\lambda}^{\rm{BC}}\f$) is calibrated
  *  from the ISM optical depth in the V-band:
  *
- *  \f$\tau_{\lambda}^{BC}=\tau_{\rm{v}}^{\rm{ISM}}\left(\frac{1}{\mu}-1\right)
+ *  \f$\tau_{\lambda}^{BC}=\tau_{\rm{v}}^{\rm{ISM}}\left(\frac{1}{\mu_}-1\right)
  *  \left(\frac{\lambda}{5500 \AA}\right)^{-0.7}\f$,
  */
 
@@ -72,129 +72,121 @@
 #ifndef POST_PROCESS_MAGS
 
 /** @brief main routine where the extinction is calculated */
-void dust_model(const int p, const int snap, const int halonr)
+void dust_model(const int galaxy_number_, const int output_number_)
 {
-  double nh, tau, alam, sec, Lum_disk, cosinc, Zg;
-  double tauv, taubc, tauvbc, mu, dly;
-  int k;
+#ifndef OUTPUT_REST_MAGS
+#ifndef COMPUTE_OBS_MAGS
+  return; /* early return if no mags to compute dust for */
+#endif /* not defined COMPUTE_OBS_MAGS */
+#endif /* not defined OUTPUT_REST_MAGS */ 
   
-  const double VBand_WaveLength = 0.55;
+  double mu_, tau_, alam_, a_bc_;
+  double Lum_disk_, dly_;
+  int filter_number_;
+  
+  const double inv_VBand_WaveLength_ = 1. / 0.55;
 
-  if(Gal[p].ColdGas > 0.0)
-    {
+  if(Gal[galaxy_number_].ColdGas > 0.0)
+  {
+    // /* 0.94 = 2.83/3. -> 3 to get scale lenght and 2.83 = 1.68^2 */
+    // n_h_ = Gal[galaxy_number_].ColdGas / (M_PI * pow(Gal[galaxy_number_].GasDiskRadius * 0.94, 2) * 1.4);
+    // /* now convert from 10^10 M_sun/h / (Mpc/h)^2 to (2.1 10^21 atoms/cm^2) */
+    // n_h_ = n_h_ / 3252.37;        // 3252.37 = 10^(3.5122) ... ha ha ! 
+    // /*redshift dependence */
+    // n_h_ = n_h_ * pow(1 + ZZ[Halo[halo_number_].SnapNum], -1.0);
+    
+    const int snapshot_number_ = ListOutputSnaps[output_number_];
+    
+    const double n_h_ = Gal[galaxy_number_].ColdGas / ((M_PI * 0.94 * 0.94 * 1.4 * 3252.37) * Gal[galaxy_number_].GasDiskRadius * Gal[galaxy_number_].GasDiskRadius * (1 + ZZ[snapshot_number_]));
 
-      /* 0.94 = 2.83/3. -> 3 to get scale lenght and 2.83 = 1.68^2 */
-      nh = Gal[p].ColdGas / (M_PI * pow(Gal[p].GasDiskRadius * 0.94, 2) * 1.4);
-      /* now convert from 10^10 M_sun/h / (Mpc/h)^2 to (2.1 10^21 atoms/cm^2) */
-      nh = nh / 3252.37;        // 3252.37 = 10^(3.5122) ... ha ha ! 
+    Gal[galaxy_number_].CosInclination = fabs(Gal[galaxy_number_].StellarSpin[2]) /
+                                sqrt(Gal[galaxy_number_].StellarSpin[0]*Gal[galaxy_number_].StellarSpin[0]+
+                                     Gal[galaxy_number_].StellarSpin[1]*Gal[galaxy_number_].StellarSpin[1]+
+                                     Gal[galaxy_number_].StellarSpin[2]*Gal[galaxy_number_].StellarSpin[2]);
 
-      /*redshift dependence */
-      nh = nh * pow(1 + ZZ[Halo[halonr].SnapNum], -1.0);
+    /* minimum inclination ~80 degrees, i.e. cos(inclination) == 0.2 */
+    const double n_h_sec_ = (Gal[galaxy_number_].CosInclination < 0.2) ? (5. * n_h_) : (n_h_ / Gal[galaxy_number_].CosInclination);
 
+    const double Z_g_ = metals_total(Gal[galaxy_number_].MetalsColdGas) / Gal[galaxy_number_].ColdGas / 0.02;
 
-      Gal[p].CosInclination = fabs(Gal[p].StellarSpin[2]) /
-                                  sqrt(Gal[p].StellarSpin[0]*Gal[p].StellarSpin[0]+
-                                       Gal[p].StellarSpin[1]*Gal[p].StellarSpin[1]+
-                                       Gal[p].StellarSpin[2]*Gal[p].StellarSpin[2]);
-      cosinc = Gal[p].CosInclination;
-      if(cosinc < 0.2)
-            cosinc = 0.2;                // minimum inclination ~80 degrees
-      sec = 1.0 / cosinc;
+    /* mu_ for YS extinction, given by a Gaussian with centre 0.3 (MUCENTER)
+     * and width 0.2 (MUWIDTH), truncated at 0.1 and 1.  */
+    do { mu_ = gsl_ran_gaussian(random_generator, MUWIDTH) + MUCENTER; }
+    while (mu_ < 0.1 || mu_ > 1.0);
+    
+    //for testing:
+    mu_ = MUCENTER;
 
-      /* mu for YS extinction, given by a Gaussian with centre 0.3 (MUCENTER)
-       * and width 0.2 (MUWIDTH), truncated at 0.1 and 1.  */
-      do { mu_ = gsl_ran_gaussian(random_generator, MUWIDTH) + MUCENTER; }
-      while (mu < 0.1 || mu > 1.0);
-
-      Zg = metals_total(Gal[p].MetalsColdGas)/Gal[p].ColdGas/0.02;
-
+    const double tauvbc_ = get_extinction(NMAG, Z_g_, 0) * n_h_ * (1. / mu_ - 1.);
 
 #ifdef OUTPUT_REST_MAGS
+    for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+    {
+      tau_  = get_extinction(filter_number_, Z_g_, 0) * n_h_sec_;
+      alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+      a_bc_ = 1. - exp(-tauvbc_ * pow(FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-      tauv = get_extinction(NMAG, Zg, 0) * nh;
+      Lum_disk_ = Gal[galaxy_number_].Lum[filter_number_][output_number_] - Gal[galaxy_number_].LumBulge[filter_number_][output_number_];
+      Gal[galaxy_number_].LumDust[filter_number_][output_number_] = Gal[galaxy_number_].LumBulge[filter_number_][output_number_] + Lum_disk_ * alam_;
 
-      for(k = 0; k < NMAG; k++)
-        {
-          tau = get_extinction(k, Zg, 0) * nh;
-          tau = tau * sec;
+      // now remove light from young stars absorbed by birth clouds
 
-          if(tau > 0.0)
-                alam = (1.0 - exp(-tau)) / tau;
-          else
-                alam = 1.;
+      dly_ = (Gal[galaxy_number_].YLum     [filter_number_][output_number_] - Gal[galaxy_number_].YLumBulge[filter_number_][output_number_]) * alam_ * a_bc_  +
+              Gal[galaxy_number_].YLumBulge[filter_number_][output_number_] * (1. - ExpTauBCBulge);
 
-          Lum_disk = Gal[p].Lum[k][snap] - Gal[p].LumBulge[k][snap];
-          Gal[p].LumDust[k][snap] = Gal[p].LumBulge[k][snap] + Lum_disk * alam;
-
-          // now remove light from young stars absorbed by birth clouds
-          tauvbc = tauv * (1. / mu - 1.);
-          taubc = tauvbc * pow(FilterLambda[k] / VBand_WaveLength, -0.7);
-
-          dly = (Gal[p].YLum[k][snap] - Gal[p].YLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
-                          Gal[p].YLumBulge[k][snap] * (1. - ExpTauBCBulge);
-
-          Gal[p].LumDust[k][snap] -= dly;
-        }
+      Gal[galaxy_number_].LumDust[filter_number_][output_number_] -= dly_;
+      
+    /*
+      Gal[galaxy_number_].LumDust[filter_number_][output_number_] = 
+      Gal[galaxy_number_].LumBulge[filter_number_][output_number_] + (Gal[galaxy_number_]. Lum[filter_number_][output_number_] - Gal[galaxy_number_]. LumBulge[filter_number_][output_number_]) * alam_
+             -                                                       (Gal[galaxy_number_].YLum[filter_number_][output_number_] - Gal[galaxy_number_].YLumBulge[filter_number_][output_number_]) * alam_ * a_bc_
+             - Gal[galaxy_number_].YLumBulge[filter_number_][output_number_] * (1. - ExpTauBCBulge)
+             
+     = Gal[galaxy_number_]. Lum     [filter_number_][output_number_] * alam_
+     + Gal[galaxy_number_]. LumBulge[filter_number_][output_number_] * (1 - alam_)
+     - Gal[galaxy_number_].YLum     [filter_number_][output_number_] * alam_ * a_bc_
+     - Gal[galaxy_number_].YLumBulge[filter_number_][output_number_] * (1. - ExpTauBCBulge - alam_ * a_bc_)
+        */     
+    }
 #endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef OUTPUT_OBS_MAGS
+    for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+    {
+      tau_  = get_extinction(filter_number_, Z_g_, ZZ[snapshot_number_]) * n_h_sec_;
+      alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+      a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-      tauv = get_extinction(NMAG, Zg, 0) * nh;
+      Lum_disk_ = Gal[galaxy_number_].ObsLum[filter_number_][output_number_] - Gal[galaxy_number_].ObsLumBulge[filter_number_][output_number_];
+      Gal[galaxy_number_].ObsLumDust[filter_number_][output_number_] = Gal[galaxy_number_].ObsLumBulge[filter_number_][output_number_] + Lum_disk_ * alam_;
 
-      for(k = 0; k < NMAG; k++)
-        {
-          tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap]]) * nh;
-          tau = tau * sec;
-          if(tau > 0.0)
-                alam = (1.0 - exp(-tau)) / tau;
-          else
-                alam = 1.;
+      // now remove light from young stars absorbed by birth clouds
 
-          Lum_disk = Gal[p].ObsLum[k][snap] - Gal[p].ObsLumBulge[k][snap];
-          Gal[p].ObsLumDust[k][snap] = Gal[p].ObsLumBulge[k][snap] + Lum_disk * alam;
+      dly_ = (Gal[galaxy_number_].ObsYLum[filter_number_][output_number_] - Gal[galaxy_number_].ObsYLumBulge[filter_number_][output_number_]) * alam_ * a_bc_  +
+                      Gal[galaxy_number_].ObsYLumBulge[filter_number_][output_number_] * (1. - ExpTauBCBulge);
 
-          // now remove light from young stars absorbed by birth clouds
-          tauvbc = tauv * (1. / mu - 1.);
-          taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap]])) / VBand_WaveLength, -0.7);
-
-          dly = (Gal[p].ObsYLum[k][snap] - Gal[p].ObsYLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
-                          Gal[p].ObsYLumBulge[k][snap] * (1. - ExpTauBCBulge);
-
-          Gal[p].ObsLumDust[k][snap] -= dly;
-
-
-#ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z + 1
-
-          if(snap < (LastDarkMatterSnapShot+1) - 1)
-                tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap] + 1]) * nh;
-          else
-                tau = get_extinction(k, Zg, ZZ[ListOutputSnaps[snap]]) * nh;
-          tau = tau * sec;
-          if(tau > 0.0)
-                alam = (1.0 - exp(-tau)) / tau;
-          else
-                alam = 1.;
-
-          Lum_disk = Gal[p].dObsLum[k][snap] - Gal[p].dObsLumBulge[k][snap];
-          Gal[p].dObsLumDust[k][snap] = Gal[p].dObsLumBulge[k][snap] + Lum_disk * alam;
-
-          // now remove light from young stars absorbed by birth clouds
-          if(snap < (LastDarkMatterSnapShot+1) - 1)
-                taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap] + 1])) / VBand_WaveLength, -0.7);
-          else
-                taubc = tauvbc * pow((FilterLambda[k] * (1. + ZZ[ListOutputSnaps[snap]])) / VBand_WaveLength, -0.7);
-
-          dly = (Gal[p].dObsYLum[k][snap] - Gal[p].dObsYLumBulge[k][snap]) * alam * (1. - exp(-taubc)) +
-                          Gal[p].dObsYLumBulge[k][snap] * (1. - ExpTauBCBulge);
-
-          Gal[p].dObsLumDust[k][snap] -= dly;
-
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-
-        }//end for loop on mags (k)
-
-#endif /* defined OUTPUT_OBS_MAGS */
+      Gal[galaxy_number_].ObsLumDust[filter_number_][output_number_] -= dly_;
     }
+
+#ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z (snapshot_number_ - 1)
+    const int earlier_snapshot_number_ = (snapshot_number_ > 0) ? (snapshot_number_ - 1) : 0;
+    for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+    {
+      tau_  = get_extinction(filter_number_, Z_g_, ZZ[earlier_snapshot_number_]) * n_h_sec_;
+      alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+      a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
+
+      Lum_disk_ = Gal[galaxy_number_].dObsLum[filter_number_][output_number_] - Gal[galaxy_number_].dObsLumBulge[filter_number_][output_number_];
+      Gal[galaxy_number_].dObsLumDust[filter_number_][output_number_] = Gal[galaxy_number_].dObsLumBulge[filter_number_][output_number_] + Lum_disk_ * alam_;
+
+      dly_ = (Gal[galaxy_number_].dObsYLum[filter_number_][output_number_] - Gal[galaxy_number_].dObsYLumBulge[filter_number_][output_number_]) * alam_ * a_bc_ +
+                      Gal[galaxy_number_].dObsYLumBulge[filter_number_][output_number_] * (1. - ExpTauBCBulge);
+
+      Gal[galaxy_number_].dObsLumDust[filter_number_][output_number_] -= dly_;
+    }
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_OBS_MAGS */
+  }
 }
 #endif /* not defined POST_PROCESS_MAGS */
 

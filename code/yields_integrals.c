@@ -90,10 +90,10 @@ void integrate_yields()
 	L1a=0;L2a=0;L3a=0;L4a=0;L5a=0;L1b=0;L2b=0;L3b=0;L4b=0;
 
 	int counta;
-	TheSFH[0] = 1.0/(tau_dt[0]*UnitTime_in_years/Hubble_h);
+	TheSFH[0] = 1.0/(tau_dt[0]*UnitTime_in_years * inv_Hubble_h);
 	for(counta=1;counta<SFH_NBIN;counta++)
 	{
-		TheSFH[counta] = 1.0/(tau_dt[counta]*UnitTime_in_years/Hubble_h);
+		TheSFH[counta] = 1.0/(tau_dt[counta]*UnitTime_in_years * inv_Hubble_h);
 	}
 	//TheSFH[0] = 0.0; TheSFH[1] = 3.8; TheSFH[2] = 5.0; TheSFH[3] = 5.5; TheSFH[4] = 5.2; TheSFH[5] = 5.0; TheSFH[6] = 4.8; TheSFH[7] = 4.2; TheSFH[8] = 4.0; TheSFH[9] = 3.8; TheSFH[10] = 3.2; TheSFH[11] = 3.0; TheSFH[12] = 2.8; TheSFH[13] = 2.5; TheSFH[14] = 2.2; TheSFH[15] = 2.2; TheSFH[16] = 2.0; TheSFH[17] = 1.8; TheSFH[18] = 1.8; TheSFH[19] = 1.5;
 
@@ -168,8 +168,8 @@ void integrate_yields()
 	        	for (mb=1;mb<=mbmax;mb++) //LOOP OVER MINI BINS (New method)
 	        	{
 	        		//From lower/upper edge of mini-bin to middle of current timestep:
-	        		t_lower = (SFH_t[snap][step][i] + (SFH_dt[snap][step][i]) - (mb*(SFH_dt[snap][step][i]/mbmax)) - timet) * UnitTime_in_years/Hubble_h; //IN YEARS //Time from low-z (lower) edge of SFH mini-bin j to middle of current timestep
-	        		t_upper = (SFH_t[snap][step][i] + (SFH_dt[snap][step][i]) - (mb*(SFH_dt[snap][step][i]/mbmax)) + (SFH_dt[snap][step][i]/mbmax) - timet) * UnitTime_in_years/Hubble_h; //IN YEARS //Time from high-z (upper) edge of SFH mini-bin j to middle of current timestep
+	        		t_lower = (SFH_t[snap][step][i] + (SFH_dt[snap][step][i]) - (mb*(SFH_dt[snap][step][i]/mbmax)) - timet) * UnitTime_in_years * inv_Hubble_h; //IN YEARS //Time from low-z (lower) edge of SFH mini-bin j to middle of current timestep
+	        		t_upper = (SFH_t[snap][step][i] + (SFH_dt[snap][step][i]) - (mb*(SFH_dt[snap][step][i]/mbmax)) + (SFH_dt[snap][step][i]/mbmax) - timet) * UnitTime_in_years * inv_Hubble_h; //IN YEARS //Time from high-z (upper) edge of SFH mini-bin j to middle of current timestep
 
 	        	  int Zi;
 	        	  for (Zi=0;Zi<LIFETIME_Z_NUM;Zi++) //LOOP OVER POSSIBLE INITIAL METALLICITIES

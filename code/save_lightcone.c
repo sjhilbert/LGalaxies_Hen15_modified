@@ -466,13 +466,15 @@ myfread_lightcone_galaxy_number_of_entries(FILE* lightcone_galaxy_file_, long lo
 void
 adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3], const int shift_index_[3], const int output_number_)
 {
-  int filter_number_;
-  float rot_m_[3][3];
+#ifndef OUTPUT_MOMAF_INPUTS 
+  (void)output_number_;  /* suppress unused-parameter warning */
+#endif /* not defined OUTPUT_MOMAF_INPUTS */
  
   apply_shift(shift_, &(galaxy_->Pos));
   apply_cartesian_to_ra_dec_r(&(galaxy_->Pos));
   
   /** @todo express sin(ra) etc. in terms of cartesian Pos?  */
+  float rot_m_[3][3];
   get_cartesian_to_ra_dec_r_local_orthogonal_rotation_matrix_from_ra_dec(galaxy_->Pos[0], galaxy_->Pos[1], &rot_m_);
   apply_rotation(rot_m_, &(galaxy_->DistanceToCentralGal));
   apply_rotation(rot_m_, &(galaxy_->Vel));
@@ -496,6 +498,7 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifdef OUTPUT_OBS_MAGS
 #ifdef OUTPUT_MOMAF_INPUTS
+  int filter_number_;
 
   const int   current_snapshot_number_   = ListOutputSnaps[output_number_];
   const float current_snapshot_redshift_ = ZZ[current_snapshot_number_];

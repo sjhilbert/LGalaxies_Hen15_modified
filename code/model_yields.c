@@ -70,7 +70,7 @@ void update_yields_and_return_mass(int p, int centralgal, double dt, int nstep)
 	//    nstep is the number of the current timestep (0-19)
 	//    dt is the width of one timestep within current snapshot
 #ifdef METALRICHWIND
-	ColdGasSurfaceDensity = max(0.0, (Gal[p].ColdGas*(1.0e10/Hubble_h))/(4.0*3.14159265*Gal[p].GasDiskRadius*Gal[p].GasDiskRadius/Hubble_h));
+	ColdGasSurfaceDensity = max(0.0, (Gal[p].ColdGas*(1.0e10 * inv_Hubble_h))/(4.0*3.14159265*Gal[p].GasDiskRadius*Gal[p].GasDiskRadius * inv_Hubble_h));
 	fwind = min(1.0, max(0.0, 1.0/(ColdGasSurfaceDensity/5.0e12))); //Fraction of SN-II ejecta put directly into HotGas
 	if (Gal[p].ColdGas != (float)Gal[p].ColdGas) {fwind = 1.0;}
 #endif
@@ -82,7 +82,7 @@ void update_yields_and_return_mass(int p, int centralgal, double dt, int nstep)
     for (i=0;i<=Gal[p].sfh_ibin;i++) //LOOP OVER SFH BINS
     {
     	sfh_time=Gal[p].sfh_t[i]+(0.5*Gal[p].sfh_dt[i]);
-    	//time_to_ts = ((sfh_time+(0.5*Gal[p].sfh_dt[i])) - timet)*(UnitTime_in_years/Hubble_h)/1.0e6; //Time from high-z (upper) edge of SFH bin to middle of current timestep [in Myrs]
+    	//time_to_ts = ((sfh_time+(0.5*Gal[p].sfh_dt[i])) - timet)*(UnitTime_in_years * inv_Hubble_h)/1.0e6; //Time from high-z (upper) edge of SFH bin to middle of current timestep [in Myrs]
     	//tcut = 2.0*((Gal[p].Rvir/Gal[p].Vvir)/0.0001); //Maximum lifetime of stars that have their ejected put straight into the HotGas [in Myrs]
 
 
@@ -95,7 +95,7 @@ void update_yields_and_return_mass(int p, int centralgal, double dt, int nstep)
      	//pre-calculations to speed up the code
     	DiskSFR = Gal[p].sfh_DiskMass[i]/Gal[p].sfh_dt[i];
     	step_width_times_DiskSFR = timestep_width * DiskSFR;
-    	DiskSFR_physical_units = DiskSFR * (1.0e10/Hubble_h);
+    	DiskSFR_physical_units = DiskSFR * (1.0e10 * inv_Hubble_h);
     	step_width_times_DiskSFR_physical_units = timestep_width * DiskSFR_physical_units;
     	inverse_DiskMass_physical_units=Hubble_h/(Gal[p].sfh_DiskMass[i]*1.0e10);
     	Disk_total_metallicity=metals_total(Gal[p].sfh_MetalsDiskMass[i])/Gal[p].sfh_DiskMass[i];
@@ -428,7 +428,7 @@ void update_yields_and_return_mass(int p, int centralgal, double dt, int nstep)
     	//pre-calculations to speed up the code
     	BulgeSFR = Gal[p].sfh_BulgeMass[i]/Gal[p].sfh_dt[i];
     	step_width_times_BulgeSFR = timestep_width * BulgeSFR;
-    	BulgeSFR_physical_units = BulgeSFR * (1.0e10/Hubble_h);
+    	BulgeSFR_physical_units = BulgeSFR * (1.0e10 * inv_Hubble_h);
     	step_width_times_BulgeSFR_physical_units = timestep_width * BulgeSFR_physical_units;
     	inverse_BulgeMass_physical_units=Hubble_h/(Gal[p].sfh_BulgeMass[i]*1.0e10);
     	Bulge_total_metallicity=metals_total(Gal[p].sfh_MetalsBulgeMass[i])/Gal[p].sfh_BulgeMass[i];
@@ -624,7 +624,7 @@ void update_yields_and_return_mass(int p, int centralgal, double dt, int nstep)
     	//pre-calculations to speed up the code
     	ICMSFR = Gal[p].sfh_ICM[i]/Gal[p].sfh_dt[i];
     	step_width_times_ICMSFR = timestep_width * ICMSFR;
-    	ICMSFR_physical_units = ICMSFR * (1.0e10/Hubble_h);
+    	ICMSFR_physical_units = ICMSFR * (1.0e10 * inv_Hubble_h);
     	step_width_times_ICMSFR_physical_units = timestep_width * ICMSFR_physical_units;
     	inverse_ICM_physical_units=Hubble_h/(Gal[p].sfh_ICM[i]*1.0e10);
     	ICM_total_metallicity=metals_total(Gal[p].sfh_MetalsICM[i])/Gal[p].sfh_ICM[i];

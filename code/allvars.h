@@ -322,9 +322,7 @@ struct GALAXY_OUTPUT
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   float MassWeightAge;
-#ifdef  POST_PROCESS_MAGS
   float rbandWeightAge;
-#endif /* defined POST_PROCESS_MAGS */
 
 #ifdef STAR_FORMATION_HISTORY
   int sfh_ibin; //Index of highest bin currently in use
@@ -578,17 +576,16 @@ extern struct GALAXY
 #ifdef ICL
   float dObsICL[NMAG][NOUT];
 #endif /* defined ICL */
-// // now define KITZBICHLER luminosities here ?
-// #ifdef KITZBICHLER
-//   float dObsLum_forward[NMAG][NOUT];
-//   float dObsYLum_forward[NMAG][NOUT];
-//   float dObsLumBulge_forward[NMAG][NOUT];
-//   float dObsYLumBulge_forward[NMAG][NOUT];
-//   float dObsLumDust_forward[NMAG][NOUT];
-// #ifdef ICL
-//   float dObsICL_forward[NMAG][NOUT];
-// #endif /* defined ICL */
-// #endif /* defined KITZBICHLER */
+#ifdef KITZBICHLER
+  float dObsLum_forward[NMAG][NOUT];
+  float dObsYLum_forward[NMAG][NOUT];
+  float dObsLumBulge_forward[NMAG][NOUT];
+  float dObsYLumBulge_forward[NMAG][NOUT];
+  float dObsLumDust_forward[NMAG][NOUT];
+#ifdef ICL
+  float dObsICL_forward[NMAG][NOUT];
+#endif /* defined ICL */
+#endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined COMPUTE_OBS_MAGS */
 
@@ -596,6 +593,8 @@ extern struct GALAXY
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   float MassWeightAge[NOUT];
+  float rbandWeightAge[NOUT];
+ 
 #ifdef STAR_FORMATION_HISTORY
   int sfh_ibin; //Index of highest bin currently in use
   double sfh_age; //Time in years of last call to sph_update_bins

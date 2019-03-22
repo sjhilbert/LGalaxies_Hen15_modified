@@ -143,9 +143,7 @@ typedef struct custom_lightcone_galaxy_output_type_
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   float     MassWeightAge;
-#ifdef  POST_PROCESS_MAGS
   float     rbandWeightAge;
-#endif /* defined POST_PROCESS_MAGS */
 #endif /* not defined LIGHT_OUTPUT */
 } custom_lightcone_galaxy_output_type;
 
@@ -300,9 +298,7 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   lightcone_galaxy_->MassWeightAge               = galaxy_->MassWeightAge              ;
-#ifdef  POST_PROCESS_MAGS
   lightcone_galaxy_->rbandWeightAge              = galaxy_->rbandWeightAge             ;
-#endif /* defined POST_PROCESS_MAGS */
 #endif /* not defined LIGHT_OUTPUT */
   
 #else /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */

@@ -51,10 +51,10 @@ void SNe_rates()
 
 	int counta;
 	TheSFH2[0] = 1.0;
-	//TheSFH2[0] = 1.0/(tau_dt[0]*UnitTime_in_years/Hubble_h);
+	//TheSFH2[0] = 1.0/(tau_dt[0]*UnitTime_in_years * inv_Hubble_h);
 	for(counta=1;counta<(STEPS*MAXSNAPS);counta++)
 	{
-		TheSFH2[counta] = 0.0;// /(tau_dt[counta]*UnitTime_in_years/Hubble_h);
+		TheSFH2[counta] = 0.0;// /(tau_dt[counta]*UnitTime_in_years * inv_Hubble_h);
 	}
 	//TheSFH2[0] = 0.0; TheSFH2[1] = 3.8; TheSFH2[2] = 5.0; TheSFH2[3] = 5.5; TheSFH2[4] = 5.2; TheSFH2[5] = 5.0; TheSFH2[6] = 4.8; TheSFH2[7] = 4.2; TheSFH2[8] = 4.0; TheSFH2[9] = 3.8; TheSFH2[10] = 3.2; TheSFH2[11] = 3.0; TheSFH2[12] = 2.8; TheSFH2[13] = 2.5; TheSFH2[14] = 2.2; TheSFH2[15] = 2.2; TheSFH2[16] = 2.0; TheSFH2[17] = 1.8; TheSFH2[18] = 1.8; TheSFH2[19] = 1.5;
 
@@ -106,8 +106,8 @@ void SNe_rates()
 
 	    	for (i=0; i<(STEPS*snap)+step; i++) //LOOP OVER SFH-TIMESTEPS
 	    	{
-				t_lower = (tau_t[i] + (0.5*tau_dt[i]) - timet - (0.5*dt)) * UnitTime_in_years/Hubble_h; //IN YEARS //Time from middle of SFH-timestep i to high-z edge of current timestep
-	        	t_upper = (tau_t[i] + (0.5*tau_dt[i]) - timet + (0.5*dt)) * UnitTime_in_years/Hubble_h; //IN YEARS //Time from middle of SFH-timestep i to low-z edge of current timestep
+				t_lower = (tau_t[i] + (0.5*tau_dt[i]) - timet - (0.5*dt)) * UnitTime_in_years * inv_Hubble_h; //IN YEARS //Time from middle of SFH-timestep i to high-z edge of current timestep
+	        	t_upper = (tau_t[i] + (0.5*tau_dt[i]) - timet + (0.5*dt)) * UnitTime_in_years * inv_Hubble_h; //IN YEARS //Time from middle of SFH-timestep i to low-z edge of current timestep
 
 	        	//if (snap==0) {printf("Timestep: %i, SFH-timestep: %i, TheSFH2[%i] = %f, t_l = %f, t_u = %f [Myrs]\n", (STEPS*snap)+step, i, i, TheSFH2[i], t_lower/1.0e6, t_upper/1.0e6);}
 
@@ -303,12 +303,12 @@ void SNe_rates()
 	        	   } //if (t_upper >= lifetimes[Zi][Mi_lower+1])
 	        	} //for (Zi=0;Zi<LIFETIME_Z_NUM;Zi++)
 	        } //for (i=0; i<(STEPS*snap)+step; i++)
-	    	//printf("%.11f, ", SNIIRate2[(STEPS*snap)+step][3]/(tau_dt[(STEPS*snap)+step]*UnitTime_in_years/Hubble_h));
-	    	//printf("Timestep %i: Cosmic time %f: %.11f\n", (STEPS*snap)+step, 13.569513 - tau_t[(STEPS*snap)+step]*UnitTime_in_years/Hubble_h/1.0e9, SNIIRate2[(STEPS*snap)+step][1]);
-	    	//printf("%.16f, ", SNIaRate2[(STEPS*snap)+step][3]/(tau_dt[(STEPS*snap)+step]*UnitTime_in_years/Hubble_h));
-	        //printf("%.16f, ", AGBRate2[(STEPS*snap)+step][3]/(tau_dt[(STEPS*snap)+step]*UnitTime_in_years/Hubble_h));
-	        //if (snap < 63) printf("%f, ", (NumToTime(snap)-(((NumToTime(snap)-NumToTime(snap+1))/STEPS)*step))*UnitTime_in_years/Hubble_h);
-	        //if (snap == 63) printf("%f, ", (NumToTime(snap)-(((NumToTime(snap))/STEPS)*step))*UnitTime_in_years/Hubble_h);
+	    	//printf("%.11f, ", SNIIRate2[(STEPS*snap)+step][3]/(tau_dt[(STEPS*snap)+step]*UnitTime_in_years * inv_Hubble_h));
+	    	//printf("Timestep %i: Cosmic time %f: %.11f\n", (STEPS*snap)+step, 13.569513 - tau_t[(STEPS*snap)+step]*UnitTime_in_years * inv_Hubble_h/1.0e9, SNIIRate2[(STEPS*snap)+step][1]);
+	    	//printf("%.16f, ", SNIaRate2[(STEPS*snap)+step][3]/(tau_dt[(STEPS*snap)+step]*UnitTime_in_years * inv_Hubble_h));
+	        //printf("%.16f, ", AGBRate2[(STEPS*snap)+step][3]/(tau_dt[(STEPS*snap)+step]*UnitTime_in_years * inv_Hubble_h));
+	        //if (snap < 63) printf("%f, ", (NumToTime(snap)-(((NumToTime(snap)-NumToTime(snap+1))/STEPS)*step))*UnitTime_in_years * inv_Hubble_h);
+	        //if (snap == 63) printf("%f, ", (NumToTime(snap)-(((NumToTime(snap))/STEPS)*step))*UnitTime_in_years * inv_Hubble_h);
 	        //printf("%i, ", (STEPS*snap)+step);
 	    } //for(step=0;step<STEPS;step++)
 	} //for(snap=0;snap<MAXSNAPS;snap++)

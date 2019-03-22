@@ -229,8 +229,8 @@ void create_sfh_bins()
       ibin=sfh_ibin;
 
       //printf("sna=%d step=%d step time=%f time low=%f\n",
-      //                snap,step,(previoustime - (step + 0.5) * (deltaT / STEPS))*UnitTime_in_years/Hubble_h/1.e9,
-      //                (time)*UnitTime_in_years/Hubble_h/1.e9);
+      //                snap,step,(previoustime - (step + 0.5) * (deltaT / STEPS))*UnitTime_in_years * inv_Hubble_h/1.e9,
+      //                (time)*UnitTime_in_years * inv_Hubble_h/1.e9);
       //Add one extra bin
       if(snap==0 && step==0) {
               sfh_t[0]=time;

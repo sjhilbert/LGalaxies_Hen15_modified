@@ -56,133 +56,133 @@
  *
  * agTableZz[Mag][mettallicity][Snapshot][Age]. */
 #ifdef PHOTTABLES_PRECOMPUTED
-void setup_LumTables_precomputed(char SimName[])
+void setup_LumTables_precomputed(const char sim_name_[])
 {
   FilterLambda[NMAG] = 0.55;        //to use by the dust model for birth clouds, the wavelength of the V-filter_number_
   
-  FILE *fa, *fb;
-  int MetalLoop, AgeLoop, filter_number_, snap;
-  char buf[1000], FilterName[100], dummy[100], SSP[1000];
-  char dumb_FilterFile[100];
-  float dumb_filterlambda;
-  int dumb_ssp_nsnaps, dumb_ssp_nage, dumb_ssp_nmetallicites, dumb_nmag;
+  FILE *metallicity_list_file_, *filter_file_;
+  int met_index_, age_index_, filter_number_, snapshot_number_;
+  char file_name_[1000], filter_name_[100], dummy_[100], SSP_name_[1000];
+  char dumb_filter_file_[100];
+  float dumb_filter_lambda_;
+  int dumb_ssp_n_snapshots_, dumb_ssp_n_ages_, dumb_ssp_n_metallicites_, dumb_n_mags_;
 
 #ifdef BC03
-  sprintf(SSP, "BC03");
+  sprintf(SSP_name_, "BC03");
 #endif
 #ifdef M05
-  sprintf(SSP, "M05");
+  sprintf(SSP_name_, "M05");
 #endif
 #ifdef CB07
-  sprintf(SSP, "CB07");
+  sprintf(SSP_name_, "CB07");
 #endif
 
-  /*Read list of metallicities available from SSP*/
-  sprintf(buf, "%s/PhotTables/%s_%s_Metallicity_list.dat", SpecPhotDir, SSP, SpecPhotIMF);
-  if(!(fa = fopen(buf, "r")))
+  /*Read list of metallicities available from SSP_name_*/
+  sprintf(file_name_, "%s/PhotTables/%s_%s_Metallicity_list.dat", SpecPhotDir, SSP_name_, SpecPhotIMF);
+  if(!(metallicity_list_file_ = fopen(file_name_, "r")))
   {
     char sbuf[1000];
-    sprintf(sbuf, "file `%s' not found.\n", buf);
+    sprintf(sbuf, "file `%s' not found.\n", file_name_);
     terminate(sbuf);
   }
 
-  fscanf(fa, "%d", &dumb_ssp_nmetallicites);
-  if(dumb_ssp_nmetallicites != SSP_NMETALLICITES)
+  fscanf(metallicity_list_file_, "%d", &dumb_ssp_n_metallicites_);
+  if(dumb_ssp_n_metallicites_ != SSP_NMETALLICITES)
   {
     terminate("nmetallicites on file not equal to SSP_NMETALLICITES");
   }
 
-  for(MetalLoop=0;MetalLoop<SSP_NMETALLICITES;MetalLoop++)
+  for(met_index_=0;met_index_<SSP_NMETALLICITES;met_index_++)
   {
-    fscanf(fa, "%f", &SSP_logMetalTab[MetalLoop]);
-    SSP_logMetalTab[MetalLoop]=log10(SSP_logMetalTab[MetalLoop]);
+    fscanf(metallicity_list_file_, "%f", &SSP_logMetalTab[met_index_]);
+    SSP_logMetalTab[met_index_]=log10(SSP_logMetalTab[met_index_]);
   }
-  fclose(fa);
+  fclose(metallicity_list_file_);
 
   /*Loop over the different files corresponding to different metallicities */
-  for(MetalLoop = 0; MetalLoop < SSP_NMETALLICITES; MetalLoop++)
+  for(met_index_ = 0; met_index_ < SSP_NMETALLICITES; met_index_++)
   {
-    sprintf(buf, "%s", FileWithFilterNames);
-    if((fa = fopen(buf, "r")) == NULL)
+    sprintf(file_name_, "%s", FileWithFilterNames);
+    if((metallicity_list_file_ = fopen(file_name_, "r")) == NULL)
     {
-      printf("\n**Can't open file \"%s\" **\n", buf);
+      printf("\n**Can't open file \"%s\" **\n", file_name_);
       char sbuf[1000];
-      sprintf(sbuf, "Can't open file %s\n", buf);
+      sprintf(sbuf, "Can't open file %s\n", file_name_);
       terminate(sbuf);
     }
 
-    fscanf(fa, "%d", &dumb_nmag);
-    if(dumb_nmag != NMAG)
+    fscanf(metallicity_list_file_, "%d", &dumb_n_mags_);
+    if(dumb_n_mags_ != NMAG)
     {
       char sbuf[1000];
-      sprintf(sbuf,"nmag = %d on file %s not equal to NMAG = %d",dumb_nmag, buf, NMAG);
+      sprintf(sbuf,"nmag = %d on file %s not equal to NMAG = %d",dumb_n_mags_, file_name_, NMAG);
       terminate(sbuf);
     }
 
     //There is a different file for each filter_number_
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      fscanf(fa,"%s %f %s" ,dumb_FilterFile, &dumb_filterlambda, FilterName);
+      fscanf(metallicity_list_file_,"%s %f %s" ,dumb_filter_file_, &dumb_filter_lambda_, filter_name_);
       //READ TABLES
-      sprintf(buf, "%s/PhotTables/%s_%s_Phot_Table_%s_Mag%s_m%0.4f.dat", SpecPhotDir, PhotPrefix, SpecPhotIMF, SimName, FilterName,
-              pow(10,SSP_logMetalTab[MetalLoop]));
-      if(!(fb = fopen(buf, "r")))
+      sprintf(file_name_, "%s/PhotTables/%s_%s_Phot_Table_%s_Mag%s_m%0.4f.dat", SpecPhotDir, PhotPrefix, SpecPhotIMF, sim_name_, filter_name_,
+              pow(10,SSP_logMetalTab[met_index_]));
+      if(!(filter_file_ = fopen(file_name_, "r")))
       {
         char sbuf[1000];
-        sprintf(sbuf, "file `%s' not found.\n", buf);
+        sprintf(sbuf, "file `%s' not found.\n", file_name_);
         terminate(sbuf);
       }
 
       if(ThisTask == 0)
-        printf("reading file %s \n", buf);
+        printf("reading file %s \n", file_name_);
 
-      fscanf(fb, "%s %f %d %d", dummy, &FilterLambda[filter_number_], &dumb_ssp_nsnaps, &dumb_ssp_nage);
+      fscanf(filter_file_, "%s %f %d %d", dummy_, &FilterLambda[filter_number_], &dumb_ssp_n_snapshots_, &dumb_ssp_n_ages_);
       /* check that the numbers on top of the file correspond to (LastDarkMatterSnapShot+1) and SSP_NAGES */
-      if(FilterLambda[filter_number_] != dumb_filterlambda)
+      if(FilterLambda[filter_number_] != dumb_filter_lambda_)
       {
         terminate("filterlambdas dont match");
       }
-      if(dumb_ssp_nsnaps != (LastDarkMatterSnapShot+1))
+      if(dumb_ssp_n_snapshots_ != (LastDarkMatterSnapShot+1))
       {
         terminate("nsnaps not equal to Snaplistlen");
       }
-      if(dumb_ssp_nage != SSP_NAGES)
+      if(dumb_ssp_n_ages_ != SSP_NAGES)
       {
         terminate("n_age_bins not equal to SSP_NAGES");
       }
 
       /* read ages of SSPs (done for all filter_number_s and metallicities)
         * last call stays on global array  SSP_logAgeTab*/
-      for(AgeLoop = 0; AgeLoop < SSP_NAGES; AgeLoop++)
+      for(age_index_ = 0; age_index_ < SSP_NAGES; age_index_++)
       {
-        fscanf(fb, " %e ", &SSP_logAgeTab[AgeLoop]);
+        fscanf(filter_file_, " %e ", &SSP_logAgeTab[age_index_]);
 
-        if(SSP_logAgeTab[AgeLoop] > 0.0)        // avoid taking a log of 0 ...
+        if(SSP_logAgeTab[age_index_] > 0.0)        // avoid taking a log of 0 ...
         {
           /* converts SSP_AgeTab from years to log10(internal time units) */
-          SSP_logAgeTab[AgeLoop] = SSP_logAgeTab[AgeLoop] / 1.0e6 / UnitTime_in_Megayears * Hubble_h;
-          SSP_logAgeTab[AgeLoop] = log10(SSP_logAgeTab[AgeLoop]);
+          SSP_logAgeTab[age_index_] = SSP_logAgeTab[age_index_] / UnitTime_in_years * Hubble_h;
+          SSP_logAgeTab[age_index_] = log10(SSP_logAgeTab[age_index_]);
         }
         else
-          SSP_logAgeTab[AgeLoop] = 0.;
+          SSP_logAgeTab[age_index_] = 0.;
       }
 
       //read luminosities at each output redshift
-      for(snap = 0; snap < (LastDarkMatterSnapShot+1); snap++)
+      for(snapshot_number_ = 0; snapshot_number_ < (LastDarkMatterSnapShot+1); snapshot_number_++)
       {
-        fscanf(fb, " %f ", &RedshiftTab[snap]);
+        fscanf(filter_file_, " %f ", &RedshiftTab[snapshot_number_]);
         //for each age
-        for(AgeLoop = 0; AgeLoop < SSP_NAGES; AgeLoop++)
+        for(age_index_ = 0; age_index_ < SSP_NAGES; age_index_++)
         {
-          fscanf(fb, "%e", &LumTables[AgeLoop][MetalLoop][snap][filter_number_]);
-          LumTables[AgeLoop][MetalLoop][snap][filter_number_] = pow(10., -LumTables[AgeLoop][MetalLoop][snap][filter_number_] / 2.5);
+          fscanf(filter_file_, "%e", &LumTables[age_index_][met_index_][snapshot_number_][filter_number_]);
+          LumTables[age_index_][met_index_][snapshot_number_][filter_number_] = pow(10., -0.4 * LumTables[age_index_][met_index_][snapshot_number_][filter_number_]);
         }                //end loop on age
       }                //end loop on redshift (everything done for current filter_number_)
 
-      fclose(fb);
+      fclose(filter_file_);
     }//end loop on filter_number_s
 
-    fclose(fa);
+    fclose(metallicity_list_file_);
   }//end loop on metallicity
 
   init_SSP_log_age_jump_index();
@@ -193,16 +193,16 @@ void setup_LumTables_precomputed(char SimName[])
 /** @brief init table for shortcut lookup into LumTables */
 void init_SSP_log_age_jump_index(void)
 {
-  double age;
-  int i, idx;
+  double log_age_;
+  int i_, idx_;
 
   SSP_log_age_jump_factor = SSP_NJUMPTAB / (SSP_logAgeTab[SSP_NAGES - 1] - SSP_logAgeTab[1]);
 
-  for(i = 0; i < SSP_NJUMPTAB; i++)
+  for(i_ = 0; i_ < SSP_NJUMPTAB; i_++)
   {
-    age = SSP_logAgeTab[1] + i / SSP_log_age_jump_factor;
-    idx = 1; while(SSP_logAgeTab[idx + 1] < age) { ++idx; };
-    SSP_log_age_jump_table[i] = idx;
+    log_age_ = SSP_logAgeTab[1] + i_ / SSP_log_age_jump_factor;
+    idx_ = 1; while(SSP_logAgeTab[idx_ + 1] < log_age_) { ++idx_; };
+    SSP_log_age_jump_table[i_] = idx_;
   }
 }
 
@@ -214,7 +214,7 @@ void init_SSP_log_age_jump_index(void)
   * The semi-analytic code uses look up tables produced by Evolutionary Population
   * Synthesis Models to convert the mass formed on every star formation episode
   * into a luminosity. Each of These tables corresponds to a simple stellar
-  * population i.e, a population with a single metallicity. For a given IMF,
+  * population i_.e, a population with a single metallicity. For a given IMF,
   * metatillicty and age, the tables give the luminosity for a
   * \f$ 10^{11}M_\odot\f$ burst. The default model uses a Chabrier IMF and
   * stellar populations from Bruzual & Charlot 2003 with 6 different metallicites.
@@ -237,7 +237,7 @@ void init_SSP_log_age_jump_index(void)
   *      but not fractions, now corrected (by Stefan Hilbert)
   **/
 #ifndef  POST_PROCESS_MAGS
-void add_to_luminosities(const int p, double stellar_mass_, double time_, double dt_, const double metallicity_)
+void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double time_, double dt_, const double metallicity_)
 {
 #ifndef OUTPUT_REST_MAGS
 #ifndef COMPUTE_OBS_MAGS
@@ -245,8 +245,16 @@ void add_to_luminosities(const int p, double stellar_mass_, double time_, double
 #endif /* not defined COMPUTE_OBS_MAGS */
 #endif /* not defined OUTPUT_REST_MAGS */
 
+#ifdef OUTPUT_REST_MAGS
+  /** @bug  filter_number_ = 17 is not necessarily r-band, since filters are assigned from info in parameter file
+   *
+   *  @todo  parametrize filter band number for computing weighted stellar age_
+   */
+  const int r_band_filter_number_ = 17;
+#endif /* defined OUTPUT_REST_MAGS */         
+
   int output_bin_, filter_number_;
-  double LuminosityToAdd;
+  double luminosity_to_add_;
    
   int age_index_;  double f_age_1_, f_age_2_; 
   int met_index_;  double f_met_1_, f_met_2_;
@@ -265,9 +273,9 @@ void add_to_luminosities(const int p, double stellar_mass_, double time_, double
 
   /* mstars converted from 1.e10Msun/h to 1.e11 Msun */
 #if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
-  stellar_mass_ *= 0.1 / (Hubble_h * N_FINE_AGE_BINS);
+  stellar_mass_ *= 0.1 / N_FINE_AGE_BINS * inv_Hubble_h;
 #else  /* not defined FINE_AGE_BINS > 1 */
-  stellar_mass_ *= 0.1 / Hubble_h;
+  stellar_mass_ *= 0.1 * inv_Hubble_h;
 #endif /* not defined FINE_AGE_BINS > 1 */
 
   /* now we have to change the luminosities accordingly. */
@@ -276,14 +284,14 @@ void add_to_luminosities(const int p, double stellar_mass_, double time_, double
    * find_interpolated_lum() finds the 2 closest points in the SPS table
    * in terms of age and metallicity. Time gives the time_to_present for
    * the current step while NumToTime(ListOutputSnaps[output_bin_]) gives
-   * the time_ of the output snap - units Mpc/Km/s/h */
+   * the time_ of the output snapshot_number_ - units Mpc/Km/s/h */
   
   if(MetallicityOption == 0) // reset met index to use only solar metallicity
   { met_index_ = 4; f_met_1_ = 1., f_met_2_ = 0.; } 
   else if(metallicity_ <= 0.)
   { met_index_ = 0; f_met_1_ = 1., f_met_2_ = 0.; } 
   else   
-  {  
+  {
     const double log10_metallicity_ = log10(metallicity_);
     find_metallicity_luminosity_interpolation_parameters(log10_metallicity_, met_index_, f_met_1_, f_met_2_);
   }
@@ -298,11 +306,11 @@ void add_to_luminosities(const int p, double stellar_mass_, double time_, double
 #endif /* defined N_FINE_AGE_BINS > 1 */
 
 #ifdef GALAXYTREE
-    const int output_bin_beg_ = Gal[p].SnapNum;
+    const int output_bin_beg_ = Gal[galaxy_number_].SnapNum;
     const int output_bin_end_ = NOUT;
 #else  /* not defined GALAXYTREE */
     const int output_bin_beg_ = 0;
-    const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[p].SnapNum] + 1;
+    const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[galaxy_number_].SnapNum] + 1;
 #endif /* not defined GALAXYTREE */
 
     for(output_bin_ = output_bin_beg_; output_bin_ < output_bin_end_; output_bin_++)
@@ -321,18 +329,21 @@ void add_to_luminosities(const int p, double stellar_mass_, double time_, double
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         //interpolation between the points found by find_interpolated_lum
-        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][0][filter_number_]  +
-                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_    ][0][filter_number_]) +
-                                           f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][0][filter_number_]  +
-                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][0][filter_number_]));
+        luminosity_to_add_ = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][0][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][0][filter_number_]) +
+                                              f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][0][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][0][filter_number_]));
                                          
-        Gal[p].Lum[filter_number_][output_bin_] += LuminosityToAdd;
+        Gal[galaxy_number_].Lum[filter_number_][output_bin_] += luminosity_to_add_;
 
         /*luminosity used for extinction due to young birth clouds */
         if(is_affected_by_birthclould_)
-          Gal[p].YLum[filter_number_][output_bin_] += LuminosityToAdd;
+          Gal[galaxy_number_].YLum[filter_number_][output_bin_] += luminosity_to_add_;
+        
+        if(filter_number_ == r_band_filter_number_)
+          Gal[galaxy_number_].rbandWeightAge[output_bin_] += age_ * luminosity_to_add_;
       }
-#endif //OUTPUT_REST_MAGS
+#endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef COMPUTE_OBS_MAGS
       redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_bin_];
@@ -341,34 +352,50 @@ void add_to_luminosities(const int p, double stellar_mass_, double time_, double
         * "inversely k-corrected to get observed frame at output bins" */
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
-        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
-                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
-                                           f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
-                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
+        luminosity_to_add_ = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                                              f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[p].ObsLum[filter_number_][output_bin_] += LuminosityToAdd;
+        Gal[galaxy_number_].ObsLum[filter_number_][output_bin_] += luminosity_to_add_;
   
         if(is_affected_by_birthclould_)
-          Gal[p].ObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
+          Gal[galaxy_number_].ObsYLum[filter_number_][output_bin_] += luminosity_to_add_;
       }
       
 #ifdef OUTPUT_MOMAF_INPUTS
-      redshift_index_ = LastDarkMatterSnapShot - (ListOutputSnaps[output_bin_] > 0 ? ListOutputSnaps[output_bin_] - 1 : 0);
+      redshift_index_ = (ListOutputSnaps[output_bin_] > 0 ? LastDarkMatterSnapShot - ListOutputSnaps[output_bin_] - 1 : LastDarkMatterSnapShot);
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
-        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
-                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
-                                           f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
-                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
+        luminosity_to_add_ = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                                              f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[p].dObsLum[filter_number_][output_bin_] += LuminosityToAdd;
+        Gal[galaxy_number_].dObsLum[filter_number_][output_bin_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[p].dObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
+          Gal[galaxy_number_].dObsYLum[filter_number_][output_bin_] += luminosity_to_add_;
       }
-#endif
+      
+#ifdef KITZBICHLER
+      redshift_index_ = (ListOutputSnaps[output_bin_] < LastDarkMatterSnapShot ? LastDarkMatterSnapShot - ListOutputSnaps[output_bin_] + 1 : 0);
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+      {
+        luminosity_to_add_ = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                                              f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
+                                                          f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
+                                                       
+        Gal[galaxy_number_].dObsLum_forward[filter_number_][output_bin_] += luminosity_to_add_;
+
+        if(is_affected_by_birthclould_)
+          Gal[galaxy_number_].dObsYLum_forward[filter_number_][output_bin_] += luminosity_to_add_;
+      }
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined COMPUTE_OBS_MAGS */
     }
-#endif //COMPUTE_OBS_MAGS
 
 #ifdef FINE_AGE_BINS  
   }//end loop on small age bins

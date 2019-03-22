@@ -16,7 +16,6 @@
 /** @file   physical_constants_and_units.h
  *
  *  @author Stefan Hilbert
- *  @author ?
  *  @date   2018
  *
  *  @brief  Sets up some variables used to convert from physical to internal
@@ -65,42 +64,82 @@
  *          \f$ \rm{Hubble} = \rm{HUBBLE} \times \rm{UnitTime}_{\rm{s}}=100.0001\f$, where
  *          \f$\rm{HUBBLE}=3.2407789\times 10^{-18} h~\rm{s}^{-1}\f$, is the hubble
  *          constante in \f$(h~\rm{Km}~\rm{s}^{-1}\rm{Mpc}^{-1})\f$.
- *          
- *  @todo   check description of units
+ *
+ *
+ * @note  the values for physical constants and basic internal units are updated, and differ
+ *        slightly from those in the public Henriques 2015 version of the code.
+ *        for using the old public Henriques 2015 values, comment the new values and uncomment
+ *        the old values below.
  **/
 #ifndef PHYSICAL_CONSTANTS_AND_UNITS_H
 #define PHYSICAL_CONSTANTS_AND_UNITS_H
 
+// /* physical constants: in external (CGS or astron.) units: */
+// #define GRAVITY                           6.67408e-8        /* in cgs */
+// #define SOLAR_MASS                        1.98855e33        /* in cgs */
+// #define SOLAR_LUM                         3.826e33          /* in cgs */
+// #define RAD_CONST                         7.565e-15         /* in cgs */
+// #define AVOGADRO                          6.02214086e23     /* in cgs */
+// #define BOLTZMANN                         1.38064852e-16    /* in cgs */
+// #define GAS_CONST                         8.3142598e7       /* in cgs */
+// #define SPEED_OF_LIGHT                    2.99792458e10     /* in cgs */
+// #define PLANCK                            6.62607004e-27    /* in cgs */
+// #define PROTONMASS                        1.67262190e-24    /* in cgs */
+// #define HUBBLE                            3.24077893e-18    /* in h/sec */
+// #define D_HUBBLE                          2997.92458        /* in Mpc/h */
+// 
+// 
+// /* standard unit conversions: */
+// #define SEC_PER_YEAR                      3.1536000e7
+// #define SEC_PER_MEGAYEAR                  3.1536000e13
+// #define SEC_PER_GIGAYEAR                  3.1536000e16
+// #define LENGTH_10_PC_IN_CM                3.08567758e19
+// 
+// 
+// /* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
+// #define UNITLENGTH_IN_CM                  3.08567758e+24    /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
+// #define UNITMASS_IN_G                     1.98855e+43	      /* 10^10Msun - WATCH OUT, masses in the code are in 10^10Msun/h */
+// #define UNITVELOCITY_IN_CM_PER_S          1.e5              /* Km/s - WATCH OUT, this are the correct units in the code km/s */
 
-/* physical constants: in external (CGS or astron.) units: */
-#define GRAVITY                           6.672e-8        /* in cgs */
-#define SOLAR_MASS                        1.989e33        /* in cgs */
-#define SOLAR_LUM                         3.826e33        /* in cgs */
-#define RAD_CONST                         7.565e-15       /* in cgs */
-#define AVOGADRO                          6.0222e23       /* in cgs */
-#define BOLTZMANN                         1.3806e-16      /* in cgs */
-#define GAS_CONST                         8.31425e7       /* in cgs */
-#define SPEED_OF_LIGHT                    2.9979e10       /* in cgs */
-#define PLANCK                            6.6262e-27      /* in cgs */
-#define PROTONMASS                        1.6726e-24      /* in cgs */
-#define HUBBLE                            3.2407789e-18   /* in h/sec */
-#define D_HUBBLE                          2997.92458      /* in Mpc/h */
 
 
-/* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
-#define UNITLENGTH_IN_CM                   3.08568e+24	  /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
-#define UNITMASS_IN_G                      1.989e+43	    /* 10^10Msun - WATCH OUT, masses in the code are in 10^10Msun/h */
-#define UNITVELOCITY_IN_CM_PER_S           1e5            /* Km/s - WATCH OUT, this are the correct units in the code km/s */
-#define SEC_PER_MEGAYEAR                   3.155e13
-#define SEC_PER_YEAR                       3.155e7
+/* for reference: 
+ * these are the old values used by the public Henriques 2015 version
+ * if you prefer these, uncomment them and comment the new values above
+ */
+#define GRAVITY                           6.672e-8
+#define SOLAR_MASS                        1.989e33
+#define SOLAR_LUM                         3.826e33
+#define RAD_CONST                         7.565e-15
+#define AVOGADRO                          6.0222e23
+#define BOLTZMANN                         1.3806e-16
+#define GAS_CONST                         8.31425e7
+#define SPEED_OF_LIGHT                    2.9979e10
+#define PLANCK                            6.6262e-27
+#define PROTONMASS                        1.6726e-24
+#define HUBBLE                            3.2407789e-18
+#define D_HUBBLE                          2997.92458 
+
+
+#define SEC_PER_YEAR                      3.155e7
+#define SEC_PER_MEGAYEAR                  3.155e13
+#define SEC_PER_GIGAYEAR                  3.155e16
+#define LENGTH_10_PC_IN_CM                3.08567758e19
+
+
+#define UNITLENGTH_IN_CM                   3.08568e+24
+#define UNITMASS_IN_G                      1.989e+43
+#define UNITVELOCITY_IN_CM_PER_S           100000
+
 
 #ifdef DERIVED_UNITS_AS_STATIC_CONSTANTS
 
 /* derived internal untits: in terms of external units (ignoring Hubble_h for masses and lengths): */
 // time: 
 static const double UnitTime_in_s                    = (UNITLENGTH_IN_CM / UNITVELOCITY_IN_CM_PER_S);
-static const double UnitTime_in_Megayears            = (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_MEGAYEAR));
 static const double UnitTime_in_years                = (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_YEAR));
+static const double UnitTime_in_Megayears            = (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_MEGAYEAR));
+static const double UnitTime_in_Gigayears            = (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_GIGAYEAR));
 
 // converts g.cm^-3 into internal units (1e10Msun Mpc^-3)
 // static const double UnitDensity_in_cgs               = UNITMASS_IN_G / pow3(UNITLENGTH_IN_CM);//6.769898e-31
@@ -145,8 +184,9 @@ static const double RhoCrit                          = (3 * HUBBLE * HUBBLE * UN
 /* derived internal untits: in terms of external units: (ignoring Hubble_h for masses and lengths)*/
 // time: 
 #define UnitTime_in_s                      (UNITLENGTH_IN_CM / UNITVELOCITY_IN_CM_PER_S)
-#define UnitTime_in_Megayears              (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_MEGAYEAR))
 #define UnitTime_in_years                  (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_YEAR))
+#define UnitTime_in_Megayears              (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_MEGAYEAR))
+#define UnitTime_in_Gigayears              (UNITLENGTH_IN_CM / (UNITVELOCITY_IN_CM_PER_S * SEC_PER_GIGAYEAR))
 
 //converts g.cm^-3 into internal units (1e10Msun Mpc^-3)
 #define UnitDensity_in_cgs                 (UNITMASS_IN_G / (UNITLENGTH_IN_CM * UNITLENGTH_IN_CM * UNITLENGTH_IN_CM)) //6.769898e-31

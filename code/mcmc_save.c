@@ -69,7 +69,7 @@ void save_galaxy_for_mcmc(int gal_index)
       StellarMass=log10(1E10 * (HaloGal[gal_index].DiskMass+HaloGal[gal_index].BulgeMass)*Hubble_h);
 #else
       //no h factor in masses for OPT+=DHALOMODEL
-      StellarMass=log10(1E10 * (HaloGal[gal_index].DiskMass+HaloGal[gal_index].BulgeMass)/Hubble_h);
+      StellarMass=log10(1E10 * (HaloGal[gal_index].DiskMass+HaloGal[gal_index].BulgeMass) * inv_Hubble_h);
 #endif
       //THE ERROR IS NOW INCLUDED IN mcmc_likelihood.c
       //StellarMass+=gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[snap]);

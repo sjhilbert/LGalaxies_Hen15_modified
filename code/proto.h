@@ -116,9 +116,9 @@ void endrun(const int ierr);
 
 void finalize_galaxy_file(const int filenr);
 
-void starformation(const int p, const int centralgal, const double time, const double dt, const int nstep);
-void update_stars_due_to_reheat(const int p, const int centralgal, double *stars);
-void update_from_star_formation(const int p, const double stars, const bool flag_burst, const int nstep);
+void starformation(const int p, const int centralgal, const double time, const double dt);
+void update_stars_due_to_reheat(const int p, double *stars);
+void update_from_star_formation(const int p, const double stars, const bool flag_burst);
 void SN_feedback(const int p, const int centralgal, const double stars, const GasComponentType feedback_location);
 void update_from_feedback(const int p, const int centralgal, const double reheated_mass, double ejected_mass);
 void update_massweightage(const int p, const double stars, const double time);
@@ -139,7 +139,7 @@ double get_reionization_modifier(const float Mvir, const double Zcurr);
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 
 #ifdef PHOTTABLES_PRECOMPUTED
-void setup_LumTables_precomputed(char SimName[]);
+void setup_LumTables_precomputed(const char sim_name_[]);
 #endif /* defined PHOTTABLES_PRECOMPUTED */
 
 #ifdef SPEC_PHOTABLES_ON_THE_FLY
@@ -154,24 +154,13 @@ void read_MetalTab();
 void read_InputSSP_spectra(double LambdaInputSSP[SSP_NAGES][SSP_NLambda], double FluxInputSSP[SSP_NAGES][SSP_NLambda], int MetalLoop);
 void free_input_spectra(double LambdaInputSSP[SSP_NAGES][SSP_NLambda], double FluxInputSSP[SSP_NAGES][SSP_NLambda]);
 
-//misc
-double get_AbsAB_magnitude(const double FluxInputSSPInt, const double FluxFilterInt, const double redshift);
-double get_area (const double redshift);
-double lum_distance(const double redshift);
-
-//numerical
-double* create_grid (const double WaveMin, const double WaveMax, const int AgeLoop, const double redshift, double LambdaInputSSP[SSP_NAGES][SSP_NLambda],
-		                      int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length);
-void locate(double *xx, const int n, const double x, int *j);
-void interpolate_flux(double *lgrid, const int Grid_Length, double *lambda, const int nlambda, double *flux, double *FluxOnGrid);
-double integrate_flux(double *flux, const int Grid_Length);
 #endif /* defined SPEC_PHOTABLES_ON_THE_FLY */
 
 #ifdef POST_PROCESS_MAGS
 void post_process_spec_mags(struct GALAXY_OUTPUT *o);
 #else /* not defined POST_PROCESS_MAGS */
-void add_to_luminosities(const int p, double mstars, double time, double dt, const double metallicity);
-void dust_model(const int p, const int snap, const int halonr);
+void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double time_, double dt_, const double metallicity_);
+void dust_model(const int galaxy_number_, const int output_number_);
 #endif /* not defined POST_PROCESS_MAGS */
 
 // dust model
@@ -327,18 +316,33 @@ double combine_redshifts(const double z_1_, const double z_2_);
 double redshift_for_comoving_los_distance_and_radial_velocity(const double d_, const double v_);
 double time_to_present(const double redshift_);
 
+
 /** @brief snapshot number to cosmic time */
-static inline double 
-NumToTime(int snapnum)
-{ return Age[snapnum]; }
+#define NumToTime(snapshot_number_) Age[snapshot_number_]
 
 /** @brief Converts luminosities into magnitudes
  *
  * Converts luminosities into magnitudes:
  * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
 static inline double 
-lum_to_mag(double lum_)
-{ return (lum_ > 0) ? -2.5 * log10(lum_) : 99.0; }
+lum_to_mag(const double lum_)
+{ return (lum_ > 2.511886431509581e-40) ? -2.5 * log10(lum_) : 99.0; }
+
+
+/** @brief Converts luminosities into magnitudes
+ *
+ * Converts luminosities into magnitudes:
+ * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
+static inline double 
+lum_to_lum_or_mag(const double lum_)
+{
+#ifdef FULL_SPECTRA  
+  return lum_;
+#else  /* not defined FULL_SPECTRA */
+  return (lum_ > 2.511886431509581e-40) ? -2.5 * log10(lum_) : 99.0;
+#endif /* not defined FULL_SPECTRA */
+}
+
 
 #ifdef LIGHTCONE_OUTPUT
 void init_lightcone(void);

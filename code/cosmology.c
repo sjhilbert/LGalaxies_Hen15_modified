@@ -234,7 +234,7 @@ integrand_time_to_present(double a_, void *param_)
 /** @brief For a given redshift, returns time to present for a given redshift
  *  using numerical integration
  *
- * @eturn time to present in code units/Hubble_h
+ * @return time to present in code units * inv_Hubble_h
  */
 static inline double
 time_to_present_ni(const double redshift_)
@@ -256,7 +256,7 @@ time_to_present_ni(const double redshift_)
 /** @brief For a given redshift, returns time to present for a given redshift
  *  assuming flat LCDM using analytic formula
  *
- * @return time to present (lookback time) in code units/Hubble_h
+ * @return time to present (lookback time) in code units * inv_Hubble_h
  *
  * \f$ t(z) = \frac{2}{3 H_0 sqrt{\Omega_{\Lambda}}} \left[\mathrm{asinh}\sqrt{\frac{\Omega_{\Lambda}}{\Omega_{m}}} - \mathrm{asinh}\sqrt{\frac{\Omega_{\Lambda}}{\Omega_{m}(1+z)^3}}\right] \f$
  *
@@ -275,7 +275,7 @@ time_to_present_flat_LCDM(const double redshift_)
  * returns the time from that redshift until redshift zero:
  * \f$H_0t_0=\int_0^z\frac{dz}{(1+z)\sqrt{(1+z)^2(1+z\Omega_m)-z(2+x)\Omega_{\Lambda}}}\f$
  *
- * @return time to present (lookback time) in code units/Hubble_h
+ * @return time to present (lookback time) in code units * inv_Hubble_h
  */
 double time_to_present(const double redshift_)
 {

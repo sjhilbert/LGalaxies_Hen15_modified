@@ -195,8 +195,8 @@ pcorr_ss=min((pow(mugal_qawo(k,4*PI/3.*Delta*rho_mean*pow(Rhalo_ss,3)),2)-pow(To
   for (i=0; i<NR; ++i) {
     r=pow(10.,(i+0.5)*(log10(80.)+2.1)/(float)(NR-1)-2.3);
     corrtmp=proj_corr(r);
-    r_arr[i]=r/Hubble_h;
-    proj_arr[i]=corrtmp/Hubble_h;
+    r_arr[i]=r * inv_Hubble_h;
+    proj_arr[i]=corrtmp * inv_Hubble_h;
   } //for
 #ifdef OUTPUTPROJ
   sprintf(buf,"proj_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);

@@ -146,12 +146,12 @@ double SAM(const int tree_file_number_)
 #endif /* defined HALOMODEL */
 #endif /* defined MCMC */
       int halo_number_;
-//       for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
-//         if(HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
-//           construct_galaxies(tree_number_, halo_number_);
-      for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
-        if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup &&  HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
-          construct_galaxies_in_fof(tree_number_, halo_number_);
+       for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+         if(HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
+           construct_galaxies(tree_number_, halo_number_);
+//      for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+//        if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup &&  HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
+//          construct_galaxies_in_fof(tree_number_, halo_number_);
     }
 
     /* output remaining galaxies as needed */
@@ -636,10 +636,6 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
   double age_in_years_;
 #endif /* defined STAR_FORMATION_HISTORY */
 
-//   // Eddington time in code units
-//   // code units are UnitTime_in_s/Hubble_h
-//   const double t_Edd=1.42e16*Hubble_h/UnitTime_in_s;
-
   if(n_galaxies_in_fof_group_ <= 0)
     return;
 
@@ -696,7 +692,7 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
 
     /* Update all galaxies to the star-formation history time-bins of current step*/
 #ifdef STAR_FORMATION_HISTORY
-    age_in_years_=(Age[0]-current_time_)*UnitTime_in_years/Hubble_h;
+    age_in_years_=(Age[0]-current_time_)*UnitTime_in_years * inv_Hubble_h;
     for (p_=0; p_<n_galaxies_in_fof_group_; p_++)
     { sfh_update_bins(p_,Halo[halo_number_].SnapNum-1,step_number_,age_in_years_); }
 
@@ -739,7 +735,7 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     {
       cool_gas_onto_galaxy(p_, dt_);
       mass_checks("Evolve_galaxies #2",p_);
-      starformation(p_, central_galaxy_number_, current_time_, dt_, step_number_);
+      starformation(p_, central_galaxy_number_, current_time_, dt_);
       mass_checks("Evolve_galaxies #3",p_);
       //print_galaxy("check3", central_galaxy_number_, halo_number_);
     }
@@ -823,7 +819,7 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
       if(Halo[halo_number_].SnapNum == ListOutputSnaps[output_number_])
       {
         for(p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
-        { dust_model(p_, output_number_, halo_number_); }
+        { dust_model(p_, output_number_); }
         break;
       }
     }
@@ -937,27 +933,27 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
  *  on disk,
  *  after writing, pops galaxy from heap (temporary memory)
  */
-void output_galaxy(const int tree_number_, const int heap_index)
+void output_galaxy(const int tree_number_, const int heap_index_)
 {
   (void) tree_number_; /* avoid unused-parameter warning for certain compiler options */
-  int gal_index = HaloGalHeap[heap_index];
+  int galaxy_index_ = HaloGalHeap[heap_index_];
 
-  if(heap_index >= NHaloGal)
-  { terminate("heap_index >= NHaloGal"); }
+  if(heap_index_ >= NHaloGal)
+  { terminate("heap_index_ >= NHaloGal"); }
  
-  if(HaloGal[gal_index].HeapIndex != heap_index)                // consistency check
+  if(HaloGal[galaxy_index_].HeapIndex != heap_index_)                // consistency check
   { terminate("this should not happen"); }
 
 #ifdef GUO10
 #ifdef UPDATETYPETWO
-  update_type_two_coordinate_and_velocity(tree_number_, gal_index, HaloGal[0].CentralGal);
+  update_type_two_coordinate_and_velocity(tree_number_, galaxy_index_, HaloGal[0].CentralGal);
 #endif
 #endif
 
 #ifdef GALAXYTREE
-  GalTree[HaloGal[gal_index].GalTreeIndex].IndexStored = IndexStored++;
+  GalTree[HaloGal[galaxy_index_].GalTreeIndex].IndexStored = IndexStored++;
 #ifndef LIGHTCONE_OUTPUT_ONLY  
-  save_galaxy_tree_append(gal_index);
+  save_galaxy_tree_append(galaxy_index_);
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */
 #else /* not defined GALAXYTREE */
 #ifdef MCMC
@@ -965,16 +961,16 @@ void output_galaxy(const int tree_number_, const int heap_index)
    * with observations. The output will come in form of a file with
    * parameters, not galaxy properties */
 
-  save_galaxy_for_mcmc(gal_index);
+  save_galaxy_for_mcmc(galaxy_index_);
 
 #else  /* not defined MCMC */
 #ifndef LIGHTCONE_OUTPUT_ONLY  
   {
     int output_number_;
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
-      if(ListOutputSnaps[output_number_] == HaloGal[gal_index].SnapNum)
+      if(ListOutputSnaps[output_number_] == HaloGal[galaxy_index_].SnapNum)
       {
-        save_galaxy_append(tree_number_, gal_index, output_number_);
+        save_galaxy_append(tree_number_, galaxy_index_, output_number_);
       }
   }
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */
@@ -984,16 +980,16 @@ void output_galaxy(const int tree_number_, const int heap_index)
 #ifndef MCMC
 #ifdef LIGHTCONE_OUTPUT
 #ifdef GALAXYTREE
-  GalTree[HaloGal[gal_index].GalTreeIndex].lightcone_galaxy_number_in_file_begin = TotLightconeGalCount;       
-  save_lightcone_galaxy_append(gal_index, HaloGal[gal_index].SnapNum);
-  GalTree[HaloGal[gal_index].GalTreeIndex].lightcone_galaxy_number_in_file_end = TotLightconeGalCount;
+  GalTree[HaloGal[galaxy_index_].GalTreeIndex].lightcone_galaxy_number_in_file_begin = TotLightconeGalCount;       
+  save_lightcone_galaxy_append(galaxy_index_, HaloGal[galaxy_index_].SnapNum);
+  GalTree[HaloGal[galaxy_index_].GalTreeIndex].lightcone_galaxy_number_in_file_end = TotLightconeGalCount;
 #else  /* not defined GALAXYTREE */
   {
     int output_number_;
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
-      if(ListOutputSnaps[output_number_] == HaloGal[gal_index].SnapNum)
+      if(ListOutputSnaps[output_number_] == HaloGal[galaxy_index_].SnapNum)
       {
-        save_lightcone_galaxy_append(gal_index, output_number_);
+        save_lightcone_galaxy_append(galaxy_index_, output_number_);
       }
   }
 #endif /* not defined GALAXYTREE */
@@ -1002,14 +998,13 @@ void output_galaxy(const int tree_number_, const int heap_index)
 #endif /* not defined MCMC */ 
 
   /* fill the gap in the heap with the galaxy in the last occupied slot */
-
-  int last = NHaloGal - 1;
-  int last_gal_index = HaloGalHeap[last];
-  HaloGalHeap[last] = gal_index;
-  HaloGalHeap[heap_index] = last_gal_index;
+  const int last_ = NHaloGal - 1;
+  const int last_gal_index_ = HaloGalHeap[last_];
+  HaloGalHeap[last_] = galaxy_index_;
+  HaloGalHeap[heap_index_] = last_gal_index_;
 
   /* make sure that the back-pointer of the last galaxy is updated */
-  HaloGal[last_gal_index].HeapIndex = heap_index;
+  HaloGal[last_gal_index_].HeapIndex = heap_index_;
 
   NHaloGal--;
 }

@@ -38,21 +38,21 @@
  * times are allowed, which can happen for scaled cosmologies. */
 void setup_RedshiftTab()
 {
-  int snap;
+  int snapshot_number_;
 
-  for(snap=0;snap<(LastDarkMatterSnapShot+1);snap++)
+  for(snapshot_number_=0;snapshot_number_<(LastDarkMatterSnapShot+1);snapshot_number_++)
   {
-    RedshiftTab[snap]=ZZ[snap];
+    RedshiftTab[snapshot_number_]=ZZ[snapshot_number_];
     //for the photometry calculation do not allow negative times (it can happen for scaled cosmologies)
-    if(ZZ[snap]<0.0)
-      RedshiftTab[snap]=0.;
+    if(ZZ[snapshot_number_]<0.0)
+      RedshiftTab[snapshot_number_]=0.;
   }
 }
 
 
-void read_vega_spectra(double *LambdaVega, double *FluxVega)
+void read_vega_spectra(double *LambdaVega_, double *FluxVega_)
 {
-  int i;
+  int i_;
   char buf[1000];
   FILE *fa;
 
@@ -64,20 +64,20 @@ void read_vega_spectra(double *LambdaVega, double *FluxVega)
     terminate(sbuf);
   }
 
-  for (i=0;i<NLambdaVega;i++)
+  for (i_=0;i_<NLambdaVega;i_++)
   {
-    fscanf(fa,"%lf %lf" , &LambdaVega[i], &FluxVega[i]);
+    fscanf(fa,"%lf %lf" , &LambdaVega_[i_], &FluxVega_[i_]);
     //convert to ergs.cm^-2.s^-1.AA-1
-    FluxVega[i]*=2e-17;
-    FluxVega[i]=FluxVega[i]*LambdaVega[i]*LambdaVega[i]/(SPEED_OF_LIGHT*1e8);
+    FluxVega_[i_]*=2e-17;
+    FluxVega_[i_]=FluxVega_[i_]*LambdaVega_[i_]*LambdaVega_[i_]/(SPEED_OF_LIGHT*1e8);
   }
   fclose(fa);
 }
 
 
-void read_filters(double LambdaFilter[NMAG][MAX_NLambdaFilter], double FluxFilter[NMAG][MAX_NLambdaFilter])
+void read_filters(double LambdaFilter_[NMAG][MAX_NLambdaFilter], double FluxFilter_[NMAG][MAX_NLambdaFilter])
 {
-  int j, bandn, NFilters;
+  int j_, bandn, NFilters;
   FILE *fa, *fb;
   char buf[1000], buf2[1000], FilterFile[1000], FilterName[1000];
 
@@ -112,20 +112,18 @@ void read_filters(double LambdaFilter[NMAG][MAX_NLambdaFilter], double FluxFilte
       terminate(sbuf);
     }
 
-    for(j=0;j<NLambdaFilter[bandn];j++)
-      fscanf(fb,"%lf %lf" ,&LambdaFilter[bandn][j], &FluxFilter[bandn][j]);
+    for(j_=0;j_<NLambdaFilter[bandn];j_++)
+      fscanf(fb,"%lf %lf" ,&LambdaFilter_[bandn][j_], &FluxFilter_[bandn][j_]);
 
     fclose(fb);
   }
-
   fclose(fa);
-
 }
 
 
 void read_MetalTab()
 {
-  int i,dumb_ssp_nmetallicites;
+  int i_,dumb_ssp_nmetallicites;
   FILE *fa;
   char buf[1000];
 #ifdef M05
@@ -142,7 +140,7 @@ void read_MetalTab()
   if(!(fa = fopen(buf, "r")))
   {
     char sbuf[1000];
-    sprintf(sbuf, "file `%s' not found.\n", buf);
+    sprintf(sbuf, "file `%s' not found.\n_", buf);
     terminate(sbuf);
   }
 
@@ -152,10 +150,10 @@ void read_MetalTab()
     terminate("nmetallicites on file not equal to SSP_NMETALLICITES");
   }
 
-  for(i=0;i<SSP_NMETALLICITES;i++)
+  for(i_=0;i_<SSP_NMETALLICITES;i_++)
   {
-    fscanf(fa, "%f", &SSP_logMetalTab[i]);
-    SSP_logMetalTab[i]=log10(SSP_logMetalTab[i]);
+    fscanf(fa, "%f", &SSP_logMetalTab[i_]);
+    SSP_logMetalTab[i_]=log10(SSP_logMetalTab[i_]);
   }
 
   fclose(fa);
@@ -164,13 +162,13 @@ void read_MetalTab()
 
 /** @brief Reads in the SSP full spectra for the current metallicity
  *
- * LambdaInputSSP[NAGE][NLambdaInputSSP] &  FluxInputSSP[NAGE][NLambdaInputSSP];
- * original units of FluxInputSSP[i] are (erg.s^-1.AA^-1);
+ * LambdaInputSSP_[NAGE][NLambdaInputSSP] &  FluxInputSSP_[NAGE][NLambdaInputSSP];
+ * original units of FluxInputSSP_[i_] are (erg.s^-1.AA^-1);
  * Flux*Lambda^2/Clight*1e8 converts it to (erg.s^-1.Hz^-1) */
-void read_InputSSP_spectra(double LambdaInputSSP[SSP_NAGES][SSP_NLambda], double FluxInputSSP[SSP_NAGES][SSP_NLambda], int MetalLoop)
+void read_InputSSP_spectra(double LambdaInputSSP_[SSP_NAGES][SSP_NLambda], double FluxInputSSP_[SSP_NAGES][SSP_NLambda], const int met_index_)
 {
   double Dumb1, age;
-  int i, ageloop;
+  int i_, ageloop;
   FILE *fa;
   char buf1[1000];
 #ifdef M05
@@ -183,7 +181,7 @@ void read_InputSSP_spectra(double LambdaInputSSP[SSP_NAGES][SSP_NLambda], double
   char *SSP = {"BC03"};
 #endif
 
-  sprintf(buf1, "%s/FullSEDs/%s_%s_FullSED_m%0.4f.dat",SpecPhotDir, SSP, SpecPhotIMF, pow(10,SSP_logMetalTab[MetalLoop]));
+  sprintf(buf1, "%s/FullSEDs/%s_%s_FullSED_m%0.4f.dat",SpecPhotDir, SSP, SpecPhotIMF, pow(10,SSP_logMetalTab[met_index_]));
 
   if((fa=fopen(buf1,"r"))==NULL)
   {
@@ -193,116 +191,48 @@ void read_InputSSP_spectra(double LambdaInputSSP[SSP_NAGES][SSP_NLambda], double
   }
 
   for(ageloop=0;ageloop<SSP_NAGES;ageloop++)
-    for(i=0;i<SSP_NLambda;i++)
+    for(i_=0;i_<SSP_NLambda;i_++)
     {
-      LambdaInputSSP[ageloop][i]=0.0;
-      FluxInputSSP[ageloop][i]=0.0;
+      LambdaInputSSP_[ageloop][i_]=0.0;
+      FluxInputSSP_[ageloop][i_]=0.0;
     }
 
   for(ageloop=0;ageloop<SSP_NAGES;ageloop++)
   {
-    for (i=0;i<SSP_NLambda;i++)
+    for (i_=0;i_<SSP_NLambda;i_++)
     {
-      fscanf(fa,"%lf %lf %lf %lf\n" , &age, &Dumb1,&LambdaInputSSP[ageloop][i], &FluxInputSSP[ageloop][i]);
-      FluxInputSSP[ageloop][i]=1e11*FluxInputSSP[ageloop][i]*LambdaInputSSP[ageloop][i]*LambdaInputSSP[ageloop][i]/(SPEED_OF_LIGHT*1.e8);
+      fscanf(fa,"%lf %lf %lf %lf\n" , &age, &Dumb1,&LambdaInputSSP_[ageloop][i_], &FluxInputSSP_[ageloop][i_]);
+      FluxInputSSP_[ageloop][i_]=1e11*FluxInputSSP_[ageloop][i_]*LambdaInputSSP_[ageloop][i_]*LambdaInputSSP_[ageloop][i_]/(SPEED_OF_LIGHT*1.e8);
     }
-    if(MetalLoop==0) //only read age table once
+    if(met_index_==0) //only read age table once
+    {
       if(age>0.)
-        SSP_logAgeTab[ageloop]=log10(age / 1.0e6 / UnitTime_in_Megayears * Hubble_h);
+        SSP_logAgeTab[ageloop]=log10(age * 1.0e-6 / UnitTime_in_Megayears * Hubble_h);
       else
         SSP_logAgeTab[ageloop]=0.;
+    }
   }
   
   fclose(fa);
 }
 
-
-double get_AbsAB_magnitude(const double FluxInputSSPInt, const double FluxFilterInt, const double redshift)
+/** @brief get reference AB luminosity 
+ *
+ * it needs to be converted to cm since the units of
+ * the original InputSSP spectra are (erg.s^-1.AA^-1) which
+ * was converted to (erg.s^-1.Hz^-1) by doing Flux*Lambda^2/Clight*1e8
+ * we need 3631Jy or 3631*10^-23 (= 3.631*10^-20) erg.s^-1.Hz^-1 cm-2
+ * 4*pi*10pc^2*3631jy*erg.s^-1.Hz^-1
+ */
+static inline double
+get_reference_AB_luminosity(const double FluxInputSSPInt_, const double FluxFilterInt_)
 {
 //it needs to be converted to cm since the units of
 //the original InputSSP spectra are (erg.s^-1.AA^-1) which
 //was converted to (erg.s^-1.Hz^-1) by doing Flux*Lambda^2/Clight*1e8
-//we need 3631Jy or 3631*10^-23 erg.s^-1.Hz^-1 cm-2
+//we need 3631Jy or 3631*10^-23 (= 3.631*10^-20) erg.s^-1.Hz^-1 cm-2
 //4*pi*10pc^2*3631jy*erg.s^-1.Hz^-1
-
-#ifdef APP
-  const double area      = get_area(redshift);
-  const double zeropoint = +48.6-2.5*area;
-#else
-  const double distance_cm = 1 0.0*3.08568025e18;
-  const double zeropoint   = -2.5*log10(4.0*M_PI*distance_cm*distance_cm*3631.0*1.0e-23);
-#endif
-
-  const double AbsAB = -2.5*(log10(FluxInputSSPInt) -log10(FluxFilterInt)) - zeropoint;
-
-  return AbsAB;
-}
-
-
-//use for apparent magnitudes
-double get_area (const double redshift)
-{
-  double dist, area;
-
-  //when calculating apparent magnitudes, minimum dist set to 10pc
-  if (redshift<0.00000001)
-  { dist=1e-5; }
-  else
-  { dist=lum_distance(redshift); }
-
-//  if(dist > 0.0)
-    area=log10(4.*M_PI)+2.*log10(dist*3.08568025e24);  //in cm (dl in Mpc)
-//  else area=0.0;
-
-  return area;
-}
-
-
-//LUMINOSITY DISTANCE
-double lum_distance(const double redshift)
-{
-  int i, k, Npoints=1000;
-  double x[1000];
-  double sum[2], I[3], f[4];
-  double h, integral, dl;
-
-  for(i=0;i<2;i++)sum[i]=0.0;
-  for(i=0;i<3;i++)I[i]=0.0;
-  for(i=0;i<4;i++)f[i]=0.0;
-
-  h=redshift/(Npoints-1);
-  for(i=0;i<Npoints;i++) x[i]=h*(i-1);
-
-
-  for (i=0;i<Npoints/2;i++)
-    {
-      k=2*i-1;
-      f[2]=1./sqrt((1.+x[k])*(1.+x[k])*(1.+Omega*x[k])-x[k]*OmegaLambda*(2.+x[k]));
-      sum[0]=sum[0]+f[2];
-    }
-  I[1]=sum[0]*4./3.;
-
-  for (i=0;i<Npoints/2-1;i++)
-    {
-      k=2*i;
-      f[3]=1./sqrt((1.+x[k])*(1.+x[k])*(1.+Omega*x[k])-x[k]*OmegaLambda*(2.+x[k]));
-      sum[1]=sum[1]+f[3];
-    }
-  I[2]=sum[1]*2./3.;
-
-  f[1]=1./sqrt((1.+x[0])*(1.+x[0])*(1.+Omega*x[0])-x[0]*OmegaLambda*(2.+x[0]));
-  f[2]=1./sqrt((1.+x[Npoints-1])*(1.+x[Npoints-1])*(1.+Omega*x[Npoints-1])
-               -x[Npoints-1]*OmegaLambda*(2.+x[Npoints-1]));
-
-  I[0]=(f[0]+f[1])/3.;
-
-  integral=h*(I[0]+I[1]+I[2]);
-
-  dl=integral/1000.0;    //!Mpc
-
-  dl*=(1.+redshift)*(SPEED_OF_LIGHT/100.)/(Hubble_h*100.);   //in Mpc
-
-  return dl;
+  return FluxInputSSPInt_ / (FluxFilterInt_ * (4. * M_PI * 3.631e-20 * LENGTH_10_PC_IN_CM * LENGTH_10_PC_IN_CM));
 }
 
 
@@ -313,39 +243,39 @@ double lum_distance(const double redshift)
  * 
  * erg/s/A --> erg/s/Hz --> erg/s
  */
-double integrate_flux(double *flux, const int Grid_Length)
+static double integrate_flux(double *flux_, const int grid_length_)
 {
   double sum[3], I[3], f[4];
   double integral=0.0;
-  int i,k;
+  int i_,k;
 
-  for(i=0;i<3;i++)sum[i]=0.0;
-  for(i=0;i<3;i++)I[i]=0.0;
-  for(i=0;i<4;i++)f[i]=0.0;
+  for(i_=0;i_<3;i_++)sum[i_]=0.0;
+  for(i_=0;i_<3;i_++)I[i_]=0.0;
+  for(i_=0;i_<4;i_++)f[i_]=0.0;
 
-  for(i=0;i<Grid_Length/2-2;i++)
+  for(i_=0;i_<grid_length_/2-2;i_++)
     {
-      k=2*i+1;                    //odd indexes
-      f[2]=flux[k];
+      k=2*i_+1;                    //odd indexes
+      f[2]=flux_[k];
       sum[1]=sum[1]+f[2];
     }
   I[1]=sum[1]*2./3.;
 
-  for(i=0;i<Grid_Length/2-1;i++)
+  for(i_=0;i_<grid_length_/2-1;i_++)
     {
-      k=2*i;
-      f[3]=flux[k] ;     //even indexes
+      k=2*i_;
+      f[3]=flux_[k] ;     //even indexes
       sum[2]=sum[2]+f[3];
     }
   I[2]=sum[2]*4./3.;
 
-  f[0]=flux[0];
-  f[1]=flux[Grid_Length-1];
+  f[0]=flux_[0];
+  f[1]=flux_[grid_length_-1];
   I[0]=(f[0]+f[1])/3.;
 
   integral=I[0]+I[1]+I[2];
 
-//if(Grid_Length==0)
+//if(grid_length_==0)
 //  printf("Integral=%e\n",integral);
   return integral;
 }
@@ -354,50 +284,46 @@ double integrate_flux(double *flux, const int Grid_Length)
 /** @brief find interpolation point
  * 
  * Finds interpolation point
- * the value j so that xx[j] < x < xx[jj+1]
- * 
- * @note  MATH MISC - PROBABLY SHOULD GO INTO SEPARATE FILE
+ * the value j_ so that xx_[j_] < x_ < xx_[j_+1]
  */
-void locate(double *xx, const int n, const double x, int *j)
+static inline void 
+locate(double *xx_, const int n_, const double x_, int *j_)
 {
-  unsigned long ju,jm,jl;
-  int ascnd;
+  unsigned long ju_,jm_,jl_;
+  int ascnd_;
 
-  jl=0;
-  ju=n+1;
-  ascnd=(xx[n] >= xx[1]);
-
-  while (ju-jl > 1)
+  jl_=0;
+  ju_=n_+1;
+  ascnd_=(xx_[n_] >= xx_[1]);
+  while (ju_-jl_ > 1)
     {
-      jm=(ju+jl) >> 1;
-      if ((x >= xx[jm]) == ascnd)
-        jl=jm;
+      jm_=(ju_+jl_) >> 1;
+      if ((x_ >= xx_[jm_]) == ascnd_)
+        jl_=jm_;
       else
-        ju=jm;
+        ju_=jm_;
     }
-
-  if (x == xx[1]) *j=1;
-  else if(x == xx[n]) *j=n-1;
-  else *j=jl;
-
+  if (x_ == xx_[1]) *j_=1;
+  else if(x_ == xx_[n_]) *j_=n_-1;
+  else *j_=jl_;
 }
 
 
 /** @brief interpolates filters on integral grid */
-void interpolate_flux(double *lgrid, const int Grid_Length, double *lambda, const int nlambda, double *flux, double *FluxOnGrid)
+static void interpolate_flux(double *luminosity_grid_, const int grid_length_, double *lambda_, const int n_lambda_, double *flux_, double *flux_on_grid_)
 {
-  int kk=0, nn=0, m=2, i;
+  int kk_=0, nn_=0, m_=2, i_;
 
-  for(i=0;i<Grid_Length;i++)
+  for(i_=0;i_<grid_length_;i_++)
   {
-    if (lgrid[i] < lambda[0] || lgrid[i] > lambda[nlambda-1]) FluxOnGrid[i]=0;
+    if (luminosity_grid_[i_] < lambda_[0] || luminosity_grid_[i_] > lambda_[n_lambda_-1]) flux_on_grid_[i_]=0;
     //outside filter range, transmission is 0
   else
     {
       //finds where wavelenght is in respect to the grid
-      locate(lambda,nlambda-1,lgrid[i],&nn);
-      kk=min(max(nn-(m-1)/2,1),nlambda+1-m);
-      FluxOnGrid[i]=flux[kk];
+      locate(lambda_,n_lambda_-1,luminosity_grid_[i_],&nn_);
+      kk_=min(max(nn_-(m_-1)/2,1),n_lambda_+1-m_);
+      flux_on_grid_[i_]=flux_[kk_];
     }
   }
 }
@@ -406,208 +332,216 @@ void interpolate_flux(double *lgrid, const int Grid_Length, double *lambda, cons
 /** @brief creates a grid of points based on the input SSP.
  *
  * The first point on the grid is the first point for which 
- * LambdaInputSSP>FilterWaveMin. The last point is the largest
- * wavelength for which LambdaInputSSP<FilterWaveMax 
+ * LambdaInputSSP_>FilterWaveMin. The last point is the largest
+ * wavelength for which LambdaInputSSP_<FilterWaveMax 
  */
-double* create_grid (const double WaveMin, const double WaveMax, const int AgeLoop, const double redshift, double LambdaInputSSP[SSP_NAGES][SSP_NLambda],
-                                      int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length)
+static double* create_grid (const double wave_min_, const double wave_max_, const int age_index_, const double redshift_, double LambdaInputSSP_[SSP_NAGES][SSP_NLambda],
+                                      int *min_wave_grid_, int *max_wave_grid_, int *grid_length_)
 {
-  double x0, x1, h;
-  int i, min, max;
+  int i_, min_, max_;
   double *grid;
 
-  min=min(WaveMin, WaveMax);
-  max=max(WaveMin, WaveMax);
+  min_= min(wave_min_, wave_max_);
+  max_= max(wave_min_, wave_max_);
 
-  *Grid_Length=0;
+  *grid_length_=0;
 
   //get minimum of grid
-  for(i=0;i<SSP_NLambda;i++)
-    if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=min)
+  for(i_=0;i_<SSP_NLambda;i_++)
+    if((1+redshift_)*LambdaInputSSP_[age_index_][i_]>=min_)
+    {
+      *min_wave_grid_=i_;
+      break;
+    }
+
+  for(i_=0;i_<SSP_NLambda;i_++)
+    if((1+redshift_)*LambdaInputSSP_[age_index_][i_]>=min_)
+    {
+      *grid_length_+=1;
+
+      //point at maximum range or out of it, set maximum
+      if((1+redshift_)*LambdaInputSSP_[age_index_][i_]>=max_)
       {
-        *Min_Wave_Grid=i;
+        if((1+redshift_)*LambdaInputSSP_[age_index_][i_]==max_)
+          *max_wave_grid_=i_;
+        else //if point out of range, set max to previous
+        {
+          *max_wave_grid_=i_-1;
+          *grid_length_-=1;
+        }
         break;
       }
+    }
 
-  for(i=0;i<SSP_NLambda;i++)
-    if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=min)
-      {
-        *Grid_Length+=1;
-
-        //point at maximum range or out of it, set maximum
-        if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=max)
-          {
-            if((1+redshift)*LambdaInputSSP[AgeLoop][i]==max)
-              *Max_Wave_Grid=i;
-            else //if point out of range, set max to previous
-              {
-                *Max_Wave_Grid=i-1;
-                *Grid_Length-=1;
-              }
-            break;
-          }
-      }
-
-  grid = malloc(sizeof(double) * *Grid_Length);
-  for(i=0;i<*Grid_Length;i++)
-    grid[i]=(1+redshift)*LambdaInputSSP[AgeLoop][*Min_Wave_Grid+i];
+  grid = malloc(sizeof(double) * *grid_length_);
+  for(i_=0;i_<*grid_length_;i_++)
+    grid[i_]=(1+redshift_)*LambdaInputSSP_[age_index_][*min_wave_grid_+i_];
 
   return grid;
 }
 
 
-/** Reads in the Full SEDs from a given stellar population and filter curves and
+/** Reads in the Full SEDs from given stellar population and filter curves and
  * computes PhotTables on the fly. Just needs the SEDs in SpecPhotDir/FullSEDs/,
  * the file with filter names and wave_lengths "FileWithFilterNames" and the
  * filter curves in SpecPhotDir/Filters/
  *
- * Developed by Chiara Tonini, adapted by Bruno Henriques
- *
- * 
- *
- * */
+ * Developed by Chiara Tonini, adapted by Bruno Henriques, Stefan Hilbert
+ **/
 void setup_Spec_LumTables_onthefly(void)
 {
   FilterLambda[NMAG] = 0.55;        // used by the dust model for birth clouds, the wavelength of the V-filter_number_
   
-  double AbsMAG;
+  double luminosity_;
   //FILTERS
-  double LambdaFilter[NMAG][MAX_NLambdaFilter], FluxFilter[NMAG][MAX_NLambdaFilter];
-  double *FluxFilterOnGrid, FluxFilterInt;
+  double LambdaFilter_[NMAG][MAX_NLambdaFilter], FluxFilter_[NMAG][MAX_NLambdaFilter];
+  double *FluxFilterOnGrid_, FluxFilterInt_;
   //InputSSP spectra
-  double LambdaInputSSP[SSP_NAGES][SSP_NLambda], FluxInputSSP[SSP_NAGES][SSP_NLambda];
-  double *FluxInputSSPConv, *FluxInputSSPOnGrid, FluxInputSSPInt;
+  double LambdaInputSSP_[SSP_NAGES][SSP_NLambda], FluxInputSSP_[SSP_NAGES][SSP_NLambda];
+  double *FluxInputSSPConv_, *FluxInputSSPOnGrid_, FluxInputSSPInt_;
+#ifdef VEGA
   //VEGA
-  double LambdaVega[NLambdaVega], FluxVega[NLambdaVega];
-  double *FluxVegaConv, *FluxVegaOnGrid, FluxVegaInt;
+  double LambdaVega_[NLambdaVega], FluxVega_[NLambdaVega];
+  double *FluxVegaConv_, *FluxVegaOnGrid_;
+  double FluxVegaInt_;
+#endif /* defined VEGA */
+
   //AUX ARRAYS for FILTERS and InputSSP
-  double LambdaFilter_SingleFilter[MAX_NLambdaFilter], FluxFilter_SingleFilter[MAX_NLambdaFilter], LambdaInputSSP_SingleAge[SSP_NLambda];
-  double redshift;
+  double LambdaFilter_SingleFilter_[MAX_NLambdaFilter], FluxFilter_SingleFilter[MAX_NLambdaFilter];
+  /* double LambdaInputSSP_SingleAge[SSP_NLambda];*/
+  double redshift_;
   //Loops in the code
-  int MetalLoop, AgeLoop, snap, filter_number_, i;
-  FILE *File_PhotTables[NMAG];
+  int met_index_, age_index_, snapshot_number_, filter_number_, i_;
 
-#ifdef PARALLEL
   if(ThisTask == 0)
-          printf("\n\nComputing PhotTables on the fly...\n\n");
-#else
-  printf("\n\nComputing PhotTables on the fly...\n\n");
-#endif
-
-  read_vega_spectra(LambdaVega, FluxVega);
+    printf("\n_\nComputing PhotTables on the fly...\n_\n");
+#ifdef VEGA
+  read_vega_spectra(LambdaVega_, FluxVega_);
+#endif /* defined VEGA */
 #ifndef FULL_SPECTRA
-  read_filters(LambdaFilter, FluxFilter);
-#endif
+  read_filters(LambdaFilter_, FluxFilter_);
+#endif /* not defined FULL_SPECTRA */
   setup_RedshiftTab();
   read_MetalTab();
 
   //1st loop on the mettalicity files
-  for (MetalLoop=0;MetalLoop<SSP_NMETALLICITES;MetalLoop++)
+  for (met_index_=0; met_index_ < SSP_NMETALLICITES; met_index_++)
   {
-#ifdef PARALLEL
     if(ThisTask == 0)
-      printf("Doing Metallicity File %d of %d\n",MetalLoop+1, SSP_NMETALLICITES);
-#else
-    printf("Doing Metallicity File %d of %d\n",MetalLoop+1, SSP_NMETALLICITES);
-#endif
-    //READ FULL INPUT SPECTRA into units of erg.s^-1.Hz^-1
-    read_InputSSP_spectra(LambdaInputSSP, FluxInputSSP, MetalLoop);
+      printf("Doing Metallicity File %d of %d\n",met_index_+1, SSP_NMETALLICITES);
 
-    //2nd Loop on redshift
-    for(snap=0;snap<(LastDarkMatterSnapShot+1);snap++)
+    //READ FULL INPUT SPECTRA into units of erg.s^-1.Hz^-1
+    read_InputSSP_spectra(LambdaInputSSP_, FluxInputSSP_, met_index_);
+
+    //2nd Loop on redshift_
+    for(snapshot_number_ = 0; snapshot_number_ <= LastDarkMatterSnapShot; snapshot_number_++)
     {
-      redshift=RedshiftTab[(LastDarkMatterSnapShot+1)-snap-1];
+      redshift_ = RedshiftTab[LastDarkMatterSnapShot - snapshot_number_];
 
       //3rd loop on Age
-      for(AgeLoop=0;AgeLoop<SSP_NAGES;AgeLoop++)
+      for(age_index_ = 0; age_index_ < SSP_NAGES; age_index_++)
       {
         //4th loop on Bands
         //IF FULL_SPECTRA defined a filter_number_ correspond to a wavelength on the SSP spectra
-        for(filter_number_=0;filter_number_<NMAG;filter_number_++)
+        for(filter_number_=0; filter_number_ < NMAG; filter_number_++)
         {
 #ifndef FULL_SPECTRA
           //ALLOCATE GRID - size of filter, binning of the spectra
-          int Min_Wave_Grid=0, Max_Wave_Grid=0, Grid_Length=0;
+          int min_wave_grid_=0, max_wave_grid_=0, grid_length_=0;
 
-          double *lgrid=create_grid(LambdaFilter[filter_number_][0], LambdaFilter[filter_number_][NLambdaFilter[filter_number_]-1], AgeLoop, redshift,
-                                        LambdaInputSSP, &Min_Wave_Grid, &Max_Wave_Grid, &Grid_Length);
+          double *luminosity_grid_=create_grid(LambdaFilter_[filter_number_][0], LambdaFilter_[filter_number_][NLambdaFilter[filter_number_]-1], age_index_, redshift_,
+                                        LambdaInputSSP_, &min_wave_grid_, &max_wave_grid_, &grid_length_);
 
-          if(Grid_Length>0)
+           //if grid_length_=0 (filter outside the spectra, can happen for observed frame)
+          if(grid_length_ <= 0)
+          { luminosity_ = 0.; }   
+          else
           {
-            for(i=0;i<Grid_Length;i++)
-              lgrid[i]=(1+redshift)*LambdaInputSSP[AgeLoop][Min_Wave_Grid+i];
+            for(i_=0;i_<grid_length_;i_++)
+              luminosity_grid_[i_]=(1+redshift_)*LambdaInputSSP_[age_index_][min_wave_grid_+i_];
 
+#ifdef VEGA
             //VEGA - interpolate spectrum on integral grid
-            FluxVegaOnGrid = malloc(sizeof(double) * Grid_Length);
-            interpolate_flux(lgrid, Grid_Length, LambdaVega, NLambdaVega, FluxVega, FluxVegaOnGrid);
+            FluxVegaOnGrid_ = malloc(sizeof(double) * grid_length_);
+            interpolate_flux(luminosity_grid_, grid_length_, LambdaVega_, NLambdaVega, FluxVega_, FluxVegaOnGrid_);
+#endif /* defined VEGA */
 
-
-            /*SSP - multiply by (1+z) to go from rest to observed SSP flux*/
-            FluxInputSSPOnGrid = malloc(sizeof(double) * Grid_Length);
-            for (i=0;i<Grid_Length;i++)
-              FluxInputSSPOnGrid[i]=(1.+redshift)*FluxInputSSP[AgeLoop][Min_Wave_Grid+i];
+            /*SSP - multiply by (1+z) to go from rest to observed SSP flux_*/
+            FluxInputSSPOnGrid_ = malloc(sizeof(double) * grid_length_);
+            for (i_=0;i_<grid_length_;i_++)
+              FluxInputSSPOnGrid_[i_]=(1.+redshift_)*FluxInputSSP_[age_index_][min_wave_grid_+i_];
 
             //FILTERS - interpolate on integral grid
-            for(i=0;i<NLambdaFilter[filter_number_];i++)
+            for(i_=0;i_<NLambdaFilter[filter_number_];i_++)
             {
-              LambdaFilter_SingleFilter[i]=LambdaFilter[filter_number_][i];
-              FluxFilter_SingleFilter[i]=FluxFilter[filter_number_][i];
+              LambdaFilter_SingleFilter_[i_]=LambdaFilter_[filter_number_][i_];
+              FluxFilter_SingleFilter[i_]=FluxFilter_[filter_number_][i_];
             }
-            FluxFilterOnGrid = malloc(sizeof(double) * Grid_Length);
-            interpolate_flux(lgrid, Grid_Length, LambdaFilter_SingleFilter, NLambdaFilter[filter_number_], FluxFilter_SingleFilter, FluxFilterOnGrid) ;
+            FluxFilterOnGrid_ = malloc(sizeof(double) * grid_length_);
+            interpolate_flux(luminosity_grid_, grid_length_, LambdaFilter_SingleFilter_, NLambdaFilter[filter_number_], FluxFilter_SingleFilter, FluxFilterOnGrid_) ;
 
             /* spectrum and filters are now defined on same grid
               * CONVOLUTION: direct (configuration) space
               * simply multiply filter*spectrum it's a convolution in Fourier space */
-            FluxInputSSPConv = malloc(sizeof(double) * Grid_Length);
-            for(i=0;i<Grid_Length;i++)
-              FluxInputSSPConv[i]=FluxInputSSPOnGrid[i]*FluxFilterOnGrid[i];
-
-            FluxVegaConv = malloc(sizeof(double) * Grid_Length);
-            for(i=0;i<Grid_Length;i++) FluxVegaConv[i]=FluxVegaOnGrid[i]*FluxFilterOnGrid[i];
-
+            FluxInputSSPConv_ = malloc(sizeof(double) * grid_length_);
+            for(i_=0;i_<grid_length_;i_++)
+              FluxInputSSPConv_[i_]=FluxInputSSPOnGrid_[i_]*FluxFilterOnGrid_[i_];
+#ifdef VEGA
+            FluxVegaConv_ = malloc(sizeof(double) * grid_length_);
+            for(i_=0;i_<grid_length_;i_++) FluxVegaConv_[i_]=FluxVegaOnGrid_[i_]*FluxFilterOnGrid_[i_];
+#endif /* defined VEGA */
             //INTEGRATE
-            FluxFilterInt=integrate_flux(FluxFilterOnGrid, Grid_Length);
-            FluxVegaInt=integrate_flux(FluxVegaConv, Grid_Length);
-            FluxInputSSPInt=integrate_flux(FluxInputSSPConv, Grid_Length);
+            FluxFilterInt_ = integrate_flux(FluxFilterOnGrid_, grid_length_);
+#ifdef VEGA
+            FluxVegaInt_=integrate_flux(FluxVegaConv_, grid_length_);
+#endif /* defined VEGA */
+            FluxInputSSPInt_ = integrate_flux(FluxInputSSPConv_, grid_length_);
 
             //Absolute Observed Frame Magnitudes
-            if (FluxInputSSPInt == 0. || FluxFilterInt == 0.)
-              AbsMAG=99.;
+            if (FluxInputSSPInt_ == 0. || FluxFilterInt_ == 0.)
+              luminosity_ = 0.;
             else
             {
 #ifdef AB
-              AbsMAG=get_AbsAB_magnitude(FluxInputSSPInt, FluxFilterInt, redshift);
-#endif
+              // AbsMAG=get_AbsAB_magnitude(FluxInputSSPInt_, FluxFilterInt_, redshift_);
+             //  AbsMAG = -2.5 * log10(get_reference_AB_luminosity(FluxInputSSPInt_, FluxFilterInt_));
+              luminosity_ = get_reference_AB_luminosity(FluxInputSSPInt_, FluxFilterInt_);
+#endif /* defined AB */
 #ifdef VEGA
-              AbsMAG=get_AbsAB_magnitude(FluxInputSSPInt, FluxFilterInt, redshift);
-              AbsMAG=AbsMAG+2.5*(log10(FluxVegaInt)-log10(FluxFilterInt))+48.6;
-              //MagABVega[filter_number_]=-2.5*(log10(FluxVegaInt)
-              //                -log10(FluxFilterInt))-48.6;
-#endif
-            }
-            free(FluxVegaOnGrid);
-            free(FluxVegaConv);
-            free(FluxInputSSPOnGrid);
-            free(FluxInputSSPConv);
-            free(FluxFilterOnGrid);
-          }
-          else //if Grid_Length=0 (filter outside the spectra, can happen for observed frame)
-            AbsMAG=99.;
+              // AbsMAG=get_AbsAB_magnitude(FluxInputSSPInt_, FluxFilterInt_, redshift_);
+              // AbsMAG = -2.5 * log10(get_reference_AB_luminosity(FluxInputSSPInt_, FluxFilterInt_));
+              luminosity_ = get_reference_AB_luminosity(FluxInputSSPInt_, FluxFilterInt_);
+             
+              // AbsMAG=AbsMAG+2.5*(log10(FluxVegaInt_)-log10(FluxFilterInt_))+48.6;
+              luminosity_ *= (FluxFilterInt_ * 3.631e-20) / FluxVegaInt_);
 
-          LumTables[AgeLoop][MetalLoop][snap][filter_number_] = pow(10.,-AbsMAG/2.5);
-          free(lgrid);
-#else //ifdef FULL_SPECTRA
+              //MagABVega[filter_number_]=-2.5*(log10(FluxVegaInt_)
+              //                -log10(FluxFilterInt_))-48.6;
+#endif /* defined VEGA */
+            }
+#ifdef VEGA
+            free(FluxVegaOnGrid_);
+            free(FluxVegaConv_);
+#endif /* defined VEGA */
+            free(FluxInputSSPOnGrid_);
+            free(FluxInputSSPConv_);
+            free(FluxFilterOnGrid_);
+          }
+
+          // LumTables[age_index_][met_index_][snapshot_number_][filter_number_] = pow(10.,-AbsMAG/2.5);
+          LumTables[age_index_][met_index_][snapshot_number_][filter_number_] = luminosity_;
+          free(luminosity_grid_);
+#else /* defined FULL_SPECTRA */
           //FULL_SPECTRA defined -> a filter_number_ corresponds to a wavelength on the SSP spectra
-          FilterLambda[filter_number_]=(1+redshift)*LambdaInputSSP[AgeLoop][filter_number_];
-          LumTables[AgeLoop][MetalLoop][snap][filter_number_] = (1.+redshift)*FluxInputSSP[AgeLoop][filter_number_];
-#endif
+          FilterLambda[filter_number_]=(1+redshift_)*LambdaInputSSP_[age_index_][filter_number_];
+          LumTables[age_index_][met_index_][snapshot_number_][filter_number_] = (1.+redshift_)*FluxInputSSP_[age_index_][filter_number_];
+#endif /* defined FULL_SPECTRA */
         }        // end age loop
-      }//end snap loop
+      }//end snapshot_number_ loop
     }//end Band loop
 
   }  //end loop on metallicities
-  printf("\nPhotTables Computed.\n\n");
+  printf("\nPhotTables Computed.\n_\n");
 }
 #endif /* defined SPEC_PHOTABLES_ON_THE_FLY */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */

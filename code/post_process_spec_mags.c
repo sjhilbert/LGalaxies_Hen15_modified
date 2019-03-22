@@ -62,24 +62,6 @@
 #endif /* defined OUTPUT_OBS_MAGS */
 
 
-/** @brief Converts luminosities into magnitudes
- *
- * Converts luminosities into magnitudes:
- * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
-static inline double 
-lum_to_lum_or_mag(const double lum_)
-{
-#ifdef FULL_SPECTRA  
-  return lum_;
-#else  /* not defined FULL_SPECTRA */
-  if(lum_ > 0)
-    return -2.5 * log10(lum_);
-  else
-    return 99.0;
-#endif /* not defined FULL_SPECTRA */
-}
-
-
 /** @brief computes lumsinosities for galaxies */
 static inline double
 interpolated_luminosity(const double mass_, const int filter_number_, 
@@ -331,34 +313,35 @@ post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
   
       find_age_luminosity_interpolation_parameters(log10_age_, age_index_, f_age_1_, f_age_2_);
 
+      /* stellar masses converted from 1.e10Msun/h to 1.e11 Msun (Why not simply to 1e10 Msun)*/
       /* The stellar populations tables have magnitudes for all the mass
       * formed in stars including what will be shortly lost by SNII   */
 #if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
 #ifdef DETAILED_METALS_AND_MASS_RETURN
-      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / Hubble_h;
-      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / Hubble_h;
-#ifdef ICL
-      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / Hubble_h;
+      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * inv_Hubble_h * 0.1 / N_FINE_AGE_BINS;
+      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * inv_Hubble_h * 0.1 / N_FINE_AGE_BINS;
+#ifdef ICL                                                              
+      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * inv_Hubble_h * 0.1 / N_FINE_AGE_BINS;
 #endif /* defined ICL */
 #else  /* not defined DETAILED_METALS_AND_MASS_RETURN */        
-      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / (Hubble_h * (1 - RecycleFraction) );
-      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / (Hubble_h * (1 - RecycleFraction) );
-#ifdef ICL
-      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / (Hubble_h * (1 - RecycleFraction) );
+      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * inv_Hubble_h * 0.1 / N_FINE_AGE_BINS / (1 - RecycleFraction);
+      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * inv_Hubble_h * 0.1 / N_FINE_AGE_BINS / (1 - RecycleFraction);
+#ifdef ICL                                                                                                                          
+      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * inv_Hubble_h * 0.1 / N_FINE_AGE_BINS / (1 - RecycleFraction);
 #endif /* defined ICL */
 #endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 #else  /* not defined N_FINE_AGE_BINS > 1 */
 #ifdef DETAILED_METALS_AND_MASS_RETURN
-      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / Hubble_h;
-      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / Hubble_h;
-#ifdef ICL
-      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / Hubble_h;
+      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * inv_Hubble_h * 0.1;
+      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * inv_Hubble_h * 0.1;
+#ifdef ICL                                                              
+      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * inv_Hubble_h * 0.1;
 #endif /* defined ICL */
 #else  /* not defined DETAILED_METALS_AND_MASS_RETURN */        
-      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / (Hubble_h * (1 - RecycleFraction) );
-      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / (Hubble_h * (1 - RecycleFraction) );
-#ifdef ICL
-      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / (Hubble_h * (1 - RecycleFraction) );
+      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * inv_Hubble_h * 0.1 / (1 - RecycleFraction);
+      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * inv_Hubble_h * 0.1 / (1 - RecycleFraction);
+#ifdef ICL                                                                                                       
+      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * inv_Hubble_h * 0.1 / (1 - RecycleFraction);
 #endif /* defined ICL */
 #endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 #endif /* not defined N_FINE_AGE_BINS > 1 */
@@ -481,7 +464,7 @@ post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
   if(LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_] > 0.)
   { 
     galaxy_->rbandWeightAge /= LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_];
-    galaxy_->rbandWeightAge *= UnitTime_in_Megayears / Hubble_h / 1000.; //conversion in age_ from code units/h -> Gyr
+    galaxy_->rbandWeightAge *= UnitTime_in_Megayears * inv_Hubble_h * 1.e-3; //conversion in age_ from code units -> Myr/h -> Gyr
   }
 #endif /* defined OUTPUT_REST_MAGS */    
   
@@ -566,4 +549,17 @@ post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined COMPUTE_OBS_MAGS */
+                                         
+// #ifdef OUTPUT_REST_MAGS
+//   for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagDust             [i_] = 99.; }
+// #endif /* defined OUTPUT_REST_MAGS */                        
+// #ifdef COMPUTE_OBS_MAGS                                      
+//   for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagDust          [i_] = 99.; }
+// #ifdef OUTPUT_MOMAF_INPUTS                                   
+//   for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagDust         [i_] = 99.; }
+// #ifdef KITZBICHLER                                           
+//   for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagDust_forward [i_] = 99.; }
+// #endif /* defined KITZBICHLER */
+// #endif /* defined OUTPUT_MOMAF_INPUTS */
+// #endif /* defined COMPUTE_OBS_MAGS */
 }

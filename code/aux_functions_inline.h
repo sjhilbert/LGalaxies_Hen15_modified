@@ -61,7 +61,8 @@
 
 /** @brief maximum message size in bytes for MPI communication */
 #ifndef MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES  
-#define MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES ((1ull << 31) - 1);
+#define MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES 2147483647ull
+/* = 2^31 - 1, i.e. the largest possible 32-bit signed int value */
 #endif /* not defined MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES */
 
 
@@ -80,17 +81,17 @@ do{                                                                             
 
 /* switch on/off mass checks: */
 #ifdef MASS_CHECKS
-#define mass_checks(t, p) perform_mass_checks(t, p)
+#define mass_checks(t_, p_) perform_mass_checks(t_, p_)
 #else  /* not defined MASS_CHECKS */
-#define mass_checks(t, p)
+#define mass_checks(t_, p_)
 #endif /* not defined MASS_CHECKS */ 
 
 
 /* double-to-float correction (?): */
 #ifdef GALAXYTREE
-#define  CORRECTDBFLOAT(x)  ((fabs(x)<(1.e-30) || isnan(x)) ?(0.0):(x))
+#define  CORRECTDBFLOAT(x_)  ((fabs(x_)<(1.e-30) || isnan(x_)) ?(0.0):(x_))
 #else /* not defined GALAXYTREE */ 
-#define  CORRECTDBFLOAT(x) x
+#define  CORRECTDBFLOAT(x_) x_
 #endif /* not defined GALAXYTREE */ 
 
 
@@ -111,7 +112,24 @@ do { size_t ptr_##idx_; for(ptr_##idx_ = 0; ptr_##idx_ < count_; ++ptr_##idx_) {
  *
  * @warning won't work with pointers or arrays decayed to pointers
  */
-#define set_array_to(arr_, value_) set_mem_to(arr_, value_, (sizeof arr_ / sizeof *arr_))
+#define set_array_to(arr_, value_) set_mem_to(arr_, value_, (sizeof arr_ / sizeof arr_[0]))
+
+
+/** @brief sets all entries in 2d array to given value
+ *
+ * @param [inout] arr_   array to be set
+ * @param [in]    value_ value the array elements will be set to
+ *
+ * @warning untested. don't know if works 
+ */
+#define set_2d_array_to(arr_, value_)                                                      \
+do {                                                                                       \
+size_t arr_##idx_0_;                                                                       \
+size_t arr_##idx_1_;                                                                       \
+for(arr_##idx_0_ = 0; arr_##idx_0_ < (sizeof arr_    / sizeof arr_[0]   ); ++arr_##idx_0_) \
+for(arr_##idx_1_ = 0; arr_##idx_1_ < (sizeof arr_[0] / sizeof arr_[0][0]); ++arr_##idx_1_) \
+{ arr_[arr_##idx_0_][arr_##idx_1_] = value_; }                                             \
+} while(0)
 
 
 /** @brief compute interpolation tables */ 

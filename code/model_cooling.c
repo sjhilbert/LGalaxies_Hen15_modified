@@ -373,7 +373,7 @@ void do_AGN_heating(double dt_, const int n_galaxies_in_fof_group_)
       if(AGNRadioModeModel == 0)
       {
         // AGNrate = AgnEfficiency * UnitTime_in_s * Gal[galaxy_number_].BlackHoleMass / Hubble_h * (HotGas/Hubble_h) *(10. * SOLAR_MASS / (UNITMASS_IN_G * SEC_PER_YEAR));
-        AGNrate = AgnEfficiency * Gal[galaxy_number_].BlackHoleMass * HotGas / (Hubble_h * Hubble_h) * (10. * SolarMass * UnitTime_in_s / SEC_PER_YEAR);
+        AGNrate = AgnEfficiency * Gal[galaxy_number_].BlackHoleMass * HotGas *  inv_Hubble_h * inv_Hubble_h * (10. * SolarMass * UnitTime_in_s / SEC_PER_YEAR);
       }
       else if(AGNRadioModeModel == 2)
       {

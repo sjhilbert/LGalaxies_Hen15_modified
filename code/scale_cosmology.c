@@ -302,7 +302,7 @@ double scale_v_cen(const int snapnum)
 
   Scale_V= ScalePos * dgrowth_factor_dt(AA[snapnum],Omega, OmegaLambda) /
                         dgrowth_factor_dt(AA_OriginalCosm[snapnum],Omega_OriginalCosm,OmegaLambda_OriginalCosm) *
-                         AA[snapnum]/AA_OriginalCosm[snapnum] *  Hubble_h/Hubble_h_OriginalCosm;
+                         AA[snapnum]/AA_OriginalCosm[snapnum] * Hubble_h / Hubble_h_OriginalCosm;
   return Scale_V;
 
 }

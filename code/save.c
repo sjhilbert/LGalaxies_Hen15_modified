@@ -122,6 +122,14 @@ void save_galaxy_append(const int tree_number_, const int galaxy_number_, const 
         into the Galaxy output structure, some units are corrected.*/
 void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *galaxy_, struct GALAXY_OUTPUT *output_galaxy_)
 {
+#ifndef LIGHT_OUTPUT
+#ifndef POST_PROCESS_MAGS
+#ifdef OUTPUT_REST_MAGS
+  const int r_band_filter_number_ = 17;
+#endif /* defined OUTPUT_REST_MAGS */
+#endif /* not defined POST_PROCESS_MAGS */
+#endif /* not defined LIGHT_OUTPUT */
+ 
   int j_;
 
   output_galaxy_->Type = galaxy_->Type;
@@ -150,7 +158,7 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 #ifdef OUTPUT_REST_MAGS 
   /* Luminosities are converted into Mags in various bands */
   for(j_ = 0; j_ < NMAG; j_++)
-  { output_galaxy_->Mag[j_] = lum_to_mag(galaxy_->Lum[j_][output_number_]); }
+  { output_galaxy_->Mag[j_] = lum_to_lum_or_mag(galaxy_->Lum[j_][output_number_]); }
 #endif /* defined OUTPUT_REST_MAGS */
 #endif /* not defined POST_PROCESS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */ 
@@ -195,7 +203,7 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
   output_galaxy_->MMSubID = calc_big_db_subid_index(galaxy_->SnapNum, Halo[tmpfirst_].FileNr, Halo[tmpfirst_].SubhaloIndex);
 #endif /* defined GALAXYTREE */
 
-  output_galaxy_->LookBackTimeToSnap = NumToTime(galaxy_->SnapNum)*UnitTime_in_years/Hubble_h;
+  output_galaxy_->LookBackTimeToSnap = NumToTime(galaxy_->SnapNum)*UnitTime_in_years * inv_Hubble_h;
   output_galaxy_->InfallVmax = galaxy_->InfallVmax;
   output_galaxy_->InfallVmaxPeak = galaxy_->InfallVmaxPeak;
   output_galaxy_->InfallSnap = galaxy_->InfallSnap;
@@ -242,8 +250,8 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 
   if(galaxy_->Type == 2 || (galaxy_->Type == 1 && galaxy_->MergeOn == 1))
   {
-    output_galaxy_->OriMergTime=galaxy_->OriMergTime*UnitTime_in_years/Hubble_h;
-    output_galaxy_->MergTime = galaxy_->MergTime*UnitTime_in_years/Hubble_h;
+    output_galaxy_->OriMergTime=galaxy_->OriMergTime*UnitTime_in_years * inv_Hubble_h;
+    output_galaxy_->MergTime = galaxy_->MergTime*UnitTime_in_years * inv_Hubble_h;
   }
   else
   {
@@ -362,11 +370,11 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
   // Luminosities are converted into Mags in various bands
   for(j_ = 0; j_ < NMAG; j_++)
   {
-    //output_galaxy_->Mag[j_] = lum_to_mag(galaxy_->Lum[j_][output_number_]); -> DONE ON TOP FOR LIGHT_OUTPUT AS WELL
-    output_galaxy_->MagBulge[j_] = lum_to_mag(galaxy_->LumBulge[j_][output_number_]);
-    output_galaxy_->MagDust[j_] = lum_to_mag(galaxy_->LumDust[j_][output_number_]);
+    // output_galaxy_->Mag                 [j_] = lum_to_lum_or_mag(galaxy_->Lum                 [j_][output_number_]); -> DONE ON TOP FOR LIGHT_OUTPUT AS WELL
+    output_galaxy_->MagBulge            [j_] = lum_to_lum_or_mag(galaxy_->LumBulge            [j_][output_number_]);
+    output_galaxy_->MagDust             [j_] = lum_to_lum_or_mag(galaxy_->LumDust             [j_][output_number_]);
 #ifdef ICL
-    output_galaxy_->MagICL[j_] = lum_to_mag(galaxy_->ICLLum[j_][output_number_]);
+    output_galaxy_->MagICL              [j_] = lum_to_lum_or_mag(galaxy_->ICLLum              [j_][output_number_]);
 #endif /* defined ICL */
   }
 
@@ -376,20 +384,30 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
   // Luminosities in various bands
   for(j_ = 0; j_ < NMAG; j_++)
   {
-    output_galaxy_->ObsMag[j_] = lum_to_mag(galaxy_->ObsLum[j_][output_number_]);
-    output_galaxy_->ObsMagBulge[j_] = lum_to_mag(galaxy_->ObsLumBulge[j_][output_number_]);
-    output_galaxy_->ObsMagDust[j_] = lum_to_mag(galaxy_->ObsLumDust[j_][output_number_]);
+    output_galaxy_->ObsMag              [j_] = lum_to_lum_or_mag(galaxy_->ObsLum              [j_][output_number_]);
+    output_galaxy_->ObsMagBulge         [j_] = lum_to_lum_or_mag(galaxy_->ObsLumBulge         [j_][output_number_]);
+    output_galaxy_->ObsMagDust          [j_] = lum_to_lum_or_mag(galaxy_->ObsLumDust          [j_][output_number_]);
 #ifdef ICL
-    output_galaxy_->ObsMagICL[j_] = lum_to_mag(galaxy_->ObsICL[j_][output_number_]);
+    output_galaxy_->ObsMagICL           [j_] = lum_to_lum_or_mag(galaxy_->ObsICL              [j_][output_number_]);
 #endif /* defined ICL */
 
 #ifdef OUTPUT_MOMAF_INPUTS
-    output_galaxy_->dObsMag[j_] = lum_to_mag(galaxy_->dObsLum[j_][output_number_]);
-    output_galaxy_->dObsMagBulge[j_] = lum_to_mag(galaxy_->dObsLumBulge[j_][output_number_]);
-    output_galaxy_->dObsMagDust[j_] = lum_to_mag(galaxy_->dObsLumDust[j_][output_number_]);
+    output_galaxy_->dObsMag             [j_] = lum_to_lum_or_mag(galaxy_->dObsLum             [j_][output_number_]);
+    output_galaxy_->dObsMagBulge        [j_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge        [j_][output_number_]);
+    output_galaxy_->dObsMagDust         [j_] = lum_to_lum_or_mag(galaxy_->dObsLumDust         [j_][output_number_]);
 #ifdef ICL
-    output_galaxy_->dObsMagICL[j_] = lum_to_mag(galaxy_->dObsICL[j_][output_number_]);
+    output_galaxy_->dObsMagICL          [j_] = lum_to_lum_or_mag(galaxy_->dObsICL             [j_][output_number_]);
 #endif /* defined ICL */
+
+#ifdef KITZBICHLER
+    output_galaxy_->dObsMag_forward     [j_] = lum_to_lum_or_mag(galaxy_->dObsLum_forward     [j_][output_number_]);
+    output_galaxy_->dObsMagBulge_forward[j_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge_forward[j_][output_number_]);
+    output_galaxy_->dObsMagDust_forward [j_] = lum_to_lum_or_mag(galaxy_->dObsLumDust_forward [j_][output_number_]);
+#ifdef ICL
+    output_galaxy_->dObsMagICL_forward  [j_] = lum_to_lum_or_mag(galaxy_->dObsICL_forward     [j_][output_number_]);
+#endif /* defined ICL */
+
+#endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
   }
 #endif /* defined COMPUTE_OBS_MAGS */
@@ -400,10 +418,21 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
   if((galaxy_->DiskMass+galaxy_->BulgeMass)> 0.0)
   {
     output_galaxy_->MassWeightAge = galaxy_->MassWeightAge[output_number_] / (galaxy_->DiskMass+galaxy_->BulgeMass);
-    output_galaxy_->MassWeightAge = output_galaxy_->MassWeightAge / 1000. * UnitTime_in_Megayears / Hubble_h;        //Age in Gyr
+    output_galaxy_->MassWeightAge *= UnitTime_in_Gigayears * inv_Hubble_h;        //Age in Gyr
+#ifndef POST_PROCESS_MAGS
+#ifdef OUTPUT_REST_MAGS
+    output_galaxy_->rbandWeightAge = galaxy_->rbandWeightAge[output_number_] / (galaxy_->Lum[r_band_filter_number_][output_number_]);
+    output_galaxy_->rbandWeightAge *= UnitTime_in_Gigayears * inv_Hubble_h;        //Age in Gyr
+#else  /* not defined OUTPUT_REST_MAGS */ 
+    output_galaxy_->rbandWeightAge = 0.; 
+#endif /* not defined OUTPUT_REST_MAGS */ 
+#endif /* not defined POST_PROCESS_MAGS */ 
   }
   else
-  { output_galaxy_->MassWeightAge = 0.; }
+  { 
+    output_galaxy_->MassWeightAge  = 0.; 
+    output_galaxy_->rbandWeightAge = 0.;
+  }
 
 #ifdef FIX_OUTPUT_UNITS
   fix_units_for_ouput(output_galaxy_);
@@ -419,78 +448,78 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 void fix_units_for_ouput(struct GALAXY_OUTPUT *output_galaxy_)
 {
 #ifdef LIGHT_OUTPUT
-  output_galaxy_->Pos[0] /= Hubble_h;
-  output_galaxy_->Pos[1] /= Hubble_h;
-  output_galaxy_->Pos[2] /= Hubble_h;
-  output_galaxy_->Mvir /= Hubble_h;
-  output_galaxy_->Rvir /= Hubble_h;
-  output_galaxy_->ColdGas /= Hubble_h;
-  output_galaxy_->DiskMass /= Hubble_h;
-  output_galaxy_->BulgeMass /= Hubble_h;
-  output_galaxy_->HotGas /= Hubble_h;
-  output_galaxy_->BlackHoleMass /= Hubble_h;
+  output_galaxy_->Pos[0]            *= inv_Hubble_h;
+  output_galaxy_->Pos[1]            *= inv_Hubble_h;
+  output_galaxy_->Pos[2]            *= inv_Hubble_h;
+  output_galaxy_->Mvir              *= inv_Hubble_h;
+  output_galaxy_->Rvir              *= inv_Hubble_h;
+  output_galaxy_->ColdGas           *= inv_Hubble_h;
+  output_galaxy_->DiskMass          *= inv_Hubble_h;
+  output_galaxy_->BulgeMass         *= inv_Hubble_h;
+  output_galaxy_->HotGas            *= inv_Hubble_h;
+  output_galaxy_->BlackHoleMass     *= inv_Hubble_h;
 
 #else /* not defined LIGHT_OUTPUT */
   int j_;
 
-  output_galaxy_->Pos[0] /= Hubble_h;
-  output_galaxy_->Pos[1] /= Hubble_h;
-  output_galaxy_->Pos[2] /= Hubble_h;
-  output_galaxy_->CentralMvir /= Hubble_h;
-  output_galaxy_->Mvir /= Hubble_h;
-  output_galaxy_->Rvir /= Hubble_h;
+  output_galaxy_->Pos[0]            *= inv_Hubble_h;
+  output_galaxy_->Pos[1]            *= inv_Hubble_h;
+  output_galaxy_->Pos[2]            *= inv_Hubble_h;
+  output_galaxy_->CentralMvir       *= inv_Hubble_h;
+  output_galaxy_->Mvir              *= inv_Hubble_h;
+  output_galaxy_->Rvir              *= inv_Hubble_h;
 #ifdef HALOPROPERTIES
-  output_galaxy_->HaloM_Mean200 /= Hubble_h;
-  output_galaxy_->HaloM_Crit200 /= Hubble_h;
-  output_galaxy_->HaloM_TopHat /= Hubble_h;
-  output_galaxy_->HaloPos[0] /= Hubble_h;
-  output_galaxy_->HaloPos[1] /= Hubble_h;
-  output_galaxy_->HaloPos[2] /= Hubble_h;
-  output_galaxy_->HaloSpin[0] /= Hubble_h;
-  output_galaxy_->HaloSpin[1] /= Hubble_h;
-  output_galaxy_->HaloSpin[2] /= Hubble_h;
+  output_galaxy_->HaloM_Mean200     *= inv_Hubble_h;
+  output_galaxy_->HaloM_Crit200     *= inv_Hubble_h;
+  output_galaxy_->HaloM_TopHat      *= inv_Hubble_h;
+  output_galaxy_->HaloPos[0]        *= inv_Hubble_h;
+  output_galaxy_->HaloPos[1]        *= inv_Hubble_h;
+  output_galaxy_->HaloPos[2]        *= inv_Hubble_h;
+  output_galaxy_->HaloSpin[0]       *= inv_Hubble_h;
+  output_galaxy_->HaloSpin[1]       *= inv_Hubble_h;
+  output_galaxy_->HaloSpin[2]       *= inv_Hubble_h;
 #endif /* defined HALOPROPERTIES */
-  output_galaxy_->GasSpin[0] /= Hubble_h;
-  output_galaxy_->GasSpin[1] /= Hubble_h;
-  output_galaxy_->GasSpin[2] /= Hubble_h;
-  output_galaxy_->StellarSpin[0] /= Hubble_h;
-  output_galaxy_->StellarSpin[1] /= Hubble_h;
-  output_galaxy_->StellarSpin[2] /= Hubble_h;
-  output_galaxy_->HotRadius /= Hubble_h;
-  output_galaxy_->ColdGas /= Hubble_h;
-  output_galaxy_->DiskMass /= Hubble_h;
-  output_galaxy_->BulgeMass /= Hubble_h;
-  output_galaxy_->HotGas /= Hubble_h;
-  output_galaxy_->EjectedMass /= Hubble_h;
-  output_galaxy_->BlackHoleMass /= Hubble_h;
-  output_galaxy_->ICM /= Hubble_h;
-  output_galaxy_->BulgeSize /= Hubble_h;
-  output_galaxy_->StellarDiskRadius /= Hubble_h;
-  output_galaxy_->GasDiskRadius /= Hubble_h;
-  output_galaxy_->CoolingRadius /= sqrt(Hubble_h);
+  output_galaxy_->GasSpin[0]        *= inv_Hubble_h;
+  output_galaxy_->GasSpin[1]        *= inv_Hubble_h;
+  output_galaxy_->GasSpin[2]        *= inv_Hubble_h;
+  output_galaxy_->StellarSpin[0]    *= inv_Hubble_h;
+  output_galaxy_->StellarSpin[1]    *= inv_Hubble_h;
+  output_galaxy_->StellarSpin[2]    *= inv_Hubble_h;
+  output_galaxy_->HotRadius         *= inv_Hubble_h;
+  output_galaxy_->ColdGas           *= inv_Hubble_h;
+  output_galaxy_->DiskMass          *= inv_Hubble_h;
+  output_galaxy_->BulgeMass         *= inv_Hubble_h;
+  output_galaxy_->HotGas            *= inv_Hubble_h;
+  output_galaxy_->EjectedMass       *= inv_Hubble_h;
+  output_galaxy_->BlackHoleMass     *= inv_Hubble_h;
+  output_galaxy_->ICM               *= inv_Hubble_h;
+  output_galaxy_->BulgeSize         *= inv_Hubble_h;
+  output_galaxy_->StellarDiskRadius *= inv_Hubble_h;
+  output_galaxy_->GasDiskRadius     *= inv_Hubble_h;
+  output_galaxy_->CoolingRadius     *= sqrt(inv_Hubble_h);
 #ifdef TRACK_BURST
-  output_galaxy_->BurstMass /= Hubble_h;
+  output_galaxy_->BurstMass         *= inv_Hubble_h;
 #endif /* defined TRACK_BURST */
 
-  metals_multiply_by(&(output_galaxy_->MetalsColdGas),1./Hubble_h);
-  metals_multiply_by(&(output_galaxy_->MetalsDiskMass),1./Hubble_h);
-  metals_multiply_by(&(output_galaxy_->MetalsBulgeMass),1./Hubble_h);
-  metals_multiply_by(&(output_galaxy_->MetalsHotGas),1./Hubble_h);
-  metals_multiply_by(&(output_galaxy_->MetalsEjectedMass),1./Hubble_h);
-  metals_multiply_by(&(output_galaxy_->MetalsICM),1./Hubble_h);
+  metals_multiply_by(&(output_galaxy_->MetalsColdGas    ), inv_Hubble_h);
+  metals_multiply_by(&(output_galaxy_->MetalsDiskMass   ), inv_Hubble_h);
+  metals_multiply_by(&(output_galaxy_->MetalsBulgeMass  ), inv_Hubble_h);
+  metals_multiply_by(&(output_galaxy_->MetalsHotGas     ), inv_Hubble_h);
+  metals_multiply_by(&(output_galaxy_->MetalsEjectedMass), inv_Hubble_h);
+  metals_multiply_by(&(output_galaxy_->MetalsICM        ), inv_Hubble_h);
 
 #ifdef STAR_FORMATION_HISTORY
-  for(j_=0;j_<=output_galaxy_->sfh_ibin;j_++)
+  for(j_ = 0; j_ <= output_galaxy_->sfh_ibin; j_++)
   {
-    output_galaxy_->sfh_DiskMass[j_] /= Hubble_h;
-    output_galaxy_->sfh_BulgeMass[j_] /= Hubble_h;
-    output_galaxy_->sfh_ICM[j_] /= Hubble_h;
+    output_galaxy_->sfh_DiskMass [j_] *= inv_Hubble_h;
+    output_galaxy_->sfh_BulgeMass[j_] *= inv_Hubble_h;
+    output_galaxy_->sfh_ICM      [j_] *= inv_Hubble_h;
 #ifdef TRACK_BURST
-    output_galaxy_->sfh_BurstMass[j_] /= Hubble_h;
+    output_galaxy_->sfh_BurstMass[j_] *= inv_Hubble_h;
 #endif /* defined TRACK_BURST */
-    metals_multiply_by(&(output_galaxy_->sfh_MetalsDiskMass[j_]),1./Hubble_h);
-    metals_multiply_by(&(output_galaxy_->sfh_MetalsBulgeMass[j_]),1./Hubble_h);
-    metals_multiply_by(&(output_galaxy_->sfh_MetalsICM[j_]),1./Hubble_h);
+    metals_multiply_by(&(output_galaxy_->sfh_MetalsDiskMass [j_]), inv_Hubble_h);
+    metals_multiply_by(&(output_galaxy_->sfh_MetalsBulgeMass[j_]), inv_Hubble_h);
+    metals_multiply_by(&(output_galaxy_->sfh_MetalsICM      [j_]), inv_Hubble_h);
   }
 #endif /* defined STAR_FORMATION_HISTORY */
 #endif /* not defined LIGHT_OUTPUT */
@@ -542,8 +571,8 @@ void write_sfh_bins()
     {
       sfh_times_[i_bin_].snapnum = snapshot_number_;
       sfh_times_[i_bin_].bin = j_;
-      sfh_times_[i_bin_].lookbacktime = (SFH_t[snapshot_number_][0][j_]+SFH_dt[snapshot_number_][0][j_]/2.-NumToTime(snapshot_number_))*UnitTime_in_years/Hubble_h;
-      sfh_times_[i_bin_].dt=SFH_dt[snapshot_number_][0][j_]*UnitTime_in_years/Hubble_h;
+      sfh_times_[i_bin_].lookbacktime = (SFH_t[snapshot_number_][0][j_]+SFH_dt[snapshot_number_][0][j_]/2.-NumToTime(snapshot_number_))*UnitTime_in_years * inv_Hubble_h;
+      sfh_times_[i_bin_].dt=SFH_dt[snapshot_number_][0][j_]*UnitTime_in_years * inv_Hubble_h;
       sfh_times_[i_bin_].nbins = SFH_Nbins[snapshot_number_][0][j_];
       i_bin_++;
     }

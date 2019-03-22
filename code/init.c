@@ -118,7 +118,7 @@ void init(void)
 #endif
 
   EnergySNcode = EnergySN / UnitEnergy_in_cgs * Hubble_h;
-  EtaSNcode = EtaSN * (UNITMASS_IN_G / SOLAR_MASS) / Hubble_h;
+  EtaSNcode = EtaSN * (UNITMASS_IN_G / SOLAR_MASS) * inv_Hubble_h;
 
   //reads in the redshifts for the used Cosmology
   read_zlist();

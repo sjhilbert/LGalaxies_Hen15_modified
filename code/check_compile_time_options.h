@@ -62,10 +62,6 @@ check_compile_time_options(void)
 #error "Makefile option KITZBICHLER requires option OUTPUT_MOMAF_INPUTS"
 /*   terminate("\n\n> Error : Makefile option KITZBICHLER requires option OUTPUT_MOMAF_INPUTS \n"); */
 #endif /* not defined OUTPUT_MOMAF_INPUTS */
-#ifndef POST_PROCESS_MAGS
-/* #error "Makefile option KITZBICHLER requires option POST_PROCESS_MAGS"
-  terminate("\n\n> Error : Makefile option KITZBICHLER requires option POST_PROCESS_MAGS \n"); */
-#endif /* not defined POST_PROCESS_MAGS */
 #endif /* defined KITZBICHLER */
 
 #ifdef GALAXYTREE
@@ -102,27 +98,34 @@ check_compile_time_options(void)
 
 #ifdef PHOTTABLES_PRECOMPUTED
 #ifdef SPEC_PHOTABLES_ON_THE_FLY
-#error "Makefile option PHOTTABLES_PRECOMPUTED cannot run with SPEC_PHOTABLES_ON_THE_FLY"
+#error "Makefile option PHOTTABLES_PRECOMPUTED cannot be run with SPEC_PHOTABLES_ON_THE_FLY"
 /* terminate("\n\n> Error : Makefile option PHOTTABLES_PRECOMPUTED cannot run with SPEC_PHOTABLES_ON_THE_FLY\n"); */
 #endif /* defined PHOTTABLES_PRECOMPUTED */
 #endif /* defined SPEC_PHOTABLES_ON_THE_FLY */
 
 #ifdef LIGHT_OUTPUT
 #ifdef POST_PROCESS_MAGS
-#error "Makefile option LIGHT_OUTPUT cannot run with POST_PROCESS_MAGS"
+#error "Makefile option LIGHT_OUTPUT cannot be run with POST_PROCESS_MAGS"
 /* terminate("\n\n> Error : Makefile option LIGHT_OUTPUT cannot run with POST_PROCESS_MAGS \n"); */
 #endif /* defined POST_PROCESS_MAGS */
 #ifdef OUTPUT_MOMAF_INPUTS
-#error "Makefile option LIGHT_OUTPUT cannot run with OUTPUT_MOMAF_INPUTS"
+#error "Makefile option LIGHT_OUTPUT cannot be run with OUTPUT_MOMAF_INPUTS"
 /* terminate("\n\n> Error : Makefile option LIGHT_OUTPUT cannot run with OUTPUT_MOMAF_INPUTS \n"); */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined LIGHT_OUTPUT */
 
 #ifdef LIGHTCONE_OUTPUT
 #ifdef MCMC
-#error "Makefile option LIGHTCONE_OUTPUT cannot run with MCMC"
+#error "Makefile option LIGHTCONE_OUTPUT cannot be run with MCMC"
 /* terminate("\n\n> Error : Makefile option LIGHTCONE_OUTPUT cannot run with MCMC\n"); */
 #endif /* defined MCMC */
+#endif /* defined LIGHTCONE_OUTPUT */
+
+#ifdef LIGHTCONE_OUTPUT
+#ifdef FIX_OUTPUT_UNITS
+#error "Makefile option LIGHTCONE_OUTPUT cannot be run with FIX_OUTPUT_UNITS"
+/* terminate("\n\n> Error : Makefile option LIGHTCONE_OUTPUT cannot run with FIX_OUTPUT_UNITS\n"); */
+#endif /* defined FIX_OUTPUT_UNITS */
 #endif /* defined LIGHTCONE_OUTPUT */
 
 #ifndef LIGHTCONE_OUTPUT
