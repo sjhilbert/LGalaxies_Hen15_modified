@@ -29,42 +29,22 @@
 #include "allvars.h"
 #include "proto.h"
 
-/* double get_AbsAB_magnitude(double *FluxInputSSPInt, double *FluxFilterInt, int BandNum, double redshift)
- * double get_area (double redshift)
- * double lum_distance(double redshift)
- * double error_on_mag(double AbsMag)
- *
- * void create_grid (double WaveMin, double WaveMax,double *LambdaInputSSP_SingleAge, double *lgrid,
- * int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length)
- *
- * void locate(double *xx, int n, double x, int *j)
- * void interpolate(double *lgrid, int Grid_Length, double *lambda, int nlambda, double *flux, double *FluxOnGrid)
- * double integrate(double *flux, int Grid_Length)
- * void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
- */
+
 double get_AbsAB_magnitude(const double FluxInputSSPInt, const double FluxFilterInt, const double redshift)
 {
-  double zeropoint, distance_cm;
-  double AbsAB,area;
-
 //it needs to be converted to cm since the units of
 //the original InputSSP spectra are (erg.s^-1.AA^-1) which
 //was converted to (erg.s^-1.Hz^-1) by doing Flux*Lambda^2/Clight*1e8
 //we need 3631Jy or 3631*10^-23 erg.s^-1.Hz^-1 cm-2
-
-  area=get_area(redshift);
-
-  distance_cm=10.0*3.08568025e18;
-  //4*pi*10pc^2*3631jy*erg.s^-1.Hz^-1
-
 #ifdef APP
-  zeropoint=+48.6-2.5*area;
+  const double area = get_area(redshift);
+  const double zeropoint = +48.6-2.5*area;
 #else
-  zeropoint=-2.5*log10(4.0*M_PI*distance_cm*distance_cm*3631.0*1.0e-23);
+  const double distance_cm = 10.0*3.08568025e18;
+  //4*pi*10pc^2*3631jy*erg.s^-1.Hz^-1
+  const double zeropoint = -2.5*log10(4.0*M_PI*distance_cm*distance_cm*3631.0*1.0e-23);
 #endif
-
-  AbsAB=-2.5*(log10(FluxInputSSPInt)
-      -log10(FluxFilterInt))-zeropoint;
+  const double AbsAB= -2.5*(log10(FluxInputSSPInt) -log10(FluxFilterInt))-zeropoint;
 
   return AbsAB;
 }
@@ -124,7 +104,7 @@ double lum_distance(const double redshift)
 
   f[1]=1./sqrt((1.+x[0])*(1.+x[0])*(1.+Omega*x[0])-x[0]*OmegaLambda*(2.+x[0]));
   f[2]=1./sqrt((1.+x[Npoints-1])*(1.+x[Npoints-1])*(1.+Omega*x[Npoints-1])
-	       -x[Npoints-1]*OmegaLambda*(2.+x[Npoints-1]));
+               -x[Npoints-1]*OmegaLambda*(2.+x[Npoints-1]));
 
   I[0]=(f[0]+f[1])/3.;
 
@@ -144,7 +124,7 @@ double lum_distance(const double redshift)
  * wavelength for which LambdaInputSSP<FilterWaveMax*/
 
 double* create_grid (const double WaveMin, const double WaveMax, const int AgeLoop, const double redshift, double LambdaInputSSP[SSP_NAGES][SSP_NLambda],
-		                      int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length)
+                                      int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length)
 {
   double x0, x1, h;
   int i, min, max;
@@ -159,27 +139,27 @@ double* create_grid (const double WaveMin, const double WaveMax, const int AgeLo
   for(i=0;i<SSP_NLambda;i++)
     if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=min)
       {
-	*Min_Wave_Grid=i;
-	break;
+        *Min_Wave_Grid=i;
+        break;
       }
 
   for(i=0;i<SSP_NLambda;i++)
     if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=min)
       {
-	*Grid_Length+=1;
+        *Grid_Length+=1;
 
-	//point at maximum range or out of it, set maximum
-	if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=max)
-	  {
-	    if((1+redshift)*LambdaInputSSP[AgeLoop][i]==max)
-	      *Max_Wave_Grid=i;
-	    else //if point out of range, set max to previous
-	      {
-		*Max_Wave_Grid=i-1;
-		*Grid_Length-=1;
-	      }
-	    break;
-	  }
+        //point at maximum range or out of it, set maximum
+        if((1+redshift)*LambdaInputSSP[AgeLoop][i]>=max)
+          {
+            if((1+redshift)*LambdaInputSSP[AgeLoop][i]==max)
+              *Max_Wave_Grid=i;
+            else //if point out of range, set max to previous
+              {
+                *Max_Wave_Grid=i-1;
+                *Grid_Length-=1;
+              }
+            break;
+          }
       }
 
   grid = malloc(sizeof(double) * *Grid_Length);
@@ -189,26 +169,4 @@ double* create_grid (const double WaveMin, const double WaveMax, const int AgeLo
   return grid;
 }
 
-
-//*****************************************************
-//interpolate filters on integral grid
-//*****************************************************
-
-void interpolate(double *lgrid, const int Grid_Length, double *lambda, const int nlambda, double *flux, double *FluxOnGrid)
-{
-  int kk=0, nn=0, m=2, i;
-
-  for(i=0;i<Grid_Length;i++)
-    {
-      if (lgrid[i] < lambda[0] || lgrid[i] > lambda[nlambda-1]) FluxOnGrid[i]=0;
-      //outside filter range, transmission is 0
-      else
-	{
-	  //finds where wavelenght is in respect to the grid
-	  locate(lambda,nlambda-1,lgrid[i],&nn);
-	  kk=min(max(nn-(m-1)/2,1),nlambda+1-m);
-	  FluxOnGrid[i]=flux[kk];
-	}
-    }
-}
 

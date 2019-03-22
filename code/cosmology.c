@@ -37,9 +37,16 @@
 
 #include "allvars.h"
 
+/* workspace for gsl integration:*/
+#ifndef COSMOLOGY_GSL_INTEGRATION_WORKSPACE_SIZE
+#define COSMOLOGY_GSL_INTEGRATION_WORKSPACE_SIZE 1000
+#endif /* not defined COSMOLOGY_GSL_INTEGRATION_WORKSPACE_SIZE */
+
+static gsl_integration_workspace *cosmology_gsl_integration_workspace_;
+
+
 #ifdef ASSUME_FLAT_LCDM
-/** @brief checks for flatness, i.e. 1 = Omega + OmegaLambda
- */
+/** @brief checks for flatness, i.e. 1 = Omega + OmegaLambda */
 void assert_flat_LCDM(void)
 {
   if(fabs(1 - Omega - OmegaLambda) > 0.01)
@@ -61,64 +68,52 @@ void init_redshift_for_comoving_distance(void)
 }
 
 
-/** @brief compute comoving los distance for given 
- *         cosmological redshift
- *         using numerical integrationg
- *
- *  @warning should not assume flat LCDM, i.e. Omega + OmegaLambda = 1
- *           (but need to check) 
- */
-static inline double 
-comoving_los_distance_for_redshift_ni(const double redshift_)
+/** @brief inits workspace for gsl integration */
+void init_cosmology_gsl_integration(void)
 {
-  int i, k, Npoints=1000;
-  double x[1000];
-  double sum[2], I[3], f[4];
-  double h, integral, dl;
-
-  for(i=0;i<2;i++)sum[i]=0.0;
-  for(i=0;i<3;i++)I[i]=0.0;
-  for(i=0;i<4;i++)f[i]=0.0;
-
-  h=redshift_/(Npoints-1);
-  for(i=0;i<Npoints;i++) x[i]=h*(i-1);
-
-
-  for (i=0;i<Npoints/2;i++)
-    {
-      k=2*i-1;
-      f[2]=1./sqrt((1.+x[k])*(1.+x[k])*(1.+Omega*x[k])-x[k]*OmegaLambda*(2.+x[k]));
-      sum[0]=sum[0]+f[2];
-    }
-  I[1]=sum[0]*4./3.;
-
-  for (i=0;i<Npoints/2-1;i++)
-    {
-      k=2*i;
-      f[3]=1./sqrt((1.+x[k])*(1.+x[k])*(1.+Omega*x[k])-x[k]*OmegaLambda*(2.+x[k]));
-      sum[1]=sum[1]+f[3];
-    }
-  I[2]=sum[1]*2./3.;
-
-  f[1]=1./sqrt((1.+x[0])*(1.+x[0])*(1.+Omega*x[0])-x[0]*OmegaLambda*(2.+x[0]));
-  f[2]=1./sqrt((1.+x[Npoints-1])*(1.+x[Npoints-1])*(1.+Omega*x[Npoints-1])
-                       -x[Npoints-1]*OmegaLambda*(2.+x[Npoints-1]));
-
-  I[0]=(f[0]+f[1])/3.;
-
-  integral=h*(I[0]+I[1]+I[2]);
-
-  dl=integral/1000.0;    /* !Mpc */
-
-  dl*= (C/100.)/(100.);   /* in Mpc/h */
-
-  return dl;
+  cosmology_gsl_integration_workspace_ = gsl_integration_workspace_alloc(COSMOLOGY_GSL_INTEGRATION_WORKSPACE_SIZE);
 }
 
 
-/** @brief   compute comoving los distance for given 
- *           cosmological redshift 
+/** @brief inits stuff for cosmological calculations */
+void init_cosmology(void)
+{
+  init_redshift_for_comoving_distance();
+  init_cosmology_gsl_integration();
+}
+
+
+/** @brief aux. function for computing cosmic distances */
+static inline double 
+integrand_comoving_los_distance_for_redshift_(double inv_a_, void *param_)
+{
+  (void)param_;  /* avoid unused-parameter warning */
+  return 1 / sqrt(Omega * inv_a_ * inv_a_ * inv_a_ + (1 - Omega - OmegaLambda) * inv_a_ * inv_a_ + OmegaLambda);
+}
+
+
+/** @brief compute comoving los distance for given cosmological redshift
+ *         using numerical integrationg */
+static inline double 
+comoving_los_distance_for_redshift_ni(const double redshift_)
+{
+  gsl_function F_;
+  double result_, abserr_;
+ 
+  F_.function = &integrand_comoving_los_distance_for_redshift_;
+
+  gsl_integration_qag(&F_, 1.0, 1.0 + redshift_, 1e-5, 1.0e-6, COSMOLOGY_GSL_INTEGRATION_WORKSPACE_SIZE, GSL_INTEG_GAUSS21, cosmology_gsl_integration_workspace_, &result_, &abserr_);
+
+  return D_HUBBLE * result_;
+}
+
+
+/** @brief   compute comoving los distance for given cosmological redshift 
  *           using hypergeometric functions
+ *
+ *  @param [in] redshift_ cosmological redshift for which distance to compute
+ *  @return l.o.s. comoving distance in simulation units
+ *         (i.e. units of D_HUBBLE, usually Mpc/h or kpc/h)
  *
  *  @warning assumes flat LCDM with Omega + OmegaLambda = 1
  */
@@ -136,8 +131,11 @@ comoving_los_distance_for_redshift_flat_LCDM(const double redshift_)
 }
 
 
-/** @brief   compute comoving los distance for given 
- *           cosmological redshift 
+/** @brief compute comoving los distance for given cosmological redshift
+ *
+ *  @param [in] redshift_ cosmological redshift for which distance to compute
+ *  @return l.o.s. comoving distance in simulation units
+ *         (i.e. units of D_HUBBLE, usually Mpc/h or kpc/h)
  */
 double
 comoving_los_distance_for_redshift(const double redshift_)
@@ -146,6 +144,31 @@ comoving_los_distance_for_redshift(const double redshift_)
   return comoving_los_distance_for_redshift_flat_LCDM(redshift_);
 #else /* not defined ASSUME_FLAT_LCDM */
  return comoving_los_distance_for_redshift_ni(redshift_);
+#endif /* not defined ASSUME_FLAT_LCDM */
+}
+
+
+/** @brief   compute luminosity distance for given 
+ *           cosmological redshift  */
+double
+luminosity_distance_for_redshift(const double redshift_)
+{
+#ifdef ASSUME_FLAT_LCDM
+  return (1. + redshift_) * comoving_los_distance_for_redshift_flat_LCDM(redshift_);
+#else /* not defined ASSUME_FLAT_LCDM */
+  const double OmegaK_ = 1. - Omega - OmegaLambda;
+  if(OmegaK_ < -0.01)
+  {
+    const double R_K_ = D_HUBBLE / sqrt(-OmegaK_);
+    return (1. + redshift_) * R_K_ * sinh(comoving_los_distance_for_redshift_ni(redshift_) / R_K_);
+  }
+  else if(OmegaK_ > 0.01)
+  {
+    const double R_K_ = D_HUBBLE / sqrt(OmegaK_);
+    return (1. + redshift_) * R_K_ * sin(comoving_los_distance_for_redshift_ni(redshift_) / R_K_);
+  }
+  else
+  { return (1. + redshift_) * comoving_los_distance_for_redshift_flat_LCDM(redshift_); }
 #endif /* not defined ASSUME_FLAT_LCDM */
 }
 
@@ -212,36 +235,29 @@ integrand_time_to_present(double a_, void *param_)
 /** @brief For a given redshift, returns time to present for a given redshift
  *  using numerical integration
  *
- * Returns Age in code units/Hubble_h
+ * @eturn time to present in code units/Hubble_h
  */
 static inline double
 time_to_present_ni(const double redshift_)
 {
-#define WORKSIZE 1000
   gsl_function F_;
-  gsl_integration_workspace *workspace_;
-  double time_, result_, abserr_;
+  double result_, abserr_;
  
-  workspace_ = gsl_integration_workspace_alloc(WORKSIZE);
   F_.function = &integrand_time_to_present;
 
   /* I think that the 1.0/Hubble here should be any small number, such
      as 1e-6 - it is the aboslute error accuracy required.  PAT */
   gsl_integration_qag(&F_, 1.0 / (redshift_ + 1), 1.0, 1.0 / Hubble,
-                      1.0e-8, WORKSIZE, GSL_INTEG_GAUSS21, workspace_, &result_, &abserr_);
+                      1.0e-8, COSMOLOGY_GSL_INTEGRATION_WORKSPACE_SIZE, GSL_INTEG_GAUSS21, cosmology_gsl_integration_workspace_, &result_, &abserr_);
 
-  time_ = 1 / Hubble * result_;
-
-  gsl_integration_workspace_free(workspace_);
-  
-  return time_;
+  return 1 / Hubble * result_;
 }
 
 
 /** @brief For a given redshift, returns time to present for a given redshift
  *  assuming flat LCDM using analytic formula
  *
- * Returns Age in code units/Hubble_h
+ * @return time to present (lookback time) in code units/Hubble_h
  *
  * \f$ t(z) = \frac{2}{3 H_0 sqrt{\Omega_{\Lambda}}} \left[\mathrm{asinh}\sqrt{\frac{\Omega_{\Lambda}}{\Omega_{m}}} - \mathrm{asinh}\sqrt{\frac{\Omega_{\Lambda}}{\Omega_{m}(1+z)^3}}\right] \f$
  *
@@ -260,7 +276,7 @@ time_to_present_flat_LCDM(const double redshift_)
  * returns the time from that redshift until redshift zero:
  * \f$H_0t_0=\int_0^z\frac{dz}{(1+z)\sqrt{(1+z)^2(1+z\Omega_m)-z(2+x)\Omega_{\Lambda}}}\f$
  *
- * Returns Age in code units/Hubble_h
+ * @return time to present (lookback time) in code units/Hubble_h
  */
 double time_to_present(const double redshift_)
 {

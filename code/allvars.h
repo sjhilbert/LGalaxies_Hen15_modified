@@ -23,50 +23,11 @@
 #include <time.h>
 #include <stdbool.h>
 
-
-/* simple min, max, etc.: */
-#define  min(x,y)  ((x)<(y) ?(x):(y))
-#define  max(x,y)  ((x)>(y) ?(x):(y))
-#define  wrap(x,y) ( (x)>((y)/2.) ? ((x)-(y)) : ((x)<(-(y)/2.)?((x)+(y)):(x)) )
-#define  pow2(x)   ((x)*(x))
-#define  pow3(x)   ((x)*(x)*(x))
-
-
 #define MIN_ALLOC_NUMBER       1000
 #define ALLOC_INCREASE_FACTOR  1.1
 #define ALLOC_DECREASE_FACTOR  0.7
 
 #define PRECISION_LIMIT 1.e-7
-
-#ifdef PARALLEL
-#define  terminate(x) do {char termbuf[5000]; sprintf(termbuf, "code termination on task=%d, function %s(), file %s, line %d: %s\n", ThisTask, __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1); } while(0)
-#else /* not defined PARALLEL */
-#define  terminate(x) do {char termbuf[5000]; sprintf(termbuf, "code termination in function %s(), file %s, line %d: %s\n", __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1); } while(0)
-#endif /* not defined PARALLEL */
-
-#define  mymalloc(x, y)            mymalloc_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
-#define  mymalloc_movable(x, y, z) mymalloc_movable_fullinfo(x, y, z, __FUNCTION__, __FILE__, __LINE__)
-
-#define  myrealloc(x, y)           myrealloc_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
-#define  myrealloc_movable(x, y)   myrealloc_movable_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
-
-#define  myfree(x)                 myfree_fullinfo(x, __FUNCTION__, __FILE__, __LINE__)
-#define  myfree_movable(x)         myfree_movable_fullinfo(x, __FUNCTION__, __FILE__, __LINE__)
-
-#define  report_memory_usage(x, y) report_detailed_memory_usage_of_largest_task(x, y, __FUNCTION__, __FILE__, __LINE__)
-
-#ifdef MASS_CHECKS
-#define mass_checks(t, p) perform_mass_checks(t, p)
-#else  /* not defined MASS_CHECKS */
-#define mass_checks(t, p)
-#endif /* not defined MASS_CHECKS */ 
-
-
-#ifdef GALAXYTREE
-#define  CORRECTDBFLOAT(x)  ((fabs(x)<(1.e-30) || isnan(x)) ?(0.0):(x))
-#else /* not defined GALAXYTREE */ 
-#define  CORRECTDBFLOAT(x) x
-#endif /* not defined GALAXYTREE */ 
 
 //WATCH OUT! In the case of MCMC running both MR and MRII the larger value is used to "allocate" all the arrays
 //inside the code its LastDarkMatterSnapShot+1 that defines the extent of the loops
@@ -1124,7 +1085,7 @@ extern float SSP_logMetalTab[SSP_NMETALLICITES];
 extern float SSP_logAgeTab[SSP_NAGES];
 //table containing redshift (different from the one in the code when scaling to future times)
 extern float RedshiftTab[MAXSNAPS];
-extern float LumTables[NMAG][SSP_NMETALLICITES][MAXSNAPS][SSP_NAGES];
+extern float LumTables[SSP_NAGES][SSP_NMETALLICITES][MAXSNAPS][NMAG];
 extern float FilterLambda[NMAG+1];//wavelength of each filter + 1 for V-band
 
 //for speeding up lookup in table:

@@ -171,8 +171,8 @@ void setup_LumTables_precomputed(char SimName[])
         //for each age
         for(AgeLoop = 0; AgeLoop < SSP_NAGES; AgeLoop++)
         {
-          fscanf(fb, "%e", &LumTables[filter_number_][MetalLoop][snap][AgeLoop]);
-          LumTables[filter_number_][MetalLoop][snap][AgeLoop] = pow(10., -LumTables[filter_number_][MetalLoop][snap][AgeLoop] / 2.5);
+          fscanf(fb, "%e", &LumTables[AgeLoop][MetalLoop][snap][filter_number_]);
+          LumTables[AgeLoop][MetalLoop][snap][filter_number_] = pow(10., -LumTables[AgeLoop][MetalLoop][snap][filter_number_] / 2.5);
         }                //end loop on age
       }                //end loop on redshift (everything done for current filter_number_)
 
@@ -184,163 +184,10 @@ void setup_LumTables_precomputed(char SimName[])
 
   init_SSP_log_age_jump_index();
 }
-#endif //PHOTTABLES_PRECOMPUTED
+#endif /* defined PHOTTABLES_PRECOMPUTED */
 
 
-/** Reads in the Full SEDs from a given stellar population and filter curves and
- * computes PhotTables on the fly. Just needs the SEDs in SpecPhotDir/FullSEDs/,
- * the file with filter names and wave_lengths "FileWithFilterNames" and the
- * filter curves in SpecPhotDir/Filters/
- *
- * Developed by Chiara Tonini, adapted by Bruno Henriques
- * */
-#ifdef SPEC_PHOTABLES_ON_THE_FLY
-void setup_Spec_LumTables_onthefly(void)
-{
-  FilterLambda[NMAG] = 0.55;        // used by the dust model for birth clouds, the wavelength of the V-filter_number_
-  
-  double AbsMAG;
-  //FILTERS
-  double LambdaFilter[NMAG][MAX_NLambdaFilter], FluxFilter[NMAG][MAX_NLambdaFilter];
-  double *FluxFilterOnGrid, FluxFilterInt;
-  //InputSSP spectra
-  double LambdaInputSSP[SSP_NAGES][SSP_NLambda], FluxInputSSP[SSP_NAGES][SSP_NLambda];
-  double *FluxInputSSPConv, *FluxInputSSPOnGrid, FluxInputSSPInt;
-  //VEGA
-  double LambdaVega[NLambdaVega], FluxVega[NLambdaVega];
-  double *FluxVegaConv, *FluxVegaOnGrid, FluxVegaInt;
-  //AUX ARRAYS for FILTERS and InputSSP
-  double LambdaFilter_SingleFilter[MAX_NLambdaFilter], FluxFilter_SingleFilter[MAX_NLambdaFilter], LambdaInputSSP_SingleAge[SSP_NLambda];
-  double redshift;
-  //Loops in the code
-  int MetalLoop, AgeLoop, snap, filter_number_, i;
-  FILE *File_PhotTables[NMAG];
-
-#ifdef PARALLEL
-  if(ThisTask == 0)
-          printf("\n\nComputing PhotTables on the fly...\n\n");
-#else
-  printf("\n\nComputing PhotTables on the fly...\n\n");
-#endif
-
-  read_vega_spectra(LambdaVega, FluxVega);
-#ifndef FULL_SPECTRA
-  read_filters(LambdaFilter, FluxFilter);
-#endif
-  setup_RedshiftTab();
-  read_MetalTab();
-
-  //1st loop on the mettalicity files
-  for (MetalLoop=0;MetalLoop<SSP_NMETALLICITES;MetalLoop++)
-  {
-#ifdef PARALLEL
-    if(ThisTask == 0)
-      printf("Doing Metallicity File %d of %d\n",MetalLoop+1, SSP_NMETALLICITES);
-#else
-    printf("Doing Metallicity File %d of %d\n",MetalLoop+1, SSP_NMETALLICITES);
-#endif
-    //READ FULL INPUT SPECTRA into units of erg.s^-1.Hz^-1
-    read_InputSSP_spectra(LambdaInputSSP, FluxInputSSP, MetalLoop);
-
-    //2nd Loop on redshift
-    for(snap=0;snap<(LastDarkMatterSnapShot+1);snap++)
-    {
-      redshift=RedshiftTab[(LastDarkMatterSnapShot+1)-snap-1];
-
-      //3rd loop on Age
-      for(AgeLoop=0;AgeLoop<SSP_NAGES;AgeLoop++)
-      {
-        //4th loop on Bands
-        //IF FULL_SPECTRA defined a filter_number_ correspond to a wavelength on the SSP spectra
-        for(filter_number_=0;filter_number_<NMAG;filter_number_++)
-        {
-#ifndef FULL_SPECTRA
-          //ALLOCATE GRID - size of filter, binning of the spectra
-          int Min_Wave_Grid=0, Max_Wave_Grid=0, Grid_Length=0;
-
-          double *lgrid=create_grid(LambdaFilter[filter_number_][0], LambdaFilter[filter_number_][NLambdaFilter[filter_number_]-1], AgeLoop, redshift,
-                                        LambdaInputSSP, &Min_Wave_Grid, &Max_Wave_Grid, &Grid_Length);
-
-          if(Grid_Length>0)
-          {
-            for(i=0;i<Grid_Length;i++)
-              lgrid[i]=(1+redshift)*LambdaInputSSP[AgeLoop][Min_Wave_Grid+i];
-
-            //VEGA - interpolate spectrum on integral grid
-            FluxVegaOnGrid = malloc(sizeof(double) * Grid_Length);
-            interpolate(lgrid, Grid_Length, LambdaVega, NLambdaVega, FluxVega, FluxVegaOnGrid);
-
-
-            /*SSP - multiply by (1+z) to go from rest to observed SSP flux*/
-            FluxInputSSPOnGrid = malloc(sizeof(double) * Grid_Length);
-            for (i=0;i<Grid_Length;i++)
-              FluxInputSSPOnGrid[i]=(1.+redshift)*FluxInputSSP[AgeLoop][Min_Wave_Grid+i];
-
-            //FILTERS - interpolate on integral grid
-            for(i=0;i<NLambdaFilter[filter_number_];i++)
-            {
-              LambdaFilter_SingleFilter[i]=LambdaFilter[filter_number_][i];
-              FluxFilter_SingleFilter[i]=FluxFilter[filter_number_][i];
-            }
-            FluxFilterOnGrid = malloc(sizeof(double) * Grid_Length);
-            interpolate(lgrid, Grid_Length, LambdaFilter_SingleFilter, NLambdaFilter[filter_number_], FluxFilter_SingleFilter, FluxFilterOnGrid) ;
-
-            /* spectrum and filters are now defined on same grid
-              * CONVOLUTION: direct (configuration) space
-              * simply multiply filter*spectrum it's a convolution in Fourier space */
-            FluxInputSSPConv = malloc(sizeof(double) * Grid_Length);
-            for(i=0;i<Grid_Length;i++)
-              FluxInputSSPConv[i]=FluxInputSSPOnGrid[i]*FluxFilterOnGrid[i];
-
-            FluxVegaConv = malloc(sizeof(double) * Grid_Length);
-            for(i=0;i<Grid_Length;i++) FluxVegaConv[i]=FluxVegaOnGrid[i]*FluxFilterOnGrid[i];
-
-            //INTEGRATE
-            FluxFilterInt=integrate(FluxFilterOnGrid, Grid_Length);
-            FluxVegaInt=integrate(FluxVegaConv, Grid_Length);
-            FluxInputSSPInt=integrate(FluxInputSSPConv, Grid_Length);
-
-            //Absolute Observed Frame Magnitudes
-            if (FluxInputSSPInt == 0. || FluxFilterInt == 0.)
-              AbsMAG=99.;
-            else
-            {
-#ifdef AB
-              AbsMAG=get_AbsAB_magnitude(FluxInputSSPInt, FluxFilterInt, redshift);
-#endif
-#ifdef VEGA
-              AbsMAG=get_AbsAB_magnitude(FluxInputSSPInt, FluxFilterInt, redshift);
-              AbsMAG=AbsMAG+2.5*(log10(FluxVegaInt)-log10(FluxFilterInt))+48.6;
-              //MagABVega[filter_number_]=-2.5*(log10(FluxVegaInt)
-              //                -log10(FluxFilterInt))-48.6;
-#endif
-            }
-            free(FluxVegaOnGrid);
-            free(FluxVegaConv);
-            free(FluxInputSSPOnGrid);
-            free(FluxInputSSPConv);
-            free(FluxFilterOnGrid);
-          }
-          else //if Grid_Length=0 (filter outside the spectra, can happen for observed frame)
-            AbsMAG=99.;
-
-          LumTables[filter_number_][MetalLoop][snap][AgeLoop] = pow(10.,-AbsMAG/2.5);
-          free(lgrid);
-#else //ifdef FULL_SPECTRA
-          //FULL_SPECTRA defined -> a filter_number_ corresponds to a wavelength on the SSP spectra
-          FilterLambda[filter_number_]=(1+redshift)*LambdaInputSSP[AgeLoop][filter_number_];
-          LumTables[filter_number_][MetalLoop][snap][AgeLoop] = (1.+redshift)*FluxInputSSP[AgeLoop][filter_number_];
-#endif
-        }        // end age loop
-      }//end snap loop
-    }//end Band loop
-
-  }  //end loop on metallicities
-  printf("\nPhotTables Computed.\n\n");
-}
-#endif //SPEC_PHOTABLES_ON_THE_FLY
-
-
+/** @brief init table for shortcut lookup into LumTables */
 void init_SSP_log_age_jump_index(void)
 {
   double age;
@@ -355,6 +202,175 @@ void init_SSP_log_age_jump_index(void)
     SSP_log_age_jump_table[i] = idx;
   }
 }
+
+
+/** @brief Whenever star formation occurs, calculates the luminosity corresponding
+  *        to the mass of stars formed, considering the metallicity and age of the
+  *        material.
+  *
+  * The semi-analytic code uses look up tables produced by Evolutionary Population
+  * Synthesis Models to convert the mass formed on every star formation episode
+  * into a luminosity. Each of These tables corresponds to a simple stellar
+  * population i.e, a population with a single metallicity. For a given IMF,
+  * metatillicty and age, the tables give the luminosity for a
+  * \f$ 10^{11}M_\odot\f$ burst. The default model uses a Chabrier IMF and
+  * stellar populations from Bruzual & Charlot 2003 with 6 different metallicites.
+  *
+  * The magnitudes are immediately calculated for each output bin, so that we know
+  * the age of each population that contributed to a galaxy total population: the
+  * age between creation and output. Apart from the different ages of the populations
+  * at a given output bin, if the option COMPUTE_OBS_MAGS is turned on, then we also
+  * need to know the K-corrections (going the opposite directions as in observations)
+  * that will affect each population.
+  *
+  * For each metallicity there is a look up table which has the different magnitudes
+  * for each age and then this is k-corrected to all the snapshots.
+  *
+  * If MetallicityOption = 0 -> only solar metallicity.
+  * If MetallicityOption = 1 -> 6 metallicities.
+  *
+  * @bug MetallicityOption = 0 (-> only solar metallicity) used to only set tabindex,
+  *      but not fractions, now corrected (by Stefan Hilbert)
+  * */
+#ifndef  POST_PROCESS_MAGS
+void add_to_luminosities(const int p, double stellar_mass_, double time_, double dt_, const double metallicity_)
+{
+#ifndef OUTPUT_REST_MAGS
+#ifndef COMPUTE_OBS_MAGS
+  return; /* early return if no mags to compute */
+#endif /* not defined COMPUTE_OBS_MAGS */
+#endif /* not defined OUTPUT_REST_MAGS */
+
+  int output_bin_, filter_number_;
+  double LuminosityToAdd;
+   
+  int age_index_;  double f_age_1_, f_age_2_; 
+  int met_index_;  double f_met_1_, f_met_2_;
+  int redshift_index_;
+
+  //if one wants to have finner bins for the star formation then the STEPS
+  //of the calculation, N_FINE_AGE_BINS should be set to > 1
+  
+#if !((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  (void)dt_; /* suppress unused-parameter warning */
+#endif /* not defined N_FINE_AGE_BINS > 1 */
+
+  /* Time below which the luminosities are corrected for extinction due to
+   * molecular birth clouds.  */
+  const double birthcloud_age_ = 10.0 / UnitTime_in_Megayears * Hubble_h;
+
+  /* mstars converted from 1.e10Msun/h to 1.e11 Msun */
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  stellar_mass_ *= 0.1 / (Hubble_h * N_FINE_AGE_BINS);
+#else  /* not defined FINE_AGE_BINS > 1 */
+  stellar_mass_ *= 0.1 / Hubble_h;
+#endif /* not defined FINE_AGE_BINS > 1 */
+
+  /* now we have to change the luminosities accordingly. */
+  /* note: we already know at which place we have to look up the tables,
+   * since we know the output times, the current time_ and the metallicity.
+   * find_interpolated_lum() finds the 2 closest points in the SPS table
+   * in terms of age and metallicity. Time gives the time_to_present for
+   * the current step while NumToTime(ListOutputSnaps[output_bin_]) gives
+   * the time_ of the output snap - units Mpc/Km/s/h */
+  
+  if(MetallicityOption == 0) // reset met index to use only solar metallicity
+  { met_index_ = 4; f_met_1_ = 1., f_met_2_ = 0.; } 
+  else if(metallicity_ <= 0.)
+  { met_index_ = 0; f_met_1_ = 1., f_met_2_ = 0.; } 
+  else   
+  {  
+    const double log10_metallicity_ = log10(metallicity_);
+    find_metallicity_luminosity_interpolation_parameters(log10_metallicity_, met_index_, f_met_1_, f_met_2_);
+  }
+  
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  const double lower_time_ = time_ - 0.5 * dt;
+  dt_  /= N_FINE_AGE_BINS;
+  int fine_age_step_;
+  for(fine_age_step_ = 0; fine_age_step_< N_FINE_AGE_BINS; fine_age_step_++)
+  {
+    time_ = lower_time_ + (fine_age_step_ + 0.5) * dt_;
+#endif /* defined N_FINE_AGE_BINS > 1 */
+
+#ifdef GALAXYTREE
+    const int output_bin_beg_ = Gal[p].SnapNum;
+    const int output_bin_end_ = NOUT;
+#else  /* not defined GALAXYTREE */
+    const int output_bin_beg_ = 0;
+    const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[p].SnapNum] + 1;
+#endif /* not defined GALAXYTREE */
+
+    for(output_bin_ = output_bin_beg_; output_bin_ < output_bin_end_; output_bin_++)
+    {
+      const double age_                        = time_ - NumToTime(ListOutputSnaps[output_bin_]);
+      
+      if(age_ <= 0) continue;
+      
+      const double log10_age_                  = log10(age_);
+      const bool   is_affected_by_birthclould_ = (age_ <= birthcloud_age_);
+      find_age_luminosity_interpolation_parameters(log10_age_, age_index_, f_age_1_, f_age_2_);
+      
+#ifdef OUTPUT_REST_MAGS
+      /* For rest-frame, there is no K-correction on magnitudes,
+       * hence the 0 in LumTables[filter_number_][met_index_][0][age_index_] */
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+      {
+        //interpolation between the points found by find_interpolated_lum
+        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][0][filter_number_]  +
+                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_    ][0][filter_number_]) +
+                                           f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][0][filter_number_]  +
+                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][0][filter_number_]));
+                                         
+        Gal[p].Lum[filter_number_][output_bin_] += LuminosityToAdd;
+
+        /*luminosity used for extinction due to young birth clouds */
+        if(is_affected_by_birthclould_)
+          Gal[p].YLum[filter_number_][output_bin_] += LuminosityToAdd;
+      }
+#endif //OUTPUT_REST_MAGS
+
+#ifdef COMPUTE_OBS_MAGS
+      redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_bin_];
+
+      /* Note the zindex in LumTables[][][][] meaning the magnitudes are now
+        * "inversely k-corrected to get observed frame at output bins" */
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+      {
+        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
+                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                                           f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
+                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
+                                                       
+        Gal[p].ObsLum[filter_number_][output_bin_] += LuminosityToAdd;
+  
+        if(is_affected_by_birthclould_)
+          Gal[p].ObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
+      }
+      
+#ifdef OUTPUT_MOMAF_INPUTS
+      redshift_index_ = LastDarkMatterSnapShot - (ListOutputSnaps[output_bin_] > 0 ? ListOutputSnaps[output_bin_] - 1 : 0);
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+      {
+        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
+                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                                           f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
+                                                       f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
+                                                       
+        Gal[p].dObsLum[filter_number_][output_bin_] += LuminosityToAdd;
+
+        if(is_affected_by_birthclould_)
+          Gal[p].dObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
+      }
+#endif
+    }
+#endif //COMPUTE_OBS_MAGS
+
+#ifdef FINE_AGE_BINS  
+  }//end loop on small age bins
+#endif /* defined FINE_AGE_BINS */
+}
+#endif  //POST_PROCESS_MAGS
 
 #endif // COMPUTE_SPECPHOT_PROPERTIES
 

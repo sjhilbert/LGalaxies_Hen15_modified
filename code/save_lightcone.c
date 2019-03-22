@@ -32,6 +32,11 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include "allvars.h"
 #include "proto.h"
 
@@ -665,13 +670,14 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
 void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 {
 #ifdef GALAXYTREE
-  // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
-  qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
+  if(NGalTree > 0)
+  {
+    // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
+    qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
   
 #ifdef UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM
 /* updating done in memory */
-  if(NGalTree > 0)
-  {
+
     const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
     const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
     const long long N_galaxies_                  = galaxy_in_file_number_end_ - galaxy_in_file_number_begin_;
@@ -693,27 +699,26 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
  
     myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
     myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
-    
+
     myfree(galaxy_output_);
-  }
-  
+
 #else /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */
  /* updating done on disk with little memory overhead */
 
-  lightcone_galaxy_output_type galaxy_output_;
-  int galaxy_in_tree_number_;
-  long long galaxy_in_file_number_;
-  for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
-  { 
-    for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
-    {
-      myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
-      myfread_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
-      prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_);
-      myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
-      myfwrite_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
+    lightcone_galaxy_output_type galaxy_output_;
+    int galaxy_in_tree_number_;
+    long long galaxy_in_file_number_;
+    for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
+    { 
+      for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
+      {
+        myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
+        myfread_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
+        prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_);
+        myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
+        myfwrite_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
+      }
     }
-  }
   
 #ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
 #warning "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_LIGHTCONE_GALAXY_OUTPUT without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
@@ -722,7 +727,12 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 
 #endif /* not defined SORT_LIGHTCONE_GALAXY_OUTPUT */  
 #endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
-
+   /* after updating tree info in file, make sure that file position indicator is put back to end of file.
+    * note: file position indicator should be at end of file already,
+    * if GalTree[].lightcone_galaxy_number_in_file_begin/end work as expected an are propery sorted)
+    */
+    // myfseek_lightcone_galaxy(FdLightconeGalTree, TotLightconeGalCount);
+  }
 #else /* not defined GALAXYTREE */
  (void) file_number_;  /* avoid unused-parameter warning */
  (void) tree_number_; /* avoid unused-parameter warning */
@@ -753,6 +763,7 @@ void sort_lightcone_galaxy_in_file(FILE * lightcone_galaxy_file_)
   
 #else /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */    
 #warning "Sorry, sort_lightcone_galaxy_in_file() not yet implemented without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+  (void)lightcone_galaxy_file_; /* avoid unused-parameter warning */
 #endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
 }
 
@@ -766,10 +777,17 @@ int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const vo
   if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_begin < ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_begin)
     return -1;
 
-  if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_begin > ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_begin)
+  else if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_begin > ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_begin)
     return +1;
+  
+  else if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_end < ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_end)
+    return -1;
 
-  return 0;
+  else if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_end > ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_end)
+    return +1;
+  
+  else
+    return 0;
 }
 
 
@@ -779,37 +797,37 @@ int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const vo
  */
 int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightcone_galaxy_b_)
 {
-/* first use SnapNum for sorting (reverse order) */
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
-    return -1;
-
-  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
-    return +1;
-  
 #ifdef GALAXYTREE 
-/* if GalID available, use GalID for sorting */
-  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+  /* if GalID available, use GalID for sorting */
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return -1;
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return +1;
 #endif /* defined GALAXYTREE */
 
-/* next, use CubeShiftIndex for sorting (if GalID is available, (GalID,CubeShiftIndex) provide total order) */
+  /* next, use CubeShiftIndex for sorting (if GalID is available, (GalID,CubeShiftIndex) provide total order) */
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
     return -1;
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
     return +1;
+  
+  /* next, use SnapNum for sorting (reverse order) */
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
+    return -1;
 
-/* next, use obs. redshift */
+  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
+    return +1;
+
+  /* next, use obs. redshift */
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
     return -1;
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
     return +1;
 
-/* next, use StellarMass (reverse order)*/
+  /* next, use StellarMass (reverse order)*/
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
     return -1;
 
@@ -820,8 +838,6 @@ int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightc
     return 0;
 }
 
-
 /****************************************************/
 #endif /* defined LIGHTCONE_OUTPUT */
 /*** nothing here unless defined LIGHTCONE_OUTPUT ***/
-

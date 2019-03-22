@@ -175,35 +175,11 @@ void init(void)
   assert_flat_LCDM();
 #endif /* defined ASSUME_FLAT_LCDM */
 
-  init_redshift_for_comoving_distance();
+  init_cosmology();
   
 #ifdef LIGHTCONE_OUTPUT
   init_lightcone();
 #endif /* defined LIGHTCONE_OUTPUT */
-
-  // {
-    // const int n = 10;
-    // float x_arr[n];
-    // float y_arr[n];
-
-    // int i;
-    // for(i = 0; i < n; i++)
-    // { x_arr[i] = y_arr[i] = 1. * i; }
-
-    // const float x = 13.4;
-
-    // locate_interpolation_index_ascend_bisect(i, 0, n, x, x_arr);
-
-    // printf("\n  x = %f, i = %d, x_arr[i] = %f\n",x, i, x_arr[i]);
-     
-    // float res = -1;
-
-    // interpolate_ascend(i, 0, n, x, x_arr, y_arr, res, bisect);    
-
-    // printf("\n  x = %f, i = %d, x_arr[i] = %f, res = %f\n",x, i, x_arr[i], res );
-
-    // exit(0);
-  // }
 }
 
 

@@ -142,7 +142,7 @@ void starformation(const int p, const int centralgal, const double time, const d
   { check_disk_instability(p); }
 
   if (DiskRadiusModel== 0)
-  { get_stellar_disk_radius(p); }
+  { set_stellar_disk_radius(p); }
 }
 
 
@@ -268,7 +268,7 @@ void update_from_star_formation(const int p, const double stars, const bool flag
 #endif
 
   if (DiskRadiusModel == 0)
-    get_stellar_disk_radius(p);
+    set_stellar_disk_radius(p);
 }
 
 

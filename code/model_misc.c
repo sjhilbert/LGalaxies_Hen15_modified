@@ -30,11 +30,44 @@
 
 /**@file model_misc.c
  * @brief model_misc.c contains a mix of recipes used to: calculate disk
- *        sizes, initiate a galaxy structure, get the metallicity, add
- *        luminosities, convert snap to age, convert snap to z, calculate
- *        max of two numbers, get virial mass, get virial velocity, get virial
- *        radius, luminosity to mass, update central galaxy,
- *        update type 1 and type2, transfer stars and gas between galaxies. */
+ *        sizes, initiate a galaxy structure, update central galaxy,
+ *        update type 1 and type2, transfer stars and gas between galaxies,
+ *        etc. */
+
+
+/** @brief Calculates the separation of galaxies p and q, allowing for wrapping */
+double separation_gal(const int p, const int q)
+ {
+  int i;
+  double sep1,sep2;
+
+  sep2=0.;
+  for (i=0; i<3; i++)
+    {
+      sep1 =  Gal[p].Pos[i] - Gal[q].Pos[i];
+      sep1 =  wrap(sep1, BoxSize);
+      sep2+= sep1*sep1;
+    }
+  return sqrt(sep2);
+}
+
+
+/** @brief Calculates the separation of galaxies p and q, allowing for wrapping */
+double separation_halo(const int p, const  int q) 
+{
+  int i;
+  double sep1, sep2;
+
+  sep2=0.;
+  for (i=0; i<3; i++)
+    {
+          sep1 = Halo[p].Pos[i] - Halo[q].Pos[i];
+          sep1 = wrap(sep1,BoxSize);
+          sep2+=sep1*sep1;
+    }
+  return sqrt(sep2);
+}
+
 
 /** @brief computes disk radius
  * 
@@ -57,6 +90,97 @@ double get_disk_radius(const int halonr, const int p)
 }
 
 
+/** @brief Initiates the value of the disk radius.
+ *
+ *  First determination of radius in Guo2010 (same as in Delucia2007), after this,
+ *  the disks are updated using set_gas_disk_radius and set_stellar_disk_radius.
+ *  Two options are available:
+ *
+ *    If DiskRadiusModel = 2 then \f$R_{\rm{disk}}=\frac{R_{\rm{vir}}}{10}\f$
+ *
+ *    If DiskRadiusModel = 0 or 1 then the Mo, Mao & White (1998) formalism is
+ *    used with a Bullock style \f$\lambda\f$:
+ *
+ *    \f$ R_d=\frac{1}{\sqrt{2}}\frac{j_d}{m_d}\lambda r_{200}\f$
+ *
+ *    and using the Milky Way as an approximate guide \f$R_{\rm{disk}}=3R_d\f$. 
+ * 
+ * @bug possible bug: should really test for GasSpin != 0 instead of HaloSpin != 0?
+ */
+double get_initial_disk_radius(const int halonr_, const int p_)
+{
+  if(DiskRadiusModel == 0 || DiskRadiusModel == 1)
+  {
+    const double spin_squared_ = Halo[halonr_].Spin[0] * Halo[halonr_].Spin[0] +
+                                 Halo[halonr_].Spin[1] * Halo[halonr_].Spin[1] +
+                                 Halo[halonr_].Spin[2] * Halo[halonr_].Spin[2];  
+
+    if(Gal[p_].GasSpin[0]==0 && Gal[p_].GasSpin[1]==0 && Gal[p_].GasSpin[2]==0)
+      return 0.1 * Gal[p_].Rvir;
+    else
+      return 1.5 * sqrt(spin_squared_) / Gal[p_].Vvir;
+  }
+  else
+    /*  simpler prescription */
+    return 0.1 * Gal[p_].Rvir;
+}
+
+
+/** @brief Calculates the virial mass: \f$M_{\rm{crit200}}\f$ for central halos
+ *        with \f$M_{\rm{crit200}}\f$ or Len*PartMass for central halos without. */
+double get_virial_mass(const int halonr)
+{
+  if(halonr == Halo[halonr].FirstHaloInFOFgroup && Halo[halonr].M_Crit200)
+    return Halo[halonr].M_Crit200;        /* take spherical overdensity mass estimate */
+  else
+    return Halo[halonr].Len * PartMass;
+}
+
+
+/** @brief Calculates the virial velocity from the virial mass and radius.
+ *
+ * Calculates virial velocity:
+ *    \f$ V_{\rm{vir}}=\frac{GM_{\rm{vir}}}{R_{\rm{vir}}} \f$*/
+
+double get_virial_velocity(const int halonr)
+{
+  return sqrt(G * get_virial_mass(halonr) / get_virial_radius(halonr));
+}
+
+
+/** @brief computes Hubbble parameter for halo redshift  */
+double get_hubble_parameter_for_halo(const int halonr)
+{
+  double zplus1;
+
+  zplus1 = 1 + ZZ[Halo[halonr].SnapNum];
+
+  /*get H for current z*/
+  return Hubble * sqrt(Omega * zplus1 * zplus1 * zplus1 + (1 - Omega - OmegaLambda) * zplus1 * zplus1 + OmegaLambda);
+}
+
+
+/** @brief computes Hubbble parameter for halo redshift  */
+double get_hubble_parameter_squared_for_halo(const int halonr)
+{
+  const double zplus1 = 1 + ZZ[Halo[halonr].SnapNum];
+
+  return Hubble *  Hubble * (Omega * zplus1 * zplus1 * zplus1 + (1 - Omega - OmegaLambda) * zplus1 * zplus1 + OmegaLambda);
+}
+
+
+/** @brief Calculates virial radius from a critical overdensity
+ *
+ * Calculates virial radius using:
+ * \f$ M_{\rm{vir}}=\frac{4}{3}\pi R_{\rm{vir}}^3 \rho_c \Delta_c\f$.
+ *
+ * From which, assuming \f$ \Delta_c=200\f$, *
+ * \f$ R_{\rm{vir}}=\left( \frac{3M_{\rm{vir}}}{4\pi 200 \rho_c}\right)^{1/3}\f$
+ */
+double get_virial_radius(const int halonr)
+{ return pow(get_virial_mass(halonr) / get_hubble_parameter_squared_for_halo(halonr) * (0.01 * G), 1. / 3.); }
+
+
 /** @brief Updates the gas disk radius.
  *
  *  The gas disk is assumed to be thin, in centrifugal equilibrium and to have
@@ -76,7 +200,7 @@ double get_disk_radius(const int halonr, const int p)
  *  assuming conservation of the angular momentum of the cooling gas and that the
  *  maximum circular velocity of satellite galaxies does not change after infall
  *  (inner dark matter regions are compact and don't change). */
-void get_gas_disk_radius(const int p_)
+void set_gas_disk_radius(const int p_)
 {
   const double spin_squared_ = Gal[p_].GasSpin[0] * Gal[p_].GasSpin[0] +
                                Gal[p_].GasSpin[1] * Gal[p_].GasSpin[1] +
@@ -109,7 +233,7 @@ void get_gas_disk_radius(const int p_)
  *
  *  assuming that the maximum circular velocity of satellite galaxies does not
  *  change after infall (inner dark matter regions are compact and don't change). */
-void get_stellar_disk_radius(const int p_)
+void set_stellar_disk_radius(const int p_)
 {
   const double spin_squared_ = Gal[p_].StellarSpin[0] * Gal[p_].StellarSpin[0] +
                                Gal[p_].StellarSpin[1] * Gal[p_].StellarSpin[1] +
@@ -121,42 +245,6 @@ void get_stellar_disk_radius(const int p_)
   }
   else
   { Gal[p_].StellarDiskRadius = 0.1 * Gal[p_].Rvir;  }
-}
-
-
-/** @brief Initiates the value of the disk radius.
- *
- *  First determination of radius in Guo2010 (same as in Delucia2007), after this,
- *  the disks are updated using get_gas_disk_radius and get_stellar_disk_radius.
- *  Two options are available:
- *
- *    If DiskRadiusModel = 2 then \f$R_{\rm{disk}}=\frac{R_{\rm{vir}}}{10}\f$
- *
- *    If DiskRadiusModel = 0 or 1 then the Mo, Mao & White (1998) formalism is
- *    used with a Bullock style \f$\lambda\f$:
- *
- *    \f$ R_d=\frac{1}{\sqrt{2}}\frac{j_d}{m_d}\lambda r_{200}\f$
- *
- *    and using the Milky Way as an approximate guide \f$R_{\rm{disk}}=3R_d\f$. 
- * 
- * @bug possible bug: should really test for GasSpin != 0 instead of HaloSpin != 0?
- */
-double get_initial_disk_radius(const int halonr_, const int p_)
-{
-  if(DiskRadiusModel == 0 || DiskRadiusModel == 1)
-  {
-    const double spin_squared_ = Halo[halonr_].Spin[0] * Halo[halonr_].Spin[0] +
-                                 Halo[halonr_].Spin[1] * Halo[halonr_].Spin[1] +
-                                 Halo[halonr_].Spin[2] * Halo[halonr_].Spin[2];  
-
-    if(Gal[p_].GasSpin[0]==0 && Gal[p_].GasSpin[1]==0 && Gal[p_].GasSpin[2]==0)
-      return 0.1 * Gal[p_].Rvir;
-    else
-      return 1.5 * sqrt(spin_squared_) / Gal[p_].Vvir;
-  }
-  else
-    /*  simpler prescription */
-    return 0.1 * Gal[p_].Rvir;
 }
 
 
@@ -349,232 +437,6 @@ void init_galaxy(const int p, const int halonr)
 }
 
 
-/** @brief Whenever star formation occurs, calculates the luminosity corresponding
-  *        to the mass of stars formed, considering the metallicity and age of the
-  *        material.
-  *
-  * The semi-analytic code uses look up tables produced by Evolutionary Population
-  * Synthesis Models to convert the mass formed on every star formation episode
-  * into a luminosity. Each of These tables corresponds to a simple stellar
-  * population i.e, a population with a single metallicity. For a given IMF,
-  * metatillicty and age, the tables give the luminosity for a
-  * \f$ 10^{11}M_\odot\f$ burst. The default model uses a Chabrier IMF and
-  * stellar populations from Bruzual & Charlot 2003 with 6 different metallicites.
-  *
-  * The magnitudes are immediately calculated for each output bin, so that we know
-  * the age of each population that contributed to a galaxy total population: the
-  * age between creation and output. Apart from the different ages of the populations
-  * at a given output bin, if the option COMPUTE_OBS_MAGS is turned on, then we also
-  * need to know the K-corrections (going the opposite directions as in observations)
-  * that will affect each population.
-  *
-  * For each metallicity there is a look up table which has the different magnitudes
-  * for each age and then this is k-corrected to all the snapshots.
-  *
-  * If MetallicityOption = 0 -> only solar metallicity.
-  * If MetallicityOption = 1 -> 6 metallicities.
-  *
-  * @bug MetallicityOption = 0 (-> only solar metallicity) used to only set tabindex,
-  *      but not fractions, now corrected (by Stefan Hilbert)
-  * */
-#ifdef COMPUTE_SPECPHOT_PROPERTIES
-#ifndef  POST_PROCESS_MAGS
-void add_to_luminosities(const int p, double stellar_mass_, double time_, double dt_, const double metallicity_)
-{
-#ifndef OUTPUT_REST_MAGS
-#ifndef COMPUTE_OBS_MAGS
-  return; /* early return if no mags to compute */
-#endif /* not defined COMPUTE_OBS_MAGS */
-#endif /* not defined OUTPUT_REST_MAGS */
-
-  int output_bin_, filter_number_;
-  double LuminosityToAdd;
-   
-  int age_index_;  double f_age_1_, f_age_2_; 
-  int met_index_;  double f_met_1_, f_met_2_;
-  int redshift_index_;
-
-  //if one wants to have finner bins for the star formation then the STEPS
-  //of the calculation, N_FINE_AGE_BINS should be set to > 1
-  
-#if !((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
-  (void)dt_; /* suppress unused-parameter warning */
-#endif /* not defined N_FINE_AGE_BINS > 1 */
-
-  /* Time below which the luminosities are corrected for extinction due to
-   * molecular birth clouds.  */
-  const double birthcloud_age_ = 10.0 / UnitTime_in_Megayears * Hubble_h;
-
-  /* mstars converted from 1.e10Msun/h to 1.e11 Msun */
-#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
-  stellar_mass_ *= 0.1 / (Hubble_h * N_FINE_AGE_BINS);
-#else  /* not defined FINE_AGE_BINS > 1 */
-  stellar_mass_ *= 0.1 / Hubble_h;
-#endif /* not defined FINE_AGE_BINS > 1 */
-
-  /* now we have to change the luminosities accordingly. */
-  /* note: we already know at which place we have to look up the tables,
-   * since we know the output times, the current time_ and the metallicity.
-   * find_interpolated_lum() finds the 2 closest points in the SPS table
-   * in terms of age and metallicity. Time gives the time_to_present for
-   * the current step while NumToTime(ListOutputSnaps[output_bin_]) gives
-   * the time_ of the output snap - units Mpc/Km/s/h */
-  
-  if(MetallicityOption == 0) // reset met index to use only solar metallicity
-  { met_index_ = 4; f_met_1_ = 1., f_met_2_ = 0.; } 
-  else if(metallicity_ <= 0.)
-  { met_index_ = 0; f_met_1_ = 1., f_met_2_ = 0.; } 
-  else   
-  {  
-    const double log10_metallicity_ = log10(metallicity_);
-    find_metallicity_luminosity_interpolation_parameters(log10_metallicity_, met_index_, f_met_1_, f_met_2_);
-  }
-  
-#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
-  const double lower_time_ = time_ - 0.5 * dt;
-  dt_  /= N_FINE_AGE_BINS;
-  int fine_age_step_;
-  for(fine_age_step_ = 0; fine_age_step_< N_FINE_AGE_BINS; fine_age_step_++)
-  {
-    time_ = lower_time_ + (fine_age_step_ + 0.5) * dt_;
-#endif /* defined N_FINE_AGE_BINS > 1 */
-
-#ifdef GALAXYTREE
-    const int output_bin_beg_ = Gal[p].SnapNum;
-    const int output_bin_end_ = NOUT;
-#else  /* not defined GALAXYTREE */
-    const int output_bin_beg_ = 0;
-    const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[p].SnapNum] + 1;
-#endif /* not defined GALAXYTREE */
-
-    for(output_bin_ = output_bin_beg_; output_bin_ < output_bin_end_; output_bin_++)
-    {
-      const double age_                        = time_ - NumToTime(ListOutputSnaps[output_bin_]);
-      
-      if(age_ <= 0) continue;
-      
-      const double log10_age_                  = log10(age_);
-      const bool   is_affected_by_birthclould_ = (age_ <= birthcloud_age_);
-      find_age_luminosity_interpolation_parameters(log10_age_, age_index_, f_age_1_, f_age_2_);
-      
-#ifdef OUTPUT_REST_MAGS
-      /* For rest-frame, there is no K-correction on magnitudes,
-       * hence the 0 in LumTables[filter_number_][met_index_][0][age_index_] */
-      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
-      {
-        //interpolation between the points found by find_interpolated_lum
-        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][0][age_index_    ]  +
-                                                       f_age_2_ * LumTables[filter_number_][met_index_    ][0][age_index_ + 1]) +
-                                           f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][0][age_index_    ]  +
-                                                       f_age_2_ * LumTables[filter_number_][met_index_ + 1][0][age_index_ + 1]));
-                                         
-        Gal[p].Lum[filter_number_][output_bin_] += LuminosityToAdd;
-
-        /*luminosity used for extinction due to young birth clouds */
-        if(is_affected_by_birthclould_)
-          Gal[p].YLum[filter_number_][output_bin_] += LuminosityToAdd;
-      }
-#endif //OUTPUT_REST_MAGS
-
-#ifdef COMPUTE_OBS_MAGS
-      redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_bin_];
-
-      /* Note the zindex in LumTables[][][][] meaning the magnitudes are now
-        * "inversely k-corrected to get observed frame at output bins" */
-      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
-      {
-        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ]  +
-                                                       f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                                           f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ]  +
-                                                       f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
-                                                       
-        Gal[p].ObsLum[filter_number_][output_bin_] += LuminosityToAdd;
-  
-        if(is_affected_by_birthclould_)
-          Gal[p].ObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
-      }
-      
-#ifdef OUTPUT_MOMAF_INPUTS
-      redshift_index_ = LastDarkMatterSnapShot - (ListOutputSnaps[output_bin_] > 0 ? ListOutputSnaps[output_bin_] - 1 : 0);
-      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
-      {
-        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ]  +
-                                                       f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                                           f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ]  +
-                                                       f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
-                                                       
-        Gal[p].dObsLum[filter_number_][output_bin_] += LuminosityToAdd;
-
-        if(is_affected_by_birthclould_)
-          Gal[p].dObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
-      }
-#endif
-    }
-#endif //COMPUTE_OBS_MAGS
-
-#ifdef FINE_AGE_BINS  
-  }//end loop on small age bins
-#endif /* defined FINE_AGE_BINS */
-}
-#endif  //POST_PROCESS_MAGS
-#endif  //COMPUTE_SPECPHOT_PROPERTIES
-
-
-/** @brief Calculates the virial mass: \f$M_{\rm{crit200}}\f$ for central halos
- *        with \f$M_{\rm{crit200}}\f$ or Len*PartMass for central halos without. */
-double get_virial_mass(const int halonr)
-{
-  if(halonr == Halo[halonr].FirstHaloInFOFgroup && Halo[halonr].M_Crit200)
-    return Halo[halonr].M_Crit200;        /* take spherical overdensity mass estimate */
-  else
-    return Halo[halonr].Len * PartMass;
-}
-
-
-/** @brief Calculates the virial velocity from the virial mass and radius.
- *
- * Calculates virial velocity:
- *    \f$ V_{\rm{vir}}=\frac{GM_{\rm{vir}}}{R_{\rm{vir}}} \f$*/
-
-double get_virial_velocity(const int halonr)
-{
-  return sqrt(G * get_virial_mass(halonr) / get_virial_radius(halonr));
-}
-
-
-/** @brief computes Hubbble parameter for halo redshift  */
-double get_hubble_parameter_for_halo(const int halonr)
-{
-  double zplus1;
-
-  zplus1 = 1 + ZZ[Halo[halonr].SnapNum];
-
-  /*get H for current z*/
-  return Hubble * sqrt(Omega * zplus1 * zplus1 * zplus1 + (1 - Omega - OmegaLambda) * zplus1 * zplus1 + OmegaLambda);
-}
-
-
-/** @brief computes Hubbble parameter for halo redshift  */
-double get_hubble_parameter_squared_for_halo(const int halonr)
-{
-  const double zplus1 = 1 + ZZ[Halo[halonr].SnapNum];
-
-  return Hubble *  Hubble * (Omega * zplus1 * zplus1 * zplus1 + (1 - Omega - OmegaLambda) * zplus1 * zplus1 + OmegaLambda);
-}
-
-
-/** @brief Calculates virial radius from a critical overdensity
- *
- * Calculates virial radius using:
- * \f$ M_{\rm{vir}}=\frac{4}{3}\pi R_{\rm{vir}}^3 \rho_c \Delta_c\f$.
- *
- * From which, assuming \f$ \Delta_c=200\f$, *
- * \f$ R_{\rm{vir}}=\left( \frac{3M_{\rm{vir}}}{4\pi 200 \rho_c}\right)^{1/3}\f$
- */
-double get_virial_radius(const int halonr)
-{ return pow(get_virial_mass(halonr) / get_hubble_parameter_squared_for_halo(halonr) * (0.01 * G), 1. / 3.); }
-
-
 /** @brief Updates properties of central galaxies.
  *
  *   \f$M_{\rm{vir}}\f$, \f$R_{\rm{vir}}\f$ and \f$V_{\rm{vir}}\f$ are only
@@ -747,27 +609,27 @@ void update_type_2(const int ngal, const int halonr, const int prog, int mostmas
 }
 
 
-  /** @brief transfer part of stars between reservoirs and galaxies
-   * 
-   * Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
-   * cp and cq must each be one of: 
-   * DiskComponent, BulgeComponent, ICMComponent, BurstComponent
-   *
-   * If -DTRACK_BURST is set then can also specify BurstComponent as an option.
-   * This is different in that it is not a separate component, so it should only
-   * be transferred if both cq and cp are BurstComponent
-   * 
-   * @bug (correct by Stefan Hilbert)
-   *       it was tested that "BurstMass" could only be transferred to "BurstMass",
-   *       but it was "Burst" to indicate BurstMass transfer and "BurstMass" was
-   *       never mentioned elsewhere.
-   *       So, "BurstMass" was replaced by "Burst" (and then by BurstComponent)
-   *      
-   * @bug (correct by Stefan Hilbert)
-   *       BurstMass was given to receiving galaxy, but not taken from donor galaxy
-   *       code used to be: Gal[q].BurstMass -= 0.;
-   *       now replaced by: Gal[q].BurstMass -= Mass;
-   */
+/** @brief transfer part of stars between reservoirs and galaxies
+ * 
+ * Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
+ * cp and cq must each be one of: 
+ * DiskComponent, BulgeComponent, ICMComponent, BurstComponent
+ *
+ * If -DTRACK_BURST is set then can also specify BurstComponent as an option.
+ * This is different in that it is not a separate component, so it should only
+ * be transferred if both cq and cp are BurstComponent
+ * 
+ * @bug (correct by Stefan Hilbert)
+ *       it was tested that "BurstMass" could only be transferred to "BurstMass",
+ *       but it was "Burst" to indicate BurstMass transfer and "BurstMass" was
+ *       never mentioned elsewhere.
+ *       So, "BurstMass" was replaced by "Burst" (and then by BurstComponent)
+ *      
+ * @bug (correct by Stefan Hilbert)
+ *       BurstMass was given to receiving galaxy, but not taken from donor galaxy
+ *       code used to be: Gal[q].BurstMass -= 0.;
+ *       now replaced by: Gal[q].BurstMass -= Mass;
+ */
 void transfer_stars(const int p, const StellarComponentType cp, const int q, const StellarComponentType cq, const double fraction) 
 {
   float Mass;
@@ -1006,18 +868,18 @@ void transfer_stars(const int p, const StellarComponentType cp, const int q, con
 }
 
 
-  /** @brief transfer part of gas between reservoirs and galaxies
-   *
-   * Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
-   * cp and cq must each be one of:
-   *   ColdGasComponent
-   *   HotGasComponent
-   *   EjectedGasComponent
-   * 
-   * @note used to get info about which function was calling,
-   *       but this is (likely by far) the most called function,
-   *       so it should be kept as tidy as possible
-   */
+/** @brief transfer part of gas between reservoirs and galaxies
+ *
+ * Transfers a fraction of component cq of galaxy q onto component cp of galaxy p.
+ * cp and cq must each be one of:
+ *   ColdGasComponent
+ *   HotGasComponent
+ *   EjectedGasComponent
+ * 
+ * @note used to get info about which function was calling,
+ *       but this is (likely by far) the most called function,
+ *       so it should be kept as tidy as possible
+ */
 void transfer_gas(const int p, const GasComponentType cp, const int q, const GasComponentType  cq, const double fraction)
 {
   float Mass;
@@ -1118,15 +980,15 @@ void transfer_gas(const int p, const GasComponentType cp, const int q, const Gas
 }
 
 
-  /** @brief sanity checks on the masses of different components
-   *
-   *
-   * Some sanity checks on the masses of different components. 
-   * If due to rounding error, then apply a correction;
-   * otherwise print error message and exit
-   *
-   * @note ROB: Should probably make some of these for the elements
-   */
+/** @brief sanity checks on the masses of different components
+ *
+ *
+ * Some sanity checks on the masses of different components. 
+ * If due to rounding error, then apply a correction;
+ * otherwise print error message and exit
+ *
+ * @note ROB: Should probably make some of these for the elements
+ */
 void perform_mass_checks(char string[], const int igal)
 {
   (void) string; /* suppress unused-parameter warning */
@@ -1363,191 +1225,6 @@ void perform_mass_checks(char string[], const int igal)
 #endif //DETAILED_ENRICHEMENT
 
   return;
-}
-
-
-/** @brief Calculates the separation of galaxies p and q, allowing for wrapping */
-double separation_gal(const int p, const int q)
- {
-  int i;
-  double sep1,sep2;
-
-  sep2=0.;
-  for (i=0; i<3; i++)
-    {
-      sep1 =  wrap(Gal[p].Pos[i] - Gal[q].Pos[i],BoxSize);
-      sep2+=sep1*sep1;
-    }
-  return sqrt(sep2);
-}
-
-
-/** @brief Calculates the separation of galaxies p and q, allowing for wrapping */
-double separation_halo(const int p, const  int q) 
-{
-  int i;
-  double sep1, sep2;
-
-  sep2=0.;
-  for (i=0; i<3; i++)
-    {
-          sep1 =  wrap(Halo[p].Pos[i] - Halo[q].Pos[i],BoxSize);
-          sep2+=sep1*sep1;
-    }
-  return sqrt(sep2);
-}
-
-
-/** @brief find interpolation point
- * 
- * Finds interpolation point
- * the value j so that xx[j] < x < xx[jj+1]
- * 
- * @note  MATH MISC - PROBABLY SHOULD GO INTO SEPARATE FILE
- */
-void locate(double *xx, const int n, const double x, int *j)
-{
-  unsigned long ju,jm,jl;
-  int ascnd;
-
-  jl=0;
-  ju=n+1;
-  ascnd=(xx[n] >= xx[1]);
-
-  while (ju-jl > 1)
-    {
-      jm=(ju+jl) >> 1;
-      if ((x >= xx[jm]) == ascnd)
-        jl=jm;
-      else
-        ju=jm;
-    }
-
-  if (x == xx[1]) *j=1;
-  else if(x == xx[n]) *j=n-1;
-  else *j=jl;
-
-}
-
-
-/** @brief numerical integration for fluxes
- * 
- * numerical integration for fluxes with
- * Simpsons quadratures for the signal
- * 
- * erg/s/A --> erg/s/Hz --> erg/s
- */
-double integrate(double *flux, const int Grid_Length)
-{
-  double sum[3], I[3], f[4];
-  double integral=0.0;
-  int i,k;
-
-  for(i=0;i<3;i++)sum[i]=0.0;
-  for(i=0;i<3;i++)I[i]=0.0;
-  for(i=0;i<4;i++)f[i]=0.0;
-
-  for(i=0;i<Grid_Length/2-2;i++)
-    {
-      k=2*i+1;                    //odd indexes
-      f[2]=flux[k];
-      sum[1]=sum[1]+f[2];
-    }
-  I[1]=sum[1]*2./3.;
-
-  for(i=0;i<Grid_Length/2-1;i++)
-    {
-      k=2*i;
-      f[3]=flux[k] ;     //even indexes
-      sum[2]=sum[2]+f[3];
-    }
-  I[2]=sum[2]*4./3.;
-
-  f[0]=flux[0];
-  f[1]=flux[Grid_Length-1];
-  I[0]=(f[0]+f[1])/3.;
-
-  integral=I[0]+I[1]+I[2];
-
-//if(Grid_Length==0)
-//  printf("Integral=%e\n",integral);
-
-  return integral;
-}
-
-
-
-/** @brief Find interpolation polynomial
- * 
- * given xa and ya, returns polynomial y and error dy
- */
-void polint(double xa[], double ya[], const int n, const double x, double *y, double *dy)
-{
-  int i,m,ns=1;
-  double den, dif, dift, ho, hp;
-  double *c,*d;
-  double ww;
-
-  dif=fabs(x-xa[1]);
-  c=new_vector(1,n);
-  d=new_vector(1,n);
-  for (i=1;i<=n;i++) {
-      if ( (dift=fabs(x-xa[i])) < dif) {
-          ns=i;
-          dif=dift;
-      }
-      c[i]=ya[i];
-      d[i]=ya[i];
-  }
-  *y=ya[ns--];
-  for (m=1;m<n;m++) {
-      for (i=1;i<=n-m;i++)
-        {
-          ho=xa[i]-x;
-          hp=xa[i+m]-x;
-          ww=c[i+1]-d[i];
-          if ( (den=ho-hp) == 0.0) nrerror("Error in routine polint");
-          den=ww/den;
-          d[i]=hp*den;
-          c[i]=ho*den;
-        }
-      *y += (*dy=(2*ns < (n-m) ? c[ns+1] : d[ns--]));
-  }
-  free_vector(d,1,n);
-  free_vector(c,1,n);
-}
-
-
-/** @brief Numerical Recipes standard error handler */
-void nrerror(char error_text[])
-{
-  fprintf(stderr,"Numerical Recipes run-time error...\n");
-  fprintf(stderr,"%s\n",error_text);
-  fprintf(stderr,"...now exiting to system...\n");
-  exit(1);
-}
-
-
-#define NREND 1
-#define FREE_ARG char*
-
-
-/** @brief allocate a double vector with subscript range v[nl..nh] */
-double *new_vector(const long nl, const long nh)
-{
-  double *v;
-
-  v=(double *)malloc((size_t) ((nh-nl+1+NREND)*sizeof(double)));
-  if (!v) nrerror("allocation failure in vector()");
-  return v-nl+NREND;
-}
-
-
-/** @brief free a double vector allocated with vector() */
-void free_vector(double *v, const long nl, const long nh)
-{
-  (void)nh; /* avoid unused-parameter warning */
-  free((FREE_ARG) (v+nl-NREND));
 }
 
 

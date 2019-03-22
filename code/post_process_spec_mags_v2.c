@@ -24,8 +24,13 @@
 #include <string.h>
 #include <math.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include "allvars.h"
 #include "proto.h"
+
+#include "model_dust_extinction_inline.h"
 
 /** @file post_process_spec_mags.c
  *  @brief post_process_spec_mags.c can be used to compute mags or spectra from
@@ -107,10 +112,10 @@ compute_post_process_luminosities (const double mass_,
   
 #ifdef OUTPUT_REST_MAGS
   redshift_index_ = 0;
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ]  +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ]  +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1])  );
+  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_]  +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                             f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_])  );
 
   *Lum_ += lum_to_add_;
   if(have_to_add_to_y_lum_)
@@ -120,10 +125,10 @@ compute_post_process_luminosities (const double mass_,
 
 #ifdef COMPUTE_OBS_MAGS
   redshift_index_ = LastDarkMatterSnapShot - snapshot_number_;
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
+  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_] +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                             f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_] +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
 
   *ObsLum_ += lum_to_add_;
   if(have_to_add_to_y_lum_)
@@ -131,10 +136,10 @@ compute_post_process_luminosities (const double mass_,
 
 #ifdef OUTPUT_MOMAF_INPUTS
   redshift_index_ = LastDarkMatterSnapShot - (snapshot_number_ > 0 ? snapshot_number_ - 1 : 0);
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
+  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_] +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                             f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_] +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
 
   *dObsLum_ += lum_to_add_;
   if(have_to_add_to_y_lum_)
@@ -143,10 +148,10 @@ compute_post_process_luminosities (const double mass_,
 #ifdef KITZBICHLER
   redshift_index_ = LastDarkMatterSnapShot - (snapshot_number_ < LastDarkMatterSnapShot ? snapshot_number_ + 1 : LastDarkMatterSnapShot);
   if(redshift_index_ < 0) redshift_index_ = 0;
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
+  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_] +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
+                             f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_] +
+                                         f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
 
   *dObsLum_forward_ += lum_to_add_;
   if(have_to_add_to_y_lum_)
@@ -195,11 +200,11 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
 
   /* mu_ for YS extinction, given by a Gaussian with centre 0.3 (MUCENTER)
    * and width 0.2 (MUWIDTH), truncated at 0.1 and 1.  */
-  do { mu_ = gasdev(&mu_seed) * MUWIDTH + MUCENTER; }
+  do { mu_ = gsl_ran_gaussian(random_generator, MUWIDTH) + MUCENTER; }
   while (mu_ < 0.1 || mu_ > 1.0);
   
-//   // for testing:
-//   mu_ = MUCENTER;
+  // for testing:
+  mu_ = MUCENTER;
 
   // extinction on Vband used as reference for the BC extinction
   const double tauvbc_ = get_extinction(NMAG, Z_g_, 0) * n_h_ * (1. / mu_ - 1.);

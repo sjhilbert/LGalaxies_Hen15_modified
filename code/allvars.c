@@ -233,7 +233,7 @@ double tau_dt[STEPS*MAXSNAPS];//Width of every timestep in the code. (Used for S
 float SSP_logMetalTab[SSP_NMETALLICITES];
 float SSP_logAgeTab[SSP_NAGES];
 float RedshiftTab[MAXSNAPS];
-float LumTables[NMAG][SSP_NMETALLICITES][MAXSNAPS][SSP_NAGES];
+float LumTables[SSP_NAGES][SSP_NMETALLICITES][MAXSNAPS][NMAG];
 float FilterLambda[NMAG+1];	//wavelength of each filter + 1 for V-band
 #ifdef SPEC_PHOTABLES_ON_THE_FLY
 int NLambdaFilter[NMAG];

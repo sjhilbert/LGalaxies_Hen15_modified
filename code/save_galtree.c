@@ -162,7 +162,6 @@ void save_galaxy_tree_finalize(const int filenr, const int tree)
 
     myfseek(FdGalTree, (1 + TotGalCount + i) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
     myfwrite(&galaxy_output, sizeof(struct GALAXY_OUTPUT), 1, FdGalTree);
-
   }
 
   // GL: propose to only reorder file on disk based on input (or Makefile) parameter
@@ -172,7 +171,9 @@ void save_galaxy_tree_finalize(const int filenr, const int tree)
   // for easier to read
 #ifdef SORT_GALAXYTREE_OUTPUT
   save_galaxy_tree_reorder_on_disk();
-#endif /* defined SORT_GALAXYTREE_OUTPUT */
+#else  /* not defined SORT_GALAXYTREE_OUTPUT */
+  myfseek(FdGalTree, (1 + TotGalCount + NGalTree) * sizeof(struct GALAXY_OUTPUT), SEEK_SET);
+#endif /* not defined SORT_GALAXYTREE_OUTPUT */
 
   TotGalCount += NGalTree;
 }

@@ -26,6 +26,74 @@
 
 #include <stddef.h>
 
+
+/* simple min, max, etc.: */
+#define  min(x,y)  ((x)<(y) ?(x):(y))
+#define  max(x,y)  ((x)>(y) ?(x):(y))
+#define  wrap(x,y) ( (x)>((y)/2.) ? ((x)-(y)) : ((x)<(-(y)/2.)?((x)+(y)):(x)) )
+#define  pow2(x)   ((x)*(x))
+#define  pow3(x)   ((x)*(x)*(x))
+
+
+/* verbose program termination: */
+#ifdef PARALLEL
+#define  terminate(x) do {char termbuf[5000]; sprintf(termbuf, "code termination on task=%d, function %s(), file %s, line %d: %s\n", ThisTask, __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1); } while(0)
+#else /* not defined PARALLEL */
+#define  terminate(x) do {char termbuf[5000]; sprintf(termbuf, "code termination in function %s(), file %s, line %d: %s\n", __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1); } while(0)
+#endif /* not defined PARALLEL */
+
+
+/* memory management: */
+#define  mymalloc(x, y)            mymalloc_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
+#define  mymalloc_movable(x, y, z) mymalloc_movable_fullinfo(x, y, z, __FUNCTION__, __FILE__, __LINE__)
+
+#define  myrealloc(x, y)           myrealloc_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
+#define  myrealloc_movable(x, y)   myrealloc_movable_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
+
+#define  myfree(x)                 myfree_fullinfo(x, __FUNCTION__, __FILE__, __LINE__)
+#define  myfree_movable(x)         myfree_movable_fullinfo(x, __FUNCTION__, __FILE__, __LINE__)
+
+#define  report_memory_usage(x, y) report_detailed_memory_usage_of_largest_task(x, y, __FUNCTION__, __FILE__, __LINE__)
+
+
+/* MPI for large data: */
+#ifdef PARALLEL
+
+/** @brief maximum message size in bytes for MPI communication */
+#ifndef MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES  
+#define MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES ((1ull << 31) - 1);
+#endif /* not defined MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES */
+
+
+/** @brief MPI Bcast large data  */
+#define MPI_Bcast_large_data(ptr_, count_, size_of_value_type_, rank_of_master_task_, MPI_communicator_)              \
+do{                                                                                                                   \
+  unsigned long long ptr_##idx_;                                                                                      \
+  for(ptr_##idx_ = 0; ptr_##idx_ < count_; ptr_##idx_ += MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_)     \
+  { MPI_Bcast(&(ptr_[ptr_##idx_]), (count_ - ptr_##idx_ < MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_ ?   \
+                                    count_ - ptr_##idx_ : MPI_MAXIMUM_MESSAGE_SIZE_IN_BYTES / size_of_value_type_) *  \
+                                   size_of_value_type_, MPI_BYTE, rank_of_master_task_, MPI_communicator_); }         \
+} while(0)
+
+#endif /* defined PARALLEL */
+
+
+/* switch on/off mass checks: */
+#ifdef MASS_CHECKS
+#define mass_checks(t, p) perform_mass_checks(t, p)
+#else  /* not defined MASS_CHECKS */
+#define mass_checks(t, p)
+#endif /* not defined MASS_CHECKS */ 
+
+
+/* double-to-float correction (?): */
+#ifdef GALAXYTREE
+#define  CORRECTDBFLOAT(x)  ((fabs(x)<(1.e-30) || isnan(x)) ?(0.0):(x))
+#else /* not defined GALAXYTREE */ 
+#define  CORRECTDBFLOAT(x) x
+#endif /* not defined GALAXYTREE */ 
+
+
 /** @brief sets all entries in mem range to given value
  *
  * @param [in]    ptr_   pointer to begin of mem range

@@ -133,13 +133,6 @@ void reincorporate_gas(const int p, const double dt);
 void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int centralgal, const double time, const double deltaT, const int nstep);
 double get_reionization_modifier(const float Mvir, const double Zcurr);
 
-//MATH MISC
-void locate(double *xx, const int n, const double x, int *j);
-double integrate(double *flux, const int Grid_Length);
-void polint(double xa[], double ya[], const int n, const double x, double *y, double *dy);
-void nrerror(char error_text[]);
-double* new_vector(const long nl, const long nh);
-void free_vector(double *v, const long nl, const long nh);
 
 //SPECTRO/PHOTOMETRY PROPERTIES
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
@@ -168,7 +161,9 @@ double lum_distance(const double redshift);
 //numerical
 double* create_grid (const double WaveMin, const double WaveMax, const int AgeLoop, const double redshift, double LambdaInputSSP[SSP_NAGES][SSP_NLambda],
 		                      int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length);
-void interpolate(double *lgrid, const int Grid_Length, double *lambda, const int nlambda, double *flux, double *FluxOnGrid);
+void locate(double *xx, const int n, const double x, int *j);
+void interpolate_flux(double *lgrid, const int Grid_Length, double *lambda, const int nlambda, double *flux, double *FluxOnGrid);
+double integrate_flux(double *flux, const int Grid_Length);
 #endif /* defined SPEC_PHOTABLES_ON_THE_FLY */
 
 #ifdef POST_PROCESS_MAGS
@@ -180,7 +175,6 @@ void dust_model(const int p, const int snap, const int halonr);
 
 // dust model
 void read_dust_tables(void);
-double get_extinction(const int mag, const double Zg, const double redshift);
 
 // luminosity table lookup speedup:
 void init_SSP_log_age_jump_index(void);
@@ -197,8 +191,6 @@ locate_interpolation_index_and_fraction(met_index_, 0, SSP_NMETALLICITES, log10_
 
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
-float gasdev(long *idum);
-
 double estimate_merging_time(const int halonr, const int mostmassive, const int p);
 
 double get_hubble_parameter_for_halo(const int halonr);
@@ -213,8 +205,8 @@ void grow_black_hole(const int merger_centralgal, const double mass_ratio, const
 void check_disk_instability(const int p);
 
 double get_disk_radius(const int halonr, const int p);
-void get_gas_disk_radius(const int p);
-void get_stellar_disk_radius(const int p);
+void set_gas_disk_radius(const int p);
+void set_stellar_disk_radius(const int p);
 
 void read_output_snaps(void);
 void read_zlist(void);
@@ -222,7 +214,6 @@ void read_zlist(void);
 
 void read_cooling_functions(void);
 double get_metaldependent_cooling_rate(const double logTemp, const double logZ);
-
 
 void disrupt(const int p);
 
@@ -324,8 +315,11 @@ void reset_ejection_rates(const int i, const int sfh_ibin,
 #ifdef ASSUME_FLAT_LCDM
 void assert_flat_LCDM(void);
 #endif /* defined ASSUME_FLAT_LCDM */
+void init_cosmology(void);
 void init_redshift_for_comoving_distance(void);
+void init_cosmology_gsl_integration(void);
 double comoving_los_distance_for_redshift(const double redshift_);
+double luminosity_distance_for_redshift(const double redshift_);
 double redshift_for_comoving_los_distance(const double d_);
 double redshift_for_radial_velocity(const double v_);
 double combine_redshifts(const double z_1_, const double z_2_);

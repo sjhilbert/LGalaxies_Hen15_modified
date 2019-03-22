@@ -376,8 +376,8 @@ void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int
 
   if (DiskRadiusModel == 0) 
   {
-    get_gas_disk_radius(merger_centralgal);
-    get_stellar_disk_radius(merger_centralgal);
+    set_gas_disk_radius(merger_centralgal);
+    set_stellar_disk_radius(merger_centralgal);
   }
 
   mass_checks("deal_with_galaxy_merger #5",p);
