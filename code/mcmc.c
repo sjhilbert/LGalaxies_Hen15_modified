@@ -67,12 +67,14 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include "allvars.h"
 #include "proto.h"
 
 #include "mcmc_vars.h"
 #include "mcmc_proto.h"
-
 
 
 #ifdef HALOMODEL
@@ -105,7 +107,9 @@ void Senna(void)
         printf("**********************************************************\n\n");
   }
 
+  MCMC_rng = gsl_rng_alloc(gsl_rng_ranlxd1);
   MCMCseed = -((ThisTask + FirstChainNumber) * 100 + 25);
+  gsl_rng_set(MCMC_rng, MCMCseed);	/* start-up seed */ 
 
 #ifdef HALOMODEL //to compute correlation function for MCMC
   initialize_halomodel();
@@ -158,7 +162,7 @@ void Senna(void)
       /* By default q_ratio_ = 1, meaning we assume a flat prior. Therefore, the acceptance
        * probability is just given by the ratio of the likelihoods from two steps. */
       a_ratio_ = q_ratio_ * (proposed_likelihood_ / MCMC_Likelihood);
-      proposed_MCMC_step_is_accepted_ = (MCMC_Likelihood <= 0.) || (1. <= a_ratio_) || (ran3(&MCMCseed) < a_ratio_);
+      proposed_MCMC_step_is_accepted_ = (MCMC_Likelihood <= 0.) || (1. <= a_ratio_) || (gsl_rng_uniform(MCMC_rng) < a_ratio_);
     }
     // only accepts new parameters if likelihood increases:
     else if(MCMCMode == 1)
@@ -217,6 +221,8 @@ void Senna(void)
     gsl_interp_accel_free(ellipAcc);
     gsl_spline_free(PowSpline);
 #endif
+
+  gsl_rng_free(MCMC_rng);
 
   printf("\nFinal acceptance rate of this chain=%f%%\n", ((float) N_MCMC_steps_accepted_ / ChainLength) * 100);
   printf("\n\nMCMC OVER\n\n");
@@ -387,7 +393,7 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
       {
         aux_p_ = MCMC_PAR[parameter_number_].Value[0];
         do
-        { MCMC_PAR[parameter_number_].Value[0] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed)); }
+        { MCMC_PAR[parameter_number_].Value[0] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gsl_ran_ugaussian(MCMC_rng)); }
         while(MCMC_PAR[parameter_number_].Value[0] < MCMC_PAR[parameter_number_].PriorMin
            || MCMC_PAR[parameter_number_].Value[0] > MCMC_PAR[parameter_number_].PriorMax);
       }
@@ -413,7 +419,7 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
         {
           aux_p_=MCMC_PAR[parameter_number_].Value[0];
           do
-          { MCMC_PAR[parameter_number_].Value[output_number_] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed)); }
+          { MCMC_PAR[parameter_number_].Value[output_number_] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gsl_ran_ugaussian(MCMC_rng)); }
           while(MCMC_PAR[parameter_number_].Value[output_number_] < MCMC_PAR[parameter_number_].PriorMin
              || MCMC_PAR[parameter_number_].Value[output_number_] > MCMC_PAR[parameter_number_].PriorMax);
 
@@ -446,7 +452,7 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
           fscanf(file_,"%lg",&MCMC_PAR[parameter_number_].Value[output_number_]);
           aux_p_=MCMC_PAR[parameter_number_].Value[output_number_];
           do
-          { MCMC_PAR[parameter_number_].Value[output_number_] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gassdev(&MCMCseed)); }
+          { MCMC_PAR[parameter_number_].Value[output_number_] = aux_p_ * exp(MCMC_Initial_Par_Displacement * gsl_ran_ugaussian(MCMC_rng)); }
           while(MCMC_PAR[parameter_number_].Value[output_number_] < MCMC_PAR[parameter_number_].PriorMin || MCMC_PAR[parameter_number_].Value[output_number_] > MCMC_PAR[parameter_number_].PriorMax);
           MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[output_number_];
         }
@@ -472,7 +478,7 @@ double propose_new_parameters(void)
       if(MCMC_PAR[parameter_number_].Sampling_Switch==1)
       {
         do
-        { MCMC_PAR[parameter_number_].PropValue[0] = MCMC_PAR[parameter_number_].Value[0] * exp(MCMC_LogStep_Size * gassdev(&MCMCseed)); }
+        { MCMC_PAR[parameter_number_].PropValue[0] = MCMC_PAR[parameter_number_].Value[0] * exp(MCMC_LogStep_Size * gsl_ran_ugaussian(MCMC_rng)); }
         while(MCMC_PAR[parameter_number_].PropValue[0] < MCMC_PAR[parameter_number_].PriorMin ||
               MCMC_PAR[parameter_number_].PropValue[0] > MCMC_PAR[parameter_number_].PriorMax);
 
@@ -487,7 +493,7 @@ double propose_new_parameters(void)
         for(output_number_ = 0; output_number_ < NOUT; output_number_++)
         {
           do
-          { MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[output_number_] * exp(MCMC_LogStep_Size * gassdev(&MCMCseed)); }
+          { MCMC_PAR[parameter_number_].PropValue[output_number_] = MCMC_PAR[parameter_number_].Value[output_number_] * exp(MCMC_LogStep_Size * gsl_ran_ugaussian(MCMC_rng)); }
           while(MCMC_PAR[parameter_number_].PropValue[output_number_] < MCMC_PAR[parameter_number_].PriorMin ||
                 MCMC_PAR[parameter_number_].PropValue[output_number_] > MCMC_PAR[parameter_number_].PriorMax);
         }
@@ -1037,106 +1043,5 @@ int MCMC_FOF_compare_FoFID(const void *MCMC_FOF_a_, const void *MCMC_FOF_b_)
   else
     return 0;
 }
-
-
-//////////
-//GASDEV//
-//////////
-/** @brief Gives a random normal deviate using ran3 (ran1 NR) */
-double gassdev(long *idum)
-{
-  static int iset = 0;
-  static double gset;
-  double fac, r, v1, v2;
-
-  if(iset == 0)
-  {
-    do
-    {
-      v1 = 2.0 * ran3(idum) - 1.0;
-      v2 = 2.0 * ran3(idum) - 1.0;
-      r = v1 * v1 + v2 * v2;
-    }
-    while(r >= 1.0 || r == 0.0);
-    fac = sqrt(-2.0 * log(r) / r);
-
-    //Box Muller deviates to get two normal deviates
-    gset = v1 * fac;
-    iset = 1;
-    return v2 * fac;
-  }
-  else
-  {
-    iset = 0;
-    return gset;
-  }
-}
-
-
-////////
-//RAN3//
-////////
-#define IA 16807
-#define IM 2147483647
-#define AM (1.0/IM)
-#define IQ 127773
-#define IR 2836
-#define NTAB 32
-#define NDIV (1+(IM-1)/NTAB)
-#define RNMX (1.0-EPS)
-#define EPS 1.2e-7  
-
-/** @brief Gives a random numbers */
-double ran3(long *idum)
-{
-  int j;
-  long k;
-  static long iy = 0;
-  static long iv[NTAB];
-  double temp;
-
-  if(*idum <= 0 || !iy)
-    {
-      if(-(*idum) < 1)
-        *idum = 1;
-      else
-        *idum = -(*idum);
-      for(j = NTAB + 7; j >= 0; j--)
-        {
-          k = (*idum) / IQ;
-          *idum = IA * (*idum - k * IQ) - IR * k;
-          if(*idum < 0)
-            *idum += IM;
-          if(j < NTAB)
-            iv[j] = *idum;
-        }
-
-      iy = iv[0];
-    }
-
-  k = (*idum) / IQ;
-  *idum = IA * (*idum - k * IQ) - IR * k;
-  if(*idum < 0)
-    *idum += IM;
-  j = iy / NDIV;
-  iy = iv[j];
-  iv[j] = *idum;
-
-  if((temp = AM * iy) > RNMX)
-    return RNMX;
-  else
-    return temp;
-
-}
-
-#undef IA
-#undef IM
-#undef AM
-#undef IQ
-#undef IR
-#undef NTAB
-#undef NDIV
-#undef RNMX
-#undef EPS  
 
 #endif /* defined MCMC */

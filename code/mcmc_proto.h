@@ -23,8 +23,8 @@
  
 // Routines used in the MCMC sampling
 void Senna (void);
+
 void print_parameters (const bool current_MCMC_step_is_accepted_, FILE *fmcmc);
-// double SAM(int filenr);
 void initialize_mcmc_par_and_lhood (FILE *fmcmc);
 void read_mcmc_par (const int snapshot_number_);
 void read_sample_info(void);
@@ -58,7 +58,6 @@ double chi_square_probability(int ObsNr, double *samdata, int snap);
 double maximum_likelihood_probability(int ObsNr, double *samfract, int snap);
 double binomial_probability(int ObsNr, double *samup, double *samdown, int snap);
 
-
 double gammp (double a, double x);
 double gammq (double a, double x);
 double gser (double a, double x);
@@ -67,6 +66,3 @@ double gammpapprox(double a, double x, int psig);
 double gammln(double xx);
 double betai(double a, double b, double x);
 double betacf(double a,double  b, double x);
-double ran3(long *idum);
-double gassdev(long *idum);
-

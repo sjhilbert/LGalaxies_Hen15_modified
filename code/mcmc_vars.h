@@ -35,6 +35,9 @@
 
 // Variables for the MCMC sampling
 
+gsl_rng *MCMC_rng;
+long MCMCseed;
+
 int MCMCNpar; //Number of parameters to sample
 #define MCMCNConstraints 27  //Nr of Observational Constraints
 #define MCMCMaxObsBins 100 //maximum number of bins per observation per redshift
@@ -45,7 +48,7 @@ int TotMCMCGals[NOUT];
 //To allocate structure with SAM Galaxies
 #define MCMC_MAX_NGALS_PER_OUTPUT 200000
 //#define MCMC_MAX_NGALS_PER_OUTPUT 1000000
-long MCMCseed;
+
 int Nbins[NOUT][MCMCNConstraints]; //bins on each obs test
 double MCMC_Likelihood;
 

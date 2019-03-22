@@ -221,6 +221,8 @@ int main(int argc_, char **argv_)
   
 #endif /* not defined MCMC */
 
+  gsl_rng_free(random_generator);
+
 #ifdef PARALLEL
   MPI_Finalize();
 #endif /* defined PARALLEL */

@@ -24,6 +24,9 @@
 #include <math.h>
 #include <time.h>
 
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 #include "allvars.h"
 #include "proto.h"
 
@@ -392,7 +395,7 @@ void bin_function(int ObsNr, double *bin_sam_data_, double *sam_data_, int outpu
       {
         aux_samdata=sam_data_[kk];
         if(AddErrors==1)
-          aux_samdata+=gassdev(&MCMCseed)*AddedErrOnMass*(1+MCMCConstraintsZZ[output_number_]);
+          aux_samdata+=gsl_ran_ugaussian(MCMC_rng)*AddedErrOnMass*(1+MCMCConstraintsZZ[output_number_]);
         if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[output_number_][ii] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[output_number_][ii])
           aux_bin_sam_data_+=MCMC_GAL[output_number_][kk].Weight;
       }
@@ -473,7 +476,7 @@ void bin_red_fraction(int ObsNr, double *binredfraction, int output_number_)
                         (color_V_minus_J_ > (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ > color_V_minus_J_*slope_color_cut[output_number_]+offset_color_cut[output_number_]) );
         }
 
-        aux_samdata=MCMC_GAL[output_number_][k_].StellarMass+gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[output_number_]);
+        aux_samdata=MCMC_GAL[output_number_][k_].StellarMass+gsl_ran_ugaussian(MCMC_rng)*0.08*(1+MCMCConstraintsZZ[output_number_]);
 
         if(is_red_galaxy_)
         {

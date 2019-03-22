@@ -29,6 +29,8 @@
 #include "mcmc_vars.h"
 #include "mcmc_proto.h"
 
+// #include <gsl/gsl_rng.h>
+// #include <gsl/gsl_randist.h>
 
 #ifdef MCMC
 /** @brief Writes galaxies into a structure to be used by the MCMC */
@@ -55,7 +57,7 @@ void save_galaxy_for_mcmc(const int gal_index_)
 #endif
  
   //THE ERROR IS NOW INCLUDED IN mcmc_likelihood.c
-  //StellarMass+=gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[output_number_]);
+  //StellarMass+=gsl_ran_ugaussian(MCMC_rng)*0.08*(1+MCMCConstraintsZZ[output_number_]);
 #ifndef HALOMODEL
   const float log10_stellar_mass_ = log10(1E10 * (HaloGal[gal_index_].DiskMass + HaloGal[gal_index_].BulgeMass) * Hubble_h);
 #else
