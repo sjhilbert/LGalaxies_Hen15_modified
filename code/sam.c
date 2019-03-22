@@ -352,13 +352,13 @@ void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_ha
   if(check_outside_lightcone_for_snapshot[Halo[first_in_fof_halo_number_].SnapNum])
   {
     bool all_outside_ = true;
-    for(same_fof_halo_number_ = first_in_fof_halo_number_; same_fof_halo_number_ >= 0 && all_outside_ = true; same_fof_halo_number_ = Halo[same_fof_halo_number_].NextHaloInFOFgroup)
+    for(same_fof_halo_number_ = first_in_fof_halo_number_; same_fof_halo_number_ >= 0 && all_outside_ == true; same_fof_halo_number_ = Halo[same_fof_halo_number_].NextHaloInFOFgroup)
     {
       float d_0_ = Halo[same_fof_halo_number_].Pos[0] - lightcone_observer_position[0]; d_0_ = wrap(d_0_, BoxSize);
       float d_1_ = Halo[same_fof_halo_number_].Pos[1] - lightcone_observer_position[1]; d_1_ = wrap(d_1_, BoxSize);
       float d_2_ = Halo[same_fof_halo_number_].Pos[2] - lightcone_observer_position[2]; d_2_ = wrap(d_2_, BoxSize);
 
-      all_outside_ &= (d_0_ * d_0_ + d_1_ * d_1_ + d_2_ * d_2_ > pow2(lightcone_radius_for_snapshot[Halo[same_fof_halo_number_].SnapNum]))
+      all_outside_ &= (d_0_ * d_0_ + d_1_ * d_1_ + d_2_ * d_2_ > pow2(lightcone_radius_for_snapshot[Halo[same_fof_halo_number_].SnapNum]));
     }
     if(all_outside_)
     {
@@ -608,8 +608,9 @@ void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof
 }
 
 
-/** @brief evolve_galaxies() deals with most of the SA recipes. This is
-  *        where most of the physical recipes are called, including:
+/** @brief evolve_galaxies() deals with most of the SA recipes.
+  *
+  *        Here most of the physical recipes are called, including:
   *        infall_recipe() (gets the fraction of primordial gas that infalled),
   *        add_infall_to_hot() (adds the infalled gas to the hot phase),
   *        reincorporate_gas() (reincorporates gas ejected by SN),
@@ -624,18 +625,12 @@ void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof
   *        All these calculations are done in time steps of 1/STEPS the time
   *        between each snapshot (STEPS=20).
   * 
-  * 
-  * @bug possible bug: call to 
-  *      deal_with_galaxy_merger(p_, merger_centralgal, central_galaxy_number_, current_time_, DeltaT_);
-  *      uses full time step DeltaT_ instead of smaller dt_ = DeltaT_ / STEP
-  * 
-  * Note: halo_number_ is here the FOF-background subhalo (i_.e. main halo) 
+  * @note  halo_number_ is here the FOF-background subhalo (i_.e. main halo) 
   */
 void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int cenngal)
 {
-  int p_, q_, step_number_, central_galaxy_number_, merger_centralgal, current_halo_number_, previous_galaxy_number_, i_;
-  double infalling_gas_per_step_;
-  double current_time_, previous_time_, new_time_, DeltaT_, dt_;
+  int p_, q_, step_number_, merger_centralgal, current_halo_number_, progenitor_halo_number_, central_galaxy_number_, previous_galaxy_number_, i_;
+  double current_time_;
 
 #ifdef STAR_FORMATION_HISTORY
   double age_in_years_;
@@ -649,27 +644,26 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
     return;
 
   //previous_time_         = NumToTime(Gal[0].SnapNum);
-  previous_time_         = NumToTime(Halo[halo_number_].SnapNum-1);
-  new_time_              = NumToTime(Halo[halo_number_].SnapNum  );
-  DeltaT_                = previous_time_ - new_time_; /* Time between snapshots */
-  dt_                    = (previous_time_ - new_time_) / STEPS; 
+  const double previous_time_         = NumToTime(Halo[halo_number_].SnapNum-1);
+  const double new_time_              = NumToTime(Halo[halo_number_].SnapNum  );
+  const double deltaT_                = previous_time_ - new_time_; /* Time between snapshots */
+  const double dt_                    = (previous_time_ - new_time_) / STEPS; 
 
-  central_galaxy_number_ = Gal[0].CentralGal;
 
 #ifdef MASS_CHECKS
   for (p_ = 0; p_ < n_galaxies_in_fof_group_; p_++)
   { mass_checks("Evolve_galaxies #0", p_); }
 #endif /* defined MASS_CHECKS */
 
+  central_galaxy_number_ = Gal[0].CentralGal;
   //print_galaxy("\n\ncheck1", central_galaxy_number_, halo_number_);
-
   if(Gal[central_galaxy_number_].Type != 0 || Gal[central_galaxy_number_].HaloNr != halo_number_)
   { terminate("Something wrong here ..... \n"); }
 
   /* Update all galaxies to same star-formation history time-bins.
    * Needed in case some galaxy has skipped a snapshot. */
 #ifdef STAR_FORMATION_HISTORY
-  age_in_years_=(Age[0]-previous_time_)*UnitTime_in_years/Hubble_h; //ROB: age_in_years_ is in units of "real years"!
+  age_in_years_=(Age[0]-previous_time_)*UnitTime_in_years * inv_Hubble_h; //ROB: age_in_years_ is in units of "real years"!
   step_number_ = 0;
   for (p_=0; p_<n_galaxies_in_fof_group_; p_++)
   { sfh_update_bins(p_,Halo[halo_number_].SnapNum-1,step_number_,age_in_years_); }
@@ -689,7 +683,8 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
    
   /* Calculate how much hot gas needs to be accreted to give the correct baryon fraction
    * in the main halo. This is the universal fraction, less any reduction due to reionization. */
-  infalling_gas_per_step_ = infall_recipe(central_galaxy_number_, n_galaxies_in_fof_group_, ZZ[Halo[halo_number_].SnapNum]) / STEPS;
+   
+  const double infalling_gas_per_step_ = infall_recipe(central_galaxy_number_, n_galaxies_in_fof_group_, ZZ[Halo[halo_number_].SnapNum]) / STEPS;
   Gal[central_galaxy_number_].PrimordialAccretionRate = infalling_gas_per_step_ / dt_;
   
   /* All the physics are computed in a number of intervals between snapshots
@@ -771,7 +766,8 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
           mass_checks("Evolve_galaxies #4",p_);
           mass_checks("Evolve_galaxies #4",merger_centralgal);
           mass_checks("Evolve_galaxies #4",central_galaxy_number_);
-          deal_with_galaxy_merger(p_, merger_centralgal, central_galaxy_number_, current_time_, DeltaT_);
+           /* note: call to deal_with_galaxy_merger uses deltaT_ as parameter, and internally divides by STEPS where needed */
+          deal_with_galaxy_merger(p_, merger_centralgal, central_galaxy_number_, current_time_, deltaT_);
           mass_checks("Evolve_galaxies #5",p_);
           mass_checks("Evolve_galaxies #5",merger_centralgal);
           mass_checks("Evolve_galaxies #5",central_galaxy_number_);
@@ -835,9 +831,7 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   /* now save the galaxies of all the progenitors (and free the associated storage) */
-  int progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor;
-
-  while(progenitor_halo_number_ >= 0)
+  for(progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor; progenitor_halo_number_ >= 0;  progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor)
   {
     int current_galaxy_number_;
     for(i_ = 0, current_galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; i_++)
@@ -847,11 +841,9 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
       output_galaxy(tree_number_, HaloGal[current_galaxy_number_].HeapIndex);
       current_galaxy_number_ = next_galaxy_number_;
     }
-    progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor;
   }
     
-  /** @todo check why start was set here, and why it was set to start = NGalTree */
-  int start = NGalTree;
+  const int evolved_galaxies_begin_ = NGalTree;
   for(p_ = 0, previous_galaxy_number_ = -1, current_halo_number_ = -1, central_galaxy_number_ = -1; p_ < n_galaxies_in_fof_group_; p_++)
   {
     if(Gal[p_].HaloNr != current_halo_number_)
@@ -902,7 +894,6 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
       HaloAux[current_halo_number_].NGalaxies++;
       NHaloGal++;
 
-
 #ifdef GALAXYTREE
       if(NGalTree >= MaxGalTree)
       {
@@ -931,7 +922,7 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
   if(central_galaxy_number_ < 0)
   { terminate("central_galaxy_number_ < 0, i_.e. did not find central galaxy"); }
 
-  for(p_ = start; p_ < NGalTree; p_++)
+  for(p_ = evolved_galaxies_begin_; p_ < NGalTree; p_++)
   { GalTree[p_].FOFCentralGal = central_galaxy_number_; }
 #endif /* defined GALAXYTREE */
 

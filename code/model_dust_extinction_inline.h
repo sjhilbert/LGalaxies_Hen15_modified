@@ -126,7 +126,7 @@ get_extinction(const int filter_number_, const double Z_g_, const double redshif
   if(ObsFrameLambda_ < 0.2)
   { A_Av_ = A_Av_ * pow(Z_g_, 1.35); }
   else
-  { A_Av_ = A_Av_ * pow(Z_g_, 1.6); }
+  { A_Av_ = A_Av_ * pow(Z_g_, 1.6 ) ; }
   
   return A_Av_;
 }

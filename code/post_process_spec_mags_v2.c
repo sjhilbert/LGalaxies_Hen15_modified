@@ -275,28 +275,35 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
   const double t_snapshot_ = NumToTime(galaxy_->SnapNum);
 
   /* used for interpolating luminosities: */
-  int       age_index_ [SFH_NBIN];  double       f_age_1_ [SFH_NBIN];  double       f_age_2_ [SFH_NBIN];
-  int  disk_met_index_ [SFH_NBIN];  double  disk_f_met_1_ [SFH_NBIN];  double  disk_f_met_2_ [SFH_NBIN];
-  int bulge_met_index_ [SFH_NBIN];  double bulge_f_met_1_ [SFH_NBIN];  double bulge_f_met_2_ [SFH_NBIN];
+#if !((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  static int snapshot_number_of_previous_galaxy_ = -1;
+#endif /* not defined N_FINE_AGE_BINS > 1 */  
+  static int       age_index_[SFH_NBIN]; static double       f_age_1_[SFH_NBIN]; static double       f_age_2_[SFH_NBIN];
+         int  disk_met_index_[SFH_NBIN];        double  disk_f_met_1_[SFH_NBIN];        double  disk_f_met_2_[SFH_NBIN];
+         int bulge_met_index_[SFH_NBIN];        double bulge_f_met_1_[SFH_NBIN];        double bulge_f_met_2_[SFH_NBIN];
 #ifdef ICL
-  int   icm_met_index_ [SFH_NBIN];  double   icm_f_met_1_ [SFH_NBIN];  double   icm_f_met_2_ [SFH_NBIN];
+         int   icm_met_index_[SFH_NBIN];        double   icm_f_met_1_[SFH_NBIN];        double   icm_f_met_2_[SFH_NBIN];
 #endif /* defined ICL */
 
   int sfh_bin_number_, filter_number_;
   /* precompute parameters for interpolating luminosities: */
 #if !((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
-  for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
+  if(snapshot_number_of_previous_galaxy_ != galaxy->SnapNum) 
   {
-    const double age_       = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_;
-    
-    if(age_ <= 0)
+    snapshot_number_of_previous_galaxy_ = galaxy->SnapNum;
+    for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
     {
-      age_index_[sfh_bin_number_] = 0; f_age_1_[sfh_bin_number_] = 0.; f_age_2_[sfh_bin_number_] = 0.;
-    } 
-    else
-    {
-      const double log10_age_ = log10(age_);
-      find_age_luminosity_interpolation_parameters(log10_age_ , age_index_[sfh_bin_number_], f_age_1_[sfh_bin_number_], f_age_2_[sfh_bin_number_]);
+      const double age_       = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_;
+      
+      if(age_ <= 0)
+      {
+        age_index_[sfh_bin_number_] = 0; f_age_1_[sfh_bin_number_] = 0.; f_age_2_[sfh_bin_number_] = 0.;
+      } 
+      else
+      {
+        const double log10_age_ = log10(age_);
+        find_age_luminosity_interpolation_parameters(log10_age_ , age_index_[sfh_bin_number_], f_age_1_[sfh_bin_number_], f_age_2_[sfh_bin_number_]);
+      }
     }
   }
 #endif /* not defined N_FINE_AGE_BINS > 1 */

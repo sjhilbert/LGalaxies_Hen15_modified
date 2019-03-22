@@ -796,3 +796,11 @@ void check_program_parameters()
     terminate("invalid value program parameter encounted (MetallicityOption).");
   }
 }
+
+
+/** @brief compute derived program parameters from primary parameters */
+void compute_derived_program_parameters(void)
+{
+  inv_Hubble_h = 1. / Hubble_h;
+}
+

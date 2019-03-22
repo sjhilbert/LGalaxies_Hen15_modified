@@ -93,7 +93,9 @@ long long calc_big_db_offset(const int filenr, const int treenr);
 
 void init(void);
 void read_parameter_file(char *fname);
-void check_program_parameters();
+void check_program_parameters(void);
+void compute_derived_program_parameters(void);
+
 
 #ifdef SPECIFYFILENR
 void read_file_nrs(void);

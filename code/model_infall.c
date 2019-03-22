@@ -30,7 +30,7 @@
  *       into account.
  */
 
-double infall_recipe(int centralgal, int ngal, double Zcurr)
+double infall_recipe(int central_galaxy_number_, int ngal, double Zcurr)
 {
   int i;
   double tot_mass, reionization_modifier, infallingMass;
@@ -44,11 +44,11 @@ double infall_recipe(int centralgal, int ngal, double Zcurr)
   for(i = 0; i < ngal; i++) 
   {    /* Loop over all galaxies in the FoF-halo */
     /* dis is the separation of the galaxy which i orbits from the type 0 */
-    dis=separation_gal(centralgal,Gal[i].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
+    dis=separation_gal(central_galaxy_number_,Gal[i].CentralGal)/(1+ZZ[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]);
 
     /* If galaxy is orbiting a galaxy inside Rvir of the type 0 it will contribute
      * to the baryon sum */
-    if ( dis < Gal[centralgal].Rvir ) {
+    if ( dis < Gal[central_galaxy_number_].Rvir ) {
       tot_mass += Gal[i].DiskMass + Gal[i].BulgeMass + Gal[i].ICM + Gal[i].BlackHoleMass;
       tot_mass += Gal[i].ColdGas + Gal[i].HotGas + Gal[i].EjectedMass;
     }
@@ -62,7 +62,7 @@ double infall_recipe(int centralgal, int ngal, double Zcurr)
    * diffuse component.  It is not obvious that this is the correct thing to do. */
   /* The baryonic fraction is conserved by adding/subtracting the infallingMass
    * calculated here to/from the hot gas of the central galaxy of the FOF
-   * This is done in main.c where the infall recipe is called.
+   * This is done in sam.c where the infall recipe is called.
    * If ReionizationModel<2, the impact of reonization on the fraction of infalling
    * gas is computed, this is done using the Gnedin formalism with a choice
    * of fitting parameters to the formulas proposed by these authors.
@@ -72,18 +72,18 @@ double infall_recipe(int centralgal, int ngal, double Zcurr)
   if(ReionizationModel == 2)
     reionization_modifier = 1.0;
   else
-    reionization_modifier = get_reionization_modifier(Gal[centralgal].Mvir, Zcurr);
+    reionization_modifier = get_reionization_modifier(Gal[central_galaxy_number_].Mvir, Zcurr);
 
-  infallingMass = reionization_modifier * BaryonFrac * Gal[centralgal].Mvir - tot_mass;
+  infallingMass = reionization_modifier * BaryonFrac * Gal[central_galaxy_number_].Mvir - tot_mass;
 
   return infallingMass;
 }
 
 
 /** @brief computes reionization modifier  */
-double get_reionization_modifier(float Mvir, double Zcurr)
+double get_reionization_modifier(const float Mvir, const double Zcurr)
 {
-  double modifier=1.;
+  double modifier = 1.;
   if (ReionizationModel == 2) 
   {
     printf("Should not be called with this option\n");
@@ -129,61 +129,72 @@ double get_reionization_modifier(float Mvir, double Zcurr)
     /*  alpha gives the best fit to the Gnedin data */
     
     //Gnedin (2000)
-    double a, alpha;
-    double f_of_a, a_on_a0, a_on_ar, Mfiltering, Mjeans, Mchar, mass_to_use;
-    double Tvir, Vchar, omegaZ, xZ, deltacritZ, HubbleZ;
     
-    alpha = 6.0;
-    Tvir = 1e4;
+    const double alpha = 6.0;
+    // const double Tvir  = 1e4;
 
     /*  calculate the filtering mass */
 
-    a = 1.0 / (1.0 + Zcurr);
-    a_on_a0 = a / a0;
-    a_on_ar = a / ar;
+    const double a = 1.0 / (1.0 + Zcurr);
+    const double a0_on_a = a0 / a;
+    const double ar_on_a = ar / a;
 
+    // double f_of_a;
+    // if(a <= a0)
+    //   f_of_a = 3.0 * a / ((2.0 * alpha) * (5.0 + 2.0 * alpha)) * pow(a_on_a0, alpha);
+    // else if((a > a0) && (a < ar))
+    //   f_of_a =
+    //     (3.0 / a) * a0 * a0 * (1.0 / (2.0 + alpha) - 2.0 * sqrt(a0_on_a) / (5.0 + 2.0 * alpha)) +
+    //     a * a / 10.0 - (a0 * a0 / 10.0) * (5.0 - 4.0 * sqrt(a0_on_a));
+    // else
+    //   f_of_a = (3.0 / a) * (a0 * a0 * (1.0 / (2.0 + alpha) - 2.0 * sqrt(a0_on_a) / (5.0 + 2.0 * alpha)) +
+    //         (ar * ar / 10.0) * (5.0 - 4.0 * sqrt(ar_on_a)) - (a0 * a0 / 10.0) * (5.0 -
+    //             4.0 * sqrt(a0_on_a)) + a * ar / 3.0 - (ar * ar / 3.0) * (3.0 - 2.0 * sqrt(ar_on_a)));
+
+    double f_of_a;
     if(a <= a0)
-      f_of_a = 3.0 * a / ((2.0 * alpha) * (5.0 + 2.0 * alpha)) * pow(a_on_a0, alpha);
+      f_of_a = (3.0 / ((2.0 * alpha) * (5.0 + 2.0 * alpha))) * a * pow(a0_on_a, -alpha);
     else if((a > a0) && (a < ar))
-      f_of_a =
-        (3.0 / a) * a0 * a0 * (1.0 / (2.0 + alpha) - 2.0 * pow(a_on_a0, -0.5) / (5.0 + 2.0 * alpha)) +
-        a * a / 10.0 - (a0 * a0 / 10.0) * (5.0 - 4.0 * pow(a_on_a0, -0.5));
+      f_of_a = a0 * a0_on_a * (3.0 / (2.0 + alpha) - (6.0 / (5.0 + 2.0 * alpha)) * sqrt(a0_on_a)) + 0.1 * a * a - 0.1 * a0 * a0 * (5.0 - 4.0 * sqrt(a0_on_a));
     else
-      f_of_a = (3.0 / a) * (a0 * a0 * (1.0 / (2.0 + alpha) - 2.0 * pow(a_on_a0, -0.5) / (5.0 + 2.0 * alpha)) +
-            (ar * ar / 10.0) * (5.0 - 4.0 * pow(a_on_ar, -0.5)) - (a0 * a0 / 10.0) * (5.0 -
-                4.0 * pow(a_on_a0, -0.5)) + a * ar / 3.0 - (ar * ar / 3.0) * (3.0 - 2.0 * pow(a_on_ar, -0.5)));
+      f_of_a = (a0 * a0_on_a * (3.0 / (2.0 + alpha) - (6.0 / (5.0 + 2.0 * alpha)) * sqrt(a0_on_a)) +
+            0.3 * ar * ar_on_a * (5.0 - 4.0 * sqrt(ar_on_a)) - 0.3 * a0 * a0_on_a * (5.0 - 4.0 * sqrt(a0_on_a)) + ar  -  ar * ar_on_a * (3.0 - 2.0 * sqrt(ar_on_a)));
 
     /*  this is in units of 10^10Msun/h, note mu=0.59 and mu^-1.5 = 2.21 */
-    Mjeans = 25.0 * pow(Omega, -0.5) * 2.21;
-    Mfiltering = Mjeans * pow(f_of_a, 1.5);
-
+    // Mjeans = 25.0 * pow(Omega, -0.5) * 2.21;
+    // Mfiltering = Mjeans * pow(f_of_a, 1.5);
+    const double Mfiltering =  (25.0 * 2.21) * sqrt(f_of_a * f_of_a * f_of_a / Omega);
 
     /*  calculate the characteristic mass coresponding to a halo temperature of 10^4K */
-    Vchar = sqrt(Tvir / 36.0);
-    omegaZ = Omega * (pow3(1.0 + Zcurr) / (Omega * pow3(1.0 + Zcurr) + OmegaLambda));
-    xZ = omegaZ - 1.0;
-    deltacritZ = 18.0 * M_PI * M_PI + 82.0 * xZ - 39.0 * xZ * xZ;
-    HubbleZ = Hubble * sqrt(Omega * pow3(1.0 + Zcurr) + OmegaLambda);
+    // Vchar = sqrt(Tvir / 36.0);
+    const double Vchar = 100. / 6.;
+    // const double omegaZ = Omega * (pow3(1.0 + Zcurr) / (Omega * pow3(1.0 + Zcurr) + OmegaLambda));
+    // const double xZ = omegaZ - 1.0;
+    const double xZ = Omega / (Omega  + OmegaLambda * pow3(a)) - 1.0;
+    const double deltacritZ = 18.0 * M_PI * M_PI + 82.0 * xZ - 39.0 * xZ * xZ;
+    // const double HubbleZ = Hubble * sqrt(Omega * pow3(1.0 + Zcurr) + OmegaLambda);
 
-    Mchar = Vchar * Vchar * Vchar / (Gravity * HubbleZ * sqrt(0.5 * deltacritZ));
+    // const double Mchar = Vchar * Vchar * Vchar / (Gravity * HubbleZ * sqrt(0.5 * deltacritZ));
+    const double Mchar = (Vchar * Vchar * Vchar) / (Gravity * Hubble * sqrt((Omega * pow3(1.0 + Zcurr) + OmegaLambda) * 0.5 * deltacritZ));
 
     /*  we use the maximum of Mfiltering and Mchar */
-    mass_to_use = max(Mfiltering, Mchar);
-    modifier = 1.0 / pow3(1.0 + 0.26 * (mass_to_use / Mvir));
+    // const double mass_to_use = max(Mfiltering, Mchar);
+    // modifier = 1.0 / pow3(1.0 + 0.26 * (mass_to_use / Mvir));
+    modifier = 1.0 / pow3(1.0 + 0.26 * (max(Mfiltering, Mchar) / Mvir));
   }
   return modifier;
 }
 
 
 /** @brief adds infalling gas to the hot gas of the central galaxy.  */
-void add_infall_to_hot(int centralgal, double infallingGas) {
-
+void add_infall_to_hot(const int central_galaxy_number_, const double infalling_gas_) 
+{
   /*  Add the infalling gas to the central galaxy hot component */
-  Gal[centralgal].HotGas += infallingGas;
+  Gal[central_galaxy_number_].HotGas += infalling_gas_;
 
 #ifdef INDIVIDUAL_ELEMENTS
-  //Gal[centralgal].HotGas_elements.H += 0.75*infallingGas*1.0e10;
-  Gal[centralgal].HotGas_elements.H += 0.75*(infallingGas/Hubble_h)*1.0e10;
-  Gal[centralgal].HotGas_elements.He += 0.25*(infallingGas/Hubble_h)*1.0e10;
+  //Gal[central_galaxy_number_].HotGas_elements.H += 0.75 * infalling_gas_ * 1.0e10;
+  Gal[central_galaxy_number_].HotGas_elements.H  += 0.75 * 1.0e10 * (infalling_gas_ * inv_Hubble_h);
+  Gal[central_galaxy_number_].HotGas_elements.He += 0.25 * 1.0e10 * (infalling_gas_ * inv_Hubble_h);
 #endif
 }

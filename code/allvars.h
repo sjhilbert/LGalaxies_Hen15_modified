@@ -93,7 +93,7 @@ struct metals
 };
 
 #ifdef INDIVIDUAL_ELEMENTS
-//Individual element histories:
+/** @brief individual element content */
 struct elements
 {
   float H;
@@ -115,6 +115,7 @@ struct elements
   float Fe;
 };
 
+
 //Number of chemical elements tracked:
 #ifdef MAINELEMENTS
 #define NUM_ELEMENTS 5 //Only [H][He][O][Mg][Fe]
@@ -125,9 +126,8 @@ struct elements
 #endif /* defined INDIVIDUAL_ELEMENTS */
 #endif /* defined DETAILED_METALS_AND_MASS_RETURN */
 
-/**
- * Galaxy structure for output
- */
+
+/** @brief Galaxy structure for output */
 #ifdef LIGHT_OUTPUT
 struct GALAXY_OUTPUT
 {
@@ -400,6 +400,7 @@ struct SFH_BIN {
 #endif  /* defined INDIVIDUAL_ELEMENTS */
 };
 
+
 struct SFH_Time
 {
  	int snapnum; // snapnum
@@ -412,6 +413,7 @@ struct SFH_Time
 #endif  /* defined STAR_FORMATION_HISTORY */
 #pragma pack()   //structure alignment ends.
 #endif /* not defined LIGHT_OUTPUT */
+
 
 extern struct galaxy_tree_data
 {
@@ -433,9 +435,10 @@ extern struct galaxy_tree_data
 #endif /* defined LIGHTCONE_OUTPUT */
 }
  *GalTree;
-
-/*Structure with all the data associated with galaxies (this is not the same as the output!)*/
-extern struct GALAXY			/* Galaxy data */
+ 
+ 
+/** @brief Structure with all the data associated with galaxies (this is not the same as the output!) */
+extern struct GALAXY
 {
   int HeapIndex;
   int GalTreeIndex;
@@ -800,6 +803,7 @@ extern double Sigma8;
 extern double Omega;
 extern double OmegaLambda;
 extern double Hubble_h;
+extern double inv_Hubble_h;
 extern double Omega_OriginalCosm;
 extern double OmegaLambda_OriginalCosm;
 extern double Hubble_h_OriginalCosm;

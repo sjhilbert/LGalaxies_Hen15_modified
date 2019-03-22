@@ -123,8 +123,8 @@ int main(int argc_, char **argv_)
 
   /*Reads the parameter file, given as an argument at run time. */
   read_parameter_file(argv_[1]);
-  
   check_program_parameters();
+  compute_derived_program_parameters();
 
 #ifdef MR_PLUS_MRII
   //Start with MR files and later change to MRII

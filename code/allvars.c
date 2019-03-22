@@ -116,6 +116,7 @@ double Sigma8;
 double Omega;
 double OmegaLambda;
 double Hubble_h;
+double inv_Hubble_h;
 double Omega_OriginalCosm;
 double OmegaLambda_OriginalCosm;
 double Hubble_h_OriginalCosm;
