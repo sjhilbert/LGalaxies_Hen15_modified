@@ -62,7 +62,7 @@
 void starformation(int p, int centralgal, double time, double dt, int nstep)
 {
 	/*! Variables: reff-Rdisk, tdyn=Rdisk/Vmax, strdot=Mstar_dot, stars=strdot*dt*/
-  double tdyn, strdot=0., stars, cold_crit, metallicitySF;
+  double tdyn, strdot=0., stars, cold_crit;
   
   if(Gal[p].Type == 0)
     {
@@ -108,12 +108,16 @@ void starformation(int p, int centralgal, double time, double dt, int nstep)
    * updates Mcold, StellarMass, MetalsMcold and MetalsStellarMass
    * in Guo2010 case updates the stellar spin -> hardwired, not an option */
 
+#ifdef COMPUTE_SPECPHOT_PROPERTIES
+#ifndef POST_PROCESS_MAGS
   /* Store the value of the metallicity of the cold phase when SF occurs */
+  double metallicitySF;
   if (Gal[p].ColdGas > 0.)
   	metallicitySF= metals_total(Gal[p].MetalsColdGas)/Gal[p].ColdGas;
   else
     metallicitySF=0.;
- 
+#endif //NDEF POST_PROCESS_MAGS
+#endif //COMPUTE_SPECPHOT_PROPERTIES
 
   if (stars > 0.)
   	update_stars_due_to_reheat(p, centralgal, &stars);
@@ -159,16 +163,12 @@ void starformation(int p, int centralgal, double time, double dt, int nstep)
 }
 
 
-
-
-
-
 void update_stars_due_to_reheat(int p, int centralgal, double *stars)
 {
-  double MergeCentralVvir=0.;
-  double fac;
-  double CentralVvir=0.;
-  double reheated_mass=0., ejected_mass=0.;
+//   double MergeCentralVvir=0.;
+//   double CentralVvir=0.;
+  double reheated_mass=0.;
+//   doble ejected_mass=0.;
   /* SN FEEDBACK RECIPES */
 
   /* In Guo2010 type 1s can eject, reincorporate gas and get gas from their
@@ -178,8 +178,9 @@ void update_stars_due_to_reheat(int p, int centralgal, double *stars)
    * If it is outside, the Vvir of its central subhalo is used. */
 
   //REHEAT
-  CentralVvir = Gal[centralgal].Vvir; // main halo Vvir
-  MergeCentralVvir = Gal[Gal[p].CentralGal].Vvir; //central subhalo Vvir
+  (void) centralgal; /* avoid unused-parameter warning */
+//   CentralVvir = Gal[centralgal].Vvir; // main halo Vvir
+//   MergeCentralVvir = Gal[Gal[p].CentralGal].Vvir; //central subhalo Vvir
 
   // Feedback depends on the circular velocity of the host halo
   // Guo2010 - eq 18 & 19
@@ -201,6 +202,7 @@ void update_stars_due_to_reheat(int p, int centralgal, double *stars)
     }*/
 
 #ifndef FEEDBACK_COUPLED_WITH_MASS_RETURN
+  double fac;
   if((*stars + reheated_mass) > Gal[p].ColdGas)
     {
       fac = Gal[p].ColdGas / (*stars + reheated_mass);
@@ -208,9 +210,7 @@ void update_stars_due_to_reheat(int p, int centralgal, double *stars)
       reheated_mass *= fac;
     }
 #endif
-
 }
-
 
 
 /** @brief Updates the different components due to star formation: mass
@@ -218,11 +218,14 @@ void update_stars_due_to_reheat(int p, int centralgal, double *stars)
 //void update_from_star_formation(int p, double time, double stars, double metallicity)
 void update_from_star_formation(int p, double stars, bool flag_burst, int nstep)
 {
+  (void) nstep; /* avoid unused-parameter warning */
+
   int i;
   double fraction;
   double stars_to_add=0.;
 
-  if(Gal[p].ColdGas <= 0. || stars <= 0.) {
+  if(Gal[p].ColdGas <= 0. || stars <= 0.)
+  {
     printf("update_from_star_formation: Gal[p].ColdGas <= 0. || stars <= 0.\n");
     exit(0);
   }
@@ -232,9 +235,9 @@ void update_from_star_formation(int p, double stars, bool flag_burst, int nstep)
    * Update the Stellar Spin when forming stars */
 #ifndef DETAILED_METALS_AND_MASS_RETURN
   stars_to_add=(1 - RecycleFraction) * stars;
-#else
+#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */
   stars_to_add=stars;
-#endif
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 
   if (Gal[p].DiskMass+stars_to_add > 1.e-8)
     for (i = 0; i < 3; i++)
@@ -251,11 +254,15 @@ void update_from_star_formation(int p, double stars, bool flag_burst, int nstep)
   Gal[p].sfh_MetalsDiskMass[Gal[p].sfh_ibin] = metals_add(Gal[p].sfh_MetalsDiskMass[Gal[p].sfh_ibin],Gal[p].MetalsColdGas,fraction);
 #ifdef INDIVIDUAL_ELEMENTS
   Gal[p].sfh_ElementsDiskMass[Gal[p].sfh_ibin] = elements_add(Gal[p].sfh_ElementsDiskMass[Gal[p].sfh_ibin],Gal[p].ColdGas_elements,fraction);
-#endif
+#endif /* defined INDIVIDUAL_ELEMENTS */
 #ifdef TRACK_BURST
   if (flag_burst) Gal[p].sfh_BurstMass[Gal[p].sfh_ibin]+=stars_to_add;
-#endif
-#endif
+#else  /* not defined TRACK_BURST */
+  (void) flag_burst; /* avoid unused-parameter warning */
+#endif /* not defined TRACK_BURST */
+#else  /* not defined  STAR_FORMATION_HISTORY */
+  (void) flag_burst; /* avoid unused-parameter warning */
+#endif /* not defined STAR_FORMATION_HISTORY */
 
 
   Gal[p].MetalsDiskMass=metals_add(Gal[p].MetalsDiskMass,Gal[p].MetalsColdGas,fraction);
@@ -284,15 +291,16 @@ void update_from_star_formation(int p, double stars, bool flag_burst, int nstep)
 
   if (DiskRadiusModel == 0)
     get_stellar_disk_radius(p);
-
 }
+
 
 /* there are two modes for supernova feedback corresponding to when the mass returning
  * by dying stars is returned to the cold gas - reheat and ejection; and when the mass
  * is returned to the hot gas - onle ejection.*/
 void SN_feedback(int p, int centralgal, double stars, char feedback_location[])
 {
-  double CentralVvir, MergeCentralVvir=0., EjectVmax, EjectVvir, SN_Energy, Reheat_Energy, fac;
+//   double CentralVvir, MergeCentralVvir=0.;
+  double EjectVmax, EjectVvir, SN_Energy, Reheat_Energy;
   double reheated_mass=0., ejected_mass=0.;
   /* SN FEEDBACK MODEL */
 
@@ -307,8 +315,8 @@ void SN_feedback(int p, int centralgal, double stars, char feedback_location[])
   else
     if (strcmp(feedback_location,"ColdGas")==0)
 	{
-	CentralVvir = Gal[centralgal].Vvir; // main halo Vvir
-	MergeCentralVvir = Gal[Gal[p].CentralGal].Vvir; //central subhalo Vvir
+// 	CentralVvir = Gal[centralgal].Vvir; // main halo Vvir
+// 	MergeCentralVvir = Gal[Gal[p].CentralGal].Vvir; //central subhalo Vvir
 
 	mass_checks("recipe_starform #0",p);
 	mass_checks("recipe_starform #0.1",centralgal);
@@ -393,7 +401,7 @@ void update_from_feedback(int p, int centralgal, double reheated_mass, double ej
   double dis=0.;
   double massremain;
   double fraction;
-  int merger_centre;
+//  int merger_centre;
 
   //mass_checks("update_from_feedback #1",p);
 
@@ -409,10 +417,10 @@ void update_from_feedback(int p, int centralgal, double reheated_mass, double ej
 	}
       else if(Gal[p].Type <3)
 	{
-	  if(Gal[p].Type ==1)
-	    merger_centre=centralgal;
-	  else if(Gal[p].Type ==2)
-	    merger_centre=Gal[p].CentralGal;
+// 	  if(Gal[p].Type ==1)
+// 	    merger_centre=centralgal;
+// 	  else if(Gal[p].Type ==2)
+// 	    merger_centre=Gal[p].CentralGal;
 
 	  dis=separation_gal(centralgal,Gal[p].CentralGal)/(1+ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
 
@@ -497,7 +505,6 @@ void update_massweightage(int p, double stars, double time)
  *         Mo, Mao & White (1998) criteria */
 void check_disk_instability(int p)
 {
-
   double Mcrit, fraction, stars, diskmass;
 
 /** @brief Calculates the stability of the stellar disk as discussed
@@ -505,8 +512,11 @@ void check_disk_instability(int p)
  *         amount is transfered to the bulge to make the disk stable again.
  *         Mass, metals and luminosities updated. After Guo2010 the bulge
  *         size is followed and needs to be updated.
- *         Eq 34 & 35 in Guo2010 are used. */
-
+ *         Eq 34 & 35 in Guo2010 are used.
+ *
+ * @todo   set fraction for DiskInstabilityModel != 0, 
+ *         set stars for DiskInstabilityModel > 0
+ */
 
   if(DiskInstabilityModel == 0)
     {

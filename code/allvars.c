@@ -144,7 +144,7 @@ int ReIncorporationModel;
 int AGNRadioModeModel;
 int DiskInstabilityModel;
 int BHGrowthInDiskInstabilityModel;
-int HotGasStripingModel;
+int HotGasStrippingModel;
 int DisruptionModel;
 int StarBurstModel;
 int BulgeFormationInMinorMergersOn;
@@ -271,6 +271,48 @@ FILE *FdGalTree;
 FILE *FdGalTreeSFH;
 FILE *FdGalDumps[NOUT];
 
+/* used to compute redshift for given l.o.s. distance by interpolation */
+double distance_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION];
+double redshift_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION];
+
+/* for lightcone output */
+#ifdef LIGHTCONE_OUTPUT
+/* file pointers for lightcone output files: */
+FILE *FdLightconeGalTree;
+FILE *FdLightconeGalDumps[NOUT];
+
+/* keeping track of #galaxies in lightcone output files: */
+long long TotLightconeGalCount;
+long long TotLightconeGalaxies[NOUT];
+
+/* redshift and distance boundaries for lightcone slices: */
+float lightcone_slice_lower_redshift [NOUT];
+float lightcone_slice_upper_redshift [NOUT];
+  
+float lightcone_slice_lower_los_distance [NOUT];
+float lightcone_slice_upper_los_distance [NOUT];
+
+float lightcone_radius_for_snapshot       [MAXSNAPS];
+bool  is_outside_lightcone_for_snapshot   [MAXSNAPS];
+bool  check_outside_lightcone_for_snapshot[MAXSNAPS];
+
+/* position of observer w.r.t. simulation box: */
+float lightcone_observer_position[3];
+float lightcone_observer_distance_from_origin;
+
+/* simple lightcone geometry and stellar mass selection criteria: */
+float lightcone_lower_redshift;
+float lightcone_upper_redshift;
+float lightcone_lower_ra;
+float lightcone_upper_ra;
+float lightcone_lower_dec;
+float lightcone_upper_dec;
+float lightcone_lower_stellar_mass;
+
+long long lightcone_N_galaxies_skipped_construction;
+long long lightcone_N_galaxies_skipped_output_early;
+long long lightcone_N_galaxies_for_output;
+long long lightcone_N_galaxies_remaining_for_output_past_construct_galaxies;
 
 
-
+#endif /* defined LIGHTCONE_OUTPUT */

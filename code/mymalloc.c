@@ -99,7 +99,7 @@ void report_detailed_memory_usage_of_largest_task(size_t * OldHighMarkBytes, con
 
 void dump_memory_table(void)
 {
-  int i;
+  unsigned int i;
   size_t totBlocksize = 0;
 
   printf("------------------------ Allocated Memory Blocks----------------------------------------\n");
@@ -165,7 +165,6 @@ void *mymalloc_fullinfo(const char *varname, size_t n, const char *func, const c
 }
 
 
-
 void *mymalloc_movable_fullinfo(void *ptr, const char *varname, size_t n, const char *func, const char *file,
 				int line)
 {
@@ -215,7 +214,6 @@ void *mymalloc_movable_fullinfo(void *ptr, const char *varname, size_t n, const 
 }
 
 
-
 void myfree_fullinfo(void *p, const char *func, const char *file, int line)
 {
   if(Nblocks == 0)
@@ -236,31 +234,33 @@ void myfree_fullinfo(void *p, const char *func, const char *file, int line)
 }
 
 
-
 void myfree_movable_fullinfo(void *p, const char *func, const char *file, int line)
 {
-  int i;
+  unsigned int i, nr;
 
   if(Nblocks == 0)
     terminate("no allocated blocks that could be freed");
 
   /* first, let's find the block */
-  int nr;
-
-  for(nr = Nblocks - 1; nr >= 0; nr--)
-    if(p == Table[nr])
-      break;
-
-  if(nr < 0)
+  {
+    bool found = false;
+    for(nr = Nblocks; nr--;)
+      if(p == Table[nr])
+      {
+        found = true;
+        break;
+      }
+      
+    if(!found)
     {
       dump_memory_table();
       char buf[1000];
-      sprintf
-	(buf,
-	 "Task=%d: Wrong call of myfree_movable() from %s()/%s/line %d - this block has not been allocated!\n",
-	 ThisTask, func, file, line);
+      sprintf(buf,
+  	 "Task=%d: Wrong call of myfree_movable() from %s()/%s/line %d - this block has not been allocated!\n",
+  	 ThisTask, func, file, line);
       terminate(buf);
     }
+  }
 
   if(nr < Nblocks - 1)		/* the block is not the last allocated block */
     {
@@ -366,7 +366,7 @@ void *myrealloc_fullinfo(void *p, size_t n, const char *func, const char *file, 
 
 void *myrealloc_movable_fullinfo(void *p, size_t n, const char *func, const char *file, int line)
 {
-  int i;
+  unsigned int i, nr;
 
   if((n % 8) > 0)
     n = (n / 8 + 1) * 8;
@@ -378,23 +378,26 @@ void *myrealloc_movable_fullinfo(void *p, size_t n, const char *func, const char
     terminate("no allocated blocks that could be reallocated");
 
   /* first, let's find the block */
-  int nr;
-
-  for(nr = Nblocks - 1; nr >= 0; nr--)
-    if(p == Table[nr])
-      break;
-
-  if(nr < 0)
-    {
-      dump_memory_table();
-      char buf[1000];
-      sprintf
-	(buf,
-	 "Task=%d: Wrong call of myrealloc_movable() from %s()/%s/line %d - this block has not been allocated!\n",
-	 ThisTask, func, file, line);
-      terminate(buf);
-    }
-
+  {
+    bool found = false;
+    for(nr = Nblocks; nr--; )
+      if(p == Table[nr])
+      {
+        found = true;
+        break;
+      }
+   
+    if(!found)
+      {
+        dump_memory_table();
+        char buf[1000];
+        sprintf(buf,
+               "Task=%d: Wrong call of myrealloc_movable() from %s()/%s/line %d - this block has not been allocated!\n",
+               ThisTask, func, file, line);
+        terminate(buf);
+      }
+  }
+    
   if(nr < Nblocks - 1)		/* the block is not the last allocated block */
     {
       /* check that all subsequent blocks are actually movable */

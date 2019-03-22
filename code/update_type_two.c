@@ -187,7 +187,7 @@ void load_all_auxdata(int filenr)
   char buf[1000];
   FILE *fd;
   struct stat filestatus;
-  int SnapShotInFileName, AuxNtotHalos, AuxTotIds;
+  int SnapShotInFileName;
   size_t bytes;
 
 

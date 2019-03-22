@@ -108,7 +108,6 @@ void read_cooling_functions(void)
 double get_metaldependent_cooling_rate(double logTemp, double logZ)
 {
   int i;
-  double get_rate(int tab, double logTemp);
   double rate1, rate2, rate;
 
 

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <gsl/gsl_rng.h>
 #include <time.h>
+#include <stdbool.h>
 
 #define MIN_ALLOC_NUMBER       1000
 #define ALLOC_INCREASE_FACTOR  1.1
@@ -33,6 +34,10 @@
 #define  wrap(x,y) ( (x)>((y)/2.) ? ((x)-(y)) : ((x)<(-(y)/2.)?((x)+(y)):(x)) )
 #define  pow2(x)   ((x)*(x))
 #define  pow3(x)   ((x)*(x)*(x))
+
+#define set_array_to(arr_, value_) \
+do { size_t arr_##idx_; for(arr_##idx_ = 0; arr_##idx_ < (sizeof arr_ / sizeof *arr_); arr_##idx_++) { arr_[arr_##idx_] = value_; } } while (0)
+
 
 #define  terminate(x) {char termbuf[5000]; sprintf(termbuf, "code termination on task=%d, function %s(), file %s, line %d: %s\n", ThisTask, __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1);}
 
@@ -95,6 +100,7 @@
 #define  PLANCK      6.6262e-27
 #define  PROTONMASS  1.6726e-24
 #define  HUBBLE      3.2407789e-18   /* in h/sec */
+#define  D_HUBBLE    2997.92458      /* in Mpc/h */
 
 //To understand the units in the code read through set_units in init.c!!!
 
@@ -115,11 +121,14 @@
 
 #ifdef CATERPILLAR
 #define SFH_NBIN 24 //  CATERPILLAR - 256 snapshots
-#else
+#else  /* not defined CATERPILLAR */
 #define SFH_NBIN 20
-#endif //CATERPILLAR
+#endif /* not defined CATERPILLAR */
 
-#endif //STAR_FORMATION_HISTORY
+#endif /* defined STAR_FORMATION_HISTORY */
+
+typedef enum { HotGasComponent, ColdGasComponent, EjectedGasComponent } GasComponentType;
+typedef enum { DiskComponent, BulgeComponent, ICMComponent, BurstComponent, BurstMassComponent } StellarComponentType;
 
 #ifdef DETAILED_METALS_AND_MASS_RETURN
 struct metals
@@ -188,23 +197,26 @@ struct GALAXY_OUTPUT
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifdef OUTPUT_OBS_MAGS
   float ObsMagDust[NMAG]; // dust corrected, rest-frame absolute mags
-#endif
+#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
   float MagDust[NMAG]; // dust corrected, rest-frame absolute mags
-#endif
-#endif
+#endif /* defined OUTPUT_REST_MAGS */ 
+#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 };
-#else
-// #pragma pack(1)  //structure alignment for 1 Byte.
+#else /* not defined LIGHT_OUTPUT */
+
+#ifdef PACK_OUTPUT
+#pragma pack(1)  //structure alignment for 1 Byte(s).
+#endif /* defined PACK_OUTPUT */
 struct GALAXY_OUTPUT
 {
 #ifdef GALAXYTREE
   long long GalID; /** ID of galaxy, unique within simulation and SAM run.*/
   long long HaloID; // Unique ID of MPA halo containing this galaxy
-#endif
+#endif /* defined GALAXYTREE */
 #ifdef MBPID
   long long MostBoundID; // Most bound particle at centre of subhalo last associated with this galaxy.  Put here as want all 8-byte blocks together at top of output record.
-#endif
+#endif /* defined MBPID */
 #ifdef GALAXYTREE
   long long FirstProgGal;	// Main progenitor of this galaxy. Also the first progenitor in a linked list representation of the merger tree.
   long long NextProgGal;	// Next progenitor of this galaxy in linked list representation of merger tree
@@ -218,13 +230,20 @@ struct GALAXY_OUTPUT
   long long MMSubID; // fofId, the subhaloid of the subhalo at the center of the fof group
   int   PeanoKey; // Peano-Hilbert key, (bits=8), for position in 500/h Mpc box
   float Redshift; // redshift of the snapshot where this galaxy resides
-#endif
+#endif /* defined GALAXYTREE */
+#ifdef LIGHTCONE_OUTPUT
+#ifndef GALAXYTREE
+  float Redshift; // cosmological redshift of the galaxy (if GALAXYTREE then reuse Redshift defined there)
+#endif /* not defined GALAXYTREE */
+  float ObsRedshift; // observed (l.o.s. cosmological + peculial velocity) redshift of the galaxy
+  int   CubeShiftIndex; // index identifying periodic copy of simulation box the galaxy is in
+#endif /* defined LIGHTCONE_OUTPUT */
   int   Type; // Galaxy type: 0 for central galaxies of a main halo, 1 for central galaxies in sub-halos, 2 for satellites without halo.
 #ifndef GALAXYTREE
   int   HaloIndex;
  // long long SubID;
  // long long FirstHaloInFOFgroup;
-#endif
+#endif /* not defined GALAXYTREE */
 #ifdef HALOPROPERTIES
   float HaloM_Mean200, HaloM_Crit200, HaloM_TopHat;
   float HaloPos[3];
@@ -232,7 +251,7 @@ struct GALAXY_OUTPUT
   float HaloVelDisp;
   float HaloVmax;
   float HaloSpin[3];
-#endif
+#endif /* defined HALOPROPERTIES */
   int   SnapNum; // The snapshot number where this galaxy was identified.
   float LookBackTimeToSnap; //The time from a given snapshot to z=0, in years
   float CentralMvir; // 10^10/h Msun virial mass of background (FOF) halo containing this galaxy
@@ -275,8 +294,8 @@ struct GALAXY_OUTPUT
   struct metals MetalsICM;  // total mass in metals in intra-cluster stars, for type 0,1
 #ifdef METALS_SELF
   struct metals MetalsHotGasSelf; // hot gas metals that come from self
-#endif
-#else
+#endif /* defined METALS_SELF */
+#else /* not defined DETAILED_METALS_AND_MASS_RETURN */
   float MetalsColdGas; // 10^10/h Msun -	Mass in metals in cold gas.
   float MetalsStellarMass; // 10^10/h Msun -	Mass in metals in the bulge+disk
   float MetalsBulgeMass; // 10^10/h Msun -	Mass in metals in the bulge
@@ -286,11 +305,11 @@ struct GALAXY_OUTPUT
   float MetalsICM;  // total mass in metals in intra-cluster stars, for type 0,1
 #ifdef METALS_SELF
   float MetalsHotGasSelf; // hot gas metals that come from self
-#endif
-#endif //DETAILED_METALS_AND_MASS_RETURN
+#endif /* defined METALS_SELF */
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 #ifdef TRACK_BURST
   float BurstMass; // Mass formed in starbursts
-#endif
+#endif /* defined TRACK_BURST */
   /* misc */
   float PrimordialAccretionRate;
   float CoolingRadius;  // Q: store this ? (was stored in Delucia20006a)
@@ -315,8 +334,8 @@ struct GALAXY_OUTPUT
   float MagBulge[NMAG]; // rest-frame absolute mags for the bulge
 #ifdef ICL
   float MagICL[NMAG];          // rest-frame absolute mags of ICL
-#endif
-#endif
+#endif /* defined ICL */
+#endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef OUTPUT_OBS_MAGS
   float ObsMagDust[NMAG]; // dust-corrected, obs-frame absolute mags
@@ -324,7 +343,7 @@ struct GALAXY_OUTPUT
   float ObsMagBulge[NMAG]; // obs-frame absolute mags for the bulge
 #ifdef ICL
   float ObsMagICL[NMAG];  // observer-frame absolute mags for intra-cluster light
-#endif
+#endif /* defined ICL */
 #ifdef OUTPUT_MOMAF_INPUTS
   // define luminosities as if the galaxy were one snapshot earlier, i.e. higher redshift, than its actual snapshot
   float dObsMagDust[NMAG];
@@ -332,7 +351,7 @@ struct GALAXY_OUTPUT
   float dObsMagBulge[NMAG];
 #ifdef ICL
   float dObsMagICL[NMAG];
-#endif	//
+#endif /* defined ICL */
 #ifdef KITZBICHLER
   // define luminosities as if the galaxy were one snapshot later, i.e. lower redshift, than its actual snapshot
   float dObsMagDust_forward[NMAG];
@@ -340,17 +359,17 @@ struct GALAXY_OUTPUT
   float dObsMagBulge_forward[NMAG];
 #ifdef ICL
   float dObsMagICL_forward[NMAG];
-#endif	//
-#endif //KITZBICHLER
-#endif	//OUTPUT_MOMAF_INPUTS
-#endif	//OUTPUT_OBS_MAGS
+#endif /* defined ICL */
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_OBS_MAGS */
 
-#endif  //COMPUTE_SPECPHOT_PROPERTIES
+#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   float MassWeightAge;
-// #ifdef  POST_PROCESS_MAGS
+#ifdef  POST_PROCESS_MAGS
   float rbandWeightAge;
-// #endif
+#endif /* defined POST_PROCESS_MAGS */
 
 #ifdef STAR_FORMATION_HISTORY
   int sfh_ibin; //Index of highest bin currently in use
@@ -362,15 +381,15 @@ struct GALAXY_OUTPUT
   struct metals sfh_MetalsDiskMass[SFH_NBIN]; // Metals locked up in stars in disk.
   struct metals sfh_MetalsBulgeMass[SFH_NBIN]; // Metals locked up in stars in bulge.
   struct metals sfh_MetalsICM[SFH_NBIN]; // Metals locked up in stars in ICM.
-#else
+#else /* not defined DETAILED_METALS_AND_MASS_RETURN */
   float sfh_MetalsDiskMass[SFH_NBIN]; // Metals locked up in stars in disk.
   float sfh_MetalsBulgeMass[SFH_NBIN]; //Metals locked up in stars in bulge.
   float sfh_MetalsICM[SFH_NBIN]; // Metals locked up in stars in ICM.
-#endif
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 #ifdef TRACK_BURST
   float sfh_BurstMass[SFH_NBIN]; // Mass formed in starbursts
-#endif
-#endif //STAR_FORMATION_HISTORY
+#endif /* defined TRACK_BURST */
+#endif /* defined STAR_FORMATION_HISTORY */
 
 #ifdef INDIVIDUAL_ELEMENTS
   struct elements sfh_ElementsDiskMass[SFH_NBIN];
@@ -384,7 +403,7 @@ struct GALAXY_OUTPUT
   struct elements HotGas_elements;
   struct elements ICM_elements;
   struct elements EjectedMass_elements;
-#endif //INDIVIDUAL_ELEMENTS
+#endif /* defined INDIVIDUAL_ELEMENTS */
 };
 
 // next only of interest to DB output, which generally requires complete tree
@@ -439,7 +458,7 @@ struct SFH_Time
 #pragma pack()   //structure alignment ends.
 #endif //When LIGHT_OUTPUT is not defined
 
-struct galaxy_tree_data
+extern struct galaxy_tree_data
 {
   int HaloGalIndex;
   int IndexStored;
@@ -453,11 +472,15 @@ struct galaxy_tree_data
   int TreeRoot;
   int FOFCentralGal;
   int Done;
+#ifdef LIGHTCONE_OUTPUT
+  long long lightcone_galaxy_number_in_file_begin;
+  long long lightcone_galaxy_number_in_file_end;
+#endif /* defined  LIGHTCONE_OUTPUT */
 }
  *GalTree;
 
 /*Structure with all the data associated with galaxies (this is not the same as the output!)*/
-struct GALAXY			/* Galaxy data */
+extern struct GALAXY			/* Galaxy data */
 {
   int HeapIndex;
   int GalTreeIndex;
@@ -644,7 +667,7 @@ struct GALAXY			/* Galaxy data */
 
 
 // Documentation can be found in the database
-struct halo_data
+extern struct halo_data
 {
 	/* merger tree pointers */
 	int Descendant;
@@ -700,7 +723,7 @@ extern struct  halo_ids_data
 
 
 // Documentation can be found in the database
-struct halo_aux_data  /* auxiliary halo data */
+extern struct halo_aux_data  /* auxiliary halo data */
 {
 	int DoneFlag;
 	int HaloFlag;
@@ -835,7 +858,7 @@ extern int ReIncorporationModel;
 extern int AGNRadioModeModel;
 extern int DiskInstabilityModel;
 extern int BHGrowthInDiskInstabilityModel;
-extern int HotGasStripingModel;
+extern int HotGasStrippingModel;
 extern int DisruptionModel;
 extern int StarBurstModel;
 extern int BulgeFormationInMinorMergersOn;
@@ -1100,7 +1123,6 @@ extern long long *IdList;
 extern float *PosList, *VelList;
 #endif
 
-
 extern int Hashbits;
 extern int NumWrittenInParallel;
 extern double ScaleFactor;	// factor by which to multiply a position to get its ph index (after floring)
@@ -1113,8 +1135,6 @@ extern size_t offset_galaxydata, maxstorage_galaxydata, filled_galaxydata;
 extern size_t offset_galsnapdata[NOUT], maxstorage_galsnapdata[NOUT], filled_galsnapdata[NOUT];
 #endif
 
-#endif
-
 extern float Reion_z[46],Reion_Mc[46];
 
 extern FILE *tree_file;
@@ -1124,6 +1144,54 @@ extern FILE *FdGalTree;
 extern FILE *FdGalTreeSFH;
 extern FILE *FdGalDumps[NOUT];
 
+/* used to compute redshift for given l.o.s. distance by interpolation: */
+#ifndef N_REDSHIFTS_FOR_INTERPOLATION
+#define N_REDSHIFTS_FOR_INTERPOLATION 150
+#endif /* not defined N_REDSHIFTS_FOR_INTERPOLATION */
+#ifndef DELTA_REDSHIFT_FOR_INTERPOLATION
+#define DELTA_REDSHIFT_FOR_INTERPOLATION 0.1
+#endif /* not defined DELTA_REDSHIFT_FOR_INTERPOLATION */
+extern double distance_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION];
+extern double redshift_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION];
 
+#ifdef LIGHTCONE_OUTPUT
+/* file pointers for lightcone output files: */
+extern FILE *FdLightconeGalTree;
+extern FILE *FdLightconeGalDumps[NOUT];
 
+/* keeping track of #galaxies in lightcone output files: */
+extern long long TotLightconeGalCount;
+extern long long TotLightconeGalaxies[NOUT];
 
+/* redshift and distance boundaries for lightcone slices: */
+extern float lightcone_slice_lower_redshift [NOUT];
+extern float lightcone_slice_upper_redshift [NOUT];
+  
+extern float lightcone_slice_lower_los_distance [NOUT];
+extern float lightcone_slice_upper_los_distance [NOUT];
+
+extern float lightcone_radius_for_snapshot       [MAXSNAPS];
+extern bool  is_outside_lightcone_for_snapshot   [MAXSNAPS];
+extern bool  check_outside_lightcone_for_snapshot[MAXSNAPS];
+
+/* position of observer w.r.t. simulation box: */
+extern float lightcone_observer_position[3];
+extern float lightcone_observer_distance_from_origin;
+
+/* simple lightcone geometry and stellar mass selection criteria: */
+extern float lightcone_lower_redshift;
+extern float lightcone_upper_redshift;
+extern float lightcone_lower_ra;
+extern float lightcone_upper_ra;
+extern float lightcone_lower_dec;
+extern float lightcone_upper_dec;
+extern float lightcone_lower_stellar_mass;
+
+extern long long lightcone_N_galaxies_skipped_construction;
+extern long long lightcone_N_galaxies_skipped_output_early;
+extern long long lightcone_N_galaxies_for_output;
+extern long long lightcone_N_galaxies_remaining_for_output_past_construct_galaxies;
+
+#endif /* defined LIGHTCONE_OUTPUT */
+
+#endif /* header guard */

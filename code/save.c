@@ -71,7 +71,7 @@ void create_galaxy_files(int filenr)
     	TreeNgals[n][i] = 0;
 
       sprintf(buf, "%s/%s_z%1.2f_%d", OutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[n]], filenr);
-      if(!(FdGalDumps[n] = fopen(buf, "w+")))
+      if(!(FdGalDumps[n] = fopen(buf, "wb+")))
         {
     	  char sbuf[1000];
     	  sprintf(sbuf, "can't open file `%s'\n", buf);
@@ -98,8 +98,6 @@ void close_galaxy_files(void)
       fclose(FdGalDumps[n]);
     }
 }
-
-
 
 
 /**@brief Saves the Galaxy_Output structure for all the galaxies in
@@ -132,7 +130,7 @@ void save_galaxy_append(int tree, int i, int n)
         into the Galaxy output structure, some units are corrected.*/
 void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 {
-  int j,ibin;
+  int j;
 
   o->Type = g->Type;
   o->SnapNum = g->SnapNum;
@@ -155,19 +153,27 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
   o->HotGas = g->HotGas;
   o->BlackHoleMass = g->BlackHoleMass;
 
-
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef POST_PROCESS_MAGS
 #ifdef OUTPUT_REST_MAGS 
   /* Luminosities are converted into Mags in various bands */
   for(j = 0; j < NMAG; j++)
  	o->Mag[j] = lum_to_mag(g->Lum[j][n]);
-#endif
-#endif //ndef POST_PROCESS_MAGS
-#endif //COMPUTE_SPECPHOT_PROPERTIES
+#endif /* defined OUTPUT_REST_MAGS */
+#endif /* not defined POST_PROCESS_MAGS */
+#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */ 
 
 #ifndef LIGHT_OUTPUT
   
+#ifdef LIGHTCONE_OUTPUT
+#ifndef LIGHTCONE_OUTPUT_ONLY
+#ifndef GALAXYTREE
+  o->Redshift    = ZZ[g->SnapNum];
+#endif /* not defined  GALAXYTREE */
+  o->ObsRedshift = ZZ[g->SnapNum];
+#endif /* not defined LIGHTCONE_OUTPUT_ONLY  */
+#endif /* defined LIGHTCONE_OUTPUT */
+
 #ifdef GALAXYTREE
   o->HaloID = HaloIDs[g->HaloNr].HaloID;
   o->Redshift = ZZ[g->SnapNum];
@@ -194,7 +200,7 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
     }
 
   o->MMSubID = calc_big_db_subid_index(g->SnapNum, Halo[tmpfirst].FileNr, Halo[tmpfirst].SubhaloIndex);
-#endif
+#endif /* defined GALAXYTREE */
 
   o->LookBackTimeToSnap = NumToTime(g->SnapNum)*UnitTime_in_years/Hubble_h;
   o->InfallVmax = g->InfallVmax;
@@ -208,7 +214,7 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
   o->HaloM_TopHat = g->HaloM_TopHat;
   o->HaloVelDisp = g->HaloVelDisp;
   o->HaloVmax = g->HaloVmax;
-#endif
+#endif /* defined HALOPROPERTIES */
 
   o->Len = g->Len;
   o->Vmax = g->Vmax;
@@ -222,14 +228,14 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
       o->Vel[j] = g->Vel[j];
 #ifdef HALOSPIN
       o->HaloSpin[j] = g->HaloSpin[j];
-#endif
+#endif /* defined HALOSPIN */
       o->GasSpin[j] = g->GasSpin[j];
       o->StellarSpin[j] = g->StellarSpin[j];
 #ifdef HALOPROPERTIES
       o->HaloPos[j] = g->HaloPos[j];
       o->HaloVel[j] = g->HaloVel[j];
       o->HaloSpin[j] = g->HaloSpin[j];
-#endif      
+#endif /* defined HALOPROPERTIES */     
     }
 
   o->XrayLum = g->XrayLum;
@@ -252,19 +258,18 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 
 #ifndef GALAXYTREE
   o->HaloIndex = g->HaloNr;
-#endif
+#endif /* not defined GALAXYTREE */   
 #ifdef MBPID
   o->MostBoundID = g->MostBoundID;
-#endif
-
+#endif /* defined MBPID */   
 
 #ifdef GALAXYTREE
   o->DisruptOn = g->DisruptOn;
-#endif
+#endif /* defined GALAXYTREE */   
   o->MergeOn = g->MergeOn;
 
 //METALS
-#ifndef   DETAILED_METALS_AND_MASS_RETURN
+#ifndef DETAILED_METALS_AND_MASS_RETURN
   o->MetalsColdGas = CORRECTDBFLOAT(g->MetalsColdGas);
   o->MetalsStellarMass = CORRECTDBFLOAT(g->MetalsDiskMass)+ CORRECTDBFLOAT(g->MetalsBulgeMass);
   o->MetalsDiskMass = CORRECTDBFLOAT(g->MetalsDiskMass);
@@ -274,8 +279,8 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
   o->MetalsICM = CORRECTDBFLOAT(g->MetalsICM);
 #ifdef METALS_SELF
   o->MetalsHotGasSelf = CORRECTDBFLOAT(g->MetalsHotGasSelf);
-#endif
-#else
+#endif /* defined METALS_SELF */
+#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */
   o->MetalsColdGas = g->MetalsColdGas;
   o->MetalsDiskMass = g->MetalsDiskMass;
   o->MetalsBulgeMass = g->MetalsBulgeMass;
@@ -284,20 +289,17 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
   o->MetalsICM = g->MetalsICM;
 #ifdef METALS_SELF
   o->MetalsHotGasSelf = g->MetalsHotGasSelf;
-#endif
-#endif
+#endif /* defined METALS_SELF */
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 
 #ifdef TRACK_BURST
   o->BurstMass=g->BurstMass;
-#endif
-
-
+#endif /* defined TRACK_BURST */
 
  //STAR FORMATION HISTORIES / RATES
 
 #ifdef STAR_FORMATION_HISTORY
   o->sfh_ibin=g->sfh_ibin;
-  ibin=0;
   for (j=0;j<=o->sfh_ibin;j++) {
  	  o->sfh_DiskMass[j]=g->sfh_DiskMass[j];
  	  o->sfh_BulgeMass[j]=g->sfh_BulgeMass[j];
@@ -309,10 +311,10 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 	  o->sfh_ElementsDiskMass[j]=g->sfh_ElementsDiskMass[j];
 	  o->sfh_ElementsBulgeMass[j]=g->sfh_ElementsBulgeMass[j];
 	  o->sfh_ElementsICM[j]=g->sfh_ElementsICM[j];
-#endif
+#endif /* defined INDIVIDUAL_ELEMENTS */
 #ifdef TRACK_BURST
 	  o->sfh_BurstMass[j]=g->sfh_BurstMass[j];
-#endif
+#endif /* defined TRACK_BURST */
    }
 
   //Set all non-used array elements to zero:
@@ -328,12 +330,12 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 	  o->sfh_ElementsDiskMass[j]=elements_init();
 	  o->sfh_ElementsBulgeMass[j]=elements_init();
 	  o->sfh_ElementsICM[j]=elements_init();
-#endif
+#endif /* defined INDIVIDUAL_ELEMENTS */
 #ifdef TRACK_BURST
 	  o->sfh_BurstMass[j]=0.;
-#endif
+#endif /* defined TRACK_BURST */
   }
-#endif //STAR_FORMATION_HISTORY
+#endif /* defined STAR_FORMATION_HISTORY */
 
 #ifdef INDIVIDUAL_ELEMENTS
   o->DiskMass_elements = g->DiskMass_elements;
@@ -342,7 +344,7 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
   o->HotGas_elements = g->HotGas_elements;
   o->EjectedMass_elements = g->EjectedMass_elements;
   o->ICM_elements = g->ICM_elements;
-#endif
+#endif /* defined INDIVIDUAL_ELEMENTS */
 
   o->PrimordialAccretionRate = CORRECTDBFLOAT(g->PrimordialAccretionRate * UNITMASS_IN_G / UnitTime_in_s * SEC_PER_YEAR / SOLAR_MASS);
   o->CoolingRate = CORRECTDBFLOAT(g->CoolingRate * UNITMASS_IN_G / UnitTime_in_s * SEC_PER_YEAR / SOLAR_MASS);
@@ -357,7 +359,7 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 #ifdef POST_PROCESS_MAGS
     //Convert recorded star formation histories into mags
     post_process_spec_mags(o);
-#else //ndef POST_PROCESS_MAGS
+#else /* not defined POST_PROCESS_MAGS */
 
 #ifdef OUTPUT_REST_MAGS
   // Luminosities are converted into Mags in various bands
@@ -368,11 +370,11 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 	  o->MagDust[j] = lum_to_mag(g->LumDust[j][n]);
 #ifdef ICL
 	  o->MagICL[j] = lum_to_mag(g->ICLLum[j][n]);
-#endif
+#endif /* defined ICL */
     }
  
 
-#endif //OUTPUT_REST_MAGS
+#endif  /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
 #ifdef COMPUTE_OBS_MAGS
   // Luminosities in various bands
@@ -383,7 +385,7 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
       o->ObsMagDust[j] = lum_to_mag(g->ObsLumDust[j][n]);
 #ifdef ICL
       o->ObsMagICL[j] = lum_to_mag(g->ObsICL[j][n]);
-#endif
+#endif /* defined ICL */
 
 #ifdef OUTPUT_MOMAF_INPUTS
       o->dObsMag[j] = lum_to_mag(g->dObsLum[j][n]);
@@ -391,13 +393,13 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
       o->dObsMagDust[j] = lum_to_mag(g->dObsLumDust[j][n]);
 #ifdef ICL
       o->dObsMagICL[j] = lum_to_mag(g->dObsICL[j][n]);
-#endif
-#endif
+#endif /* defined ICL */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
     }
-#endif //COMPUTE_OBS_MAGS
-#endif //OUTPUT_OBS_MAGS
-#endif //ndef POST_PROCESS_MAGS
-#endif //COMPUTE_SPECPHOT_PROPERTIES
+#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
+#endif /* not defined POST_PROCESS_MAGS */ 
+#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   if((g->DiskMass+g->BulgeMass)> 0.0)
     {
@@ -409,8 +411,8 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 
 #ifdef FIX_OUTPUT_UNITS
   fix_units_for_ouput(o);
-#endif
-#endif //ndef LIGHT_OUTPUT
+#endif /* defined FIX_OUTPUT_UNITS */
+#endif /* not defined LIGHT_OUTPUT */ 
 }
 
 
@@ -432,10 +434,9 @@ void fix_units_for_ouput(struct GALAXY_OUTPUT *o)
   o->BulgeMass /= Hubble_h;
   o->HotGas /= Hubble_h;
   o->BlackHoleMass /= Hubble_h;
-
 }
-#else
 
+#else /* not defined LIGHT_OUTPUT */
 /**@brief Removes h from units of galaxy properties. If desired (makefile option
  * FIX_OUTPUT_UNITS is set), the output properties of the galaxies can be scaled
  * to physical units excluding any factors of h == Hubble/100 km/s/Mpc. */
@@ -459,7 +460,7 @@ void fix_units_for_ouput(struct GALAXY_OUTPUT *o)
   o->HaloSpin[0] /= Hubble_h;
   o->HaloSpin[1] /= Hubble_h;
   o->HaloSpin[2] /= Hubble_h;
-#endif
+#endif /* defined HALOPROPERTIES */
   o->GasSpin[0] /= Hubble_h;
   o->GasSpin[1] /= Hubble_h;
   o->GasSpin[2] /= Hubble_h;
@@ -480,7 +481,7 @@ void fix_units_for_ouput(struct GALAXY_OUTPUT *o)
   o->CoolingRadius /= sqrt(Hubble_h);
 #ifdef TRACK_BURST
   o->BurstMass /= Hubble_h;
-#endif
+#endif /* defined TRACK_BURST */
 
   o->MetalsColdGas=metals_add(metals_init(),o->MetalsColdGas,1./Hubble_h);
   o->MetalsDiskMass=metals_add(metals_init(),o->MetalsDiskMass,1./Hubble_h);
@@ -496,7 +497,7 @@ void fix_units_for_ouput(struct GALAXY_OUTPUT *o)
     o->sfh_ICM[j] /= Hubble_h;
 #ifdef TRACK_BURST
     o->sfh_BurstMass[j] /= Hubble_h;
-#endif
+#endif /* defined TRACK_BURST */
     o->sfh_MetalsDiskMass[j]=metals_add(metals_init(),
 					   o->sfh_MetalsDiskMass[j],1./Hubble_h);
     o->sfh_MetalsBulgeMass[j]=metals_add(metals_init(),
@@ -504,20 +505,20 @@ void fix_units_for_ouput(struct GALAXY_OUTPUT *o)
     o->sfh_MetalsICM[j]=metals_add(metals_init(),
 					 o->sfh_MetalsICM[j],1./Hubble_h);
   }
-#endif
+#endif /* defined STAR_FORMATION_HISTORY */
 }
-#endif // NO Light_Output
+#endif /* not defined LIGHT_OUTPUT */
 
-#endif // FIX_OUTPUT_UNITS
+#endif /* defined FIX_OUTPUT_UNITS */
 
 long long calc_big_db_offset(int filenr, int treenr)
 {
   long long big;
 #ifdef MRII
   big = (((filenr * (long long) 1000000) + treenr) * (long long) 1000000000);
-#else
+#else /* defined  */
   big = (((filenr * (long long) 1000000) + treenr) * (long long) 1000000);
-#endif
+#endif /* defined  */
   return big;
 }
 
@@ -527,9 +528,9 @@ long long calc_big_db_subid_index(int snapnum, int filenr, int subhaloindex)
   long long big;
 #ifdef MRII
   big = snapnum * (long long) 10000000000000 + filenr * (long long) 1000000000 + subhaloindex;
-#else
+#else /* not defined MRII */
   big = snapnum * (long long) 1000000000000 + filenr * (long long) 100000000 + subhaloindex;
-#endif
+#endif /* not defined MRII */
   return big;
 }
 
@@ -546,7 +547,6 @@ void write_sfh_bins()
   for(snap = 0; snap < MAXSNAPS; snap++)
     for(j=0;j < SFH_ibin[snap][0];j++)
       nbins++;
-
 
   sfh_times = (struct SFH_Time *) mymalloc("sfh_times", sizeof(struct SFH_Time) * nbins);
   ibin = 0;
@@ -578,8 +578,6 @@ void write_sfh_bins()
   myfwrite(sfh_times, sizeof(struct SFH_Time), nbins, SFH_Bins_File);	// size of an output structure (Galaxy_Output)
   fflush(SFH_Bins_File);
   fclose(SFH_Bins_File);
-
-
 }
-#endif
+#endif /* defined STAR_FORMATION_HISTORY */
 

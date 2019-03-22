@@ -328,9 +328,9 @@ void sfh_update_bins(int p, int snap, int step, double time)
    * Then merges bins whenever you have three or more of the same size.
    * Assumes that time counts from zero at the big bang. */
   int i, j; // loop index
-  int SFH_ibin; //desired ibin (i.e. bin in question in for loop below)
+  int sfh_ibin; //desired ibin (i.e. bin in question in for loop below)
 
-  SFH_ibin=0;
+  sfh_ibin=0;
 
   Gal[p].sfh_age=time;
 
@@ -338,21 +338,21 @@ void sfh_update_bins(int p, int snap, int step, double time)
   //ibin=Gal[p].sfh_ibin;
   for(i=0;i<SFH_NBIN;i++)
     if(SFH_Nbins[snap][step][i]>0) //i.e. If bin is active...
-      SFH_ibin=i; //Assign with 'bin in question'
+      sfh_ibin=i; //Assign with 'bin in question'
 
   if (Gal[p].sfh_ibin == 0) //i.e. If highest active bin is bin 0...
   {
-    for(i=0;i<=SFH_ibin;i++) {
+    for(i=0;i<=sfh_ibin;i++) {
       Gal[p].sfh_t[i]=SFH_t[snap][step][i];
       Gal[p].sfh_Nbins[i]=SFH_Nbins[snap][step][i];
     }
-    Gal[p].sfh_ibin=SFH_ibin;
+    Gal[p].sfh_ibin=sfh_ibin;
   }
   else //i.e. If highest active bin is > bin 0...
   {
     i=0;
     
-    while(i<=SFH_ibin) //Up to 'bin in question'...
+    while(i<=sfh_ibin) //Up to 'bin in question'...
     {
       if(i<=Gal[p].sfh_ibin) //...until highest active bin is reached...
       {
@@ -429,7 +429,7 @@ void sfh_update_bins(int p, int snap, int step, double time)
       }
       else {
 	//no more bins available in the galaxy, fill the rest times from SFH array
-	for(j=i;j<=SFH_ibin;j++) {
+	for(j=i;j<=sfh_ibin;j++) {
 	  Gal[p].sfh_Nbins[j]=SFH_Nbins[snap][step][j];
 	  Gal[p].sfh_t[j]=SFH_t[snap][step][j];
 	  Gal[p].sfh_DiskMass[j]=0.;

@@ -55,6 +55,8 @@
 #ifdef PHOTTABLES_PRECOMPUTED
 void setup_LumTables_precomputed(char SimName[])
 {
+  FilterLambda[NMAG] = 0.55;	//to use by the dust model for birth clouds, the wavelength of the V-band
+  
   FILE *fa, *fb;
   int MetalLoop, AgeLoop, band, snap;
   char buf[1000], FilterName[100], dummy[100], SSP[1000];
@@ -99,13 +101,18 @@ void setup_LumTables_precomputed(char SimName[])
     {
       sprintf(buf, "%s", FileWithFilterNames);
       if((fa = fopen(buf, "r")) == NULL)
-	printf("\n**%s not found on line %d of init.c**\n", buf, __LINE__);
+      {
+        printf("\n**Can't open file \"%s\" **\n", buf);
+        char sbuf[1000];
+        sprintf(sbuf, "Can't open file %s\n", buf);
+        terminate(sbuf);
+      }
 
       fscanf(fa, "%d", &dumb_nmag);
       if(dumb_nmag != NMAG)
 	{
 	  char sbuf[1000];
-	  sprintf(sbuf,"nmag on file %s not equal to NMAG",buf);
+	  sprintf(sbuf,"nmag = %d on file %s not equal to NMAG = %d",dumb_nmag, buf, NMAG);
 	  terminate(sbuf);
 	}
 
@@ -194,6 +201,8 @@ void setup_LumTables_precomputed(char SimName[])
 #ifdef SPEC_PHOTABLES_ON_THE_FLY
 void setup_Spec_LumTables_onthefly(void)
 {
+  FilterLambda[NMAG] = 0.55;	// used by the dust model for birth clouds, the wavelength of the V-band
+  
   double AbsMAG;
   //FILTERS
   double LambdaFilter[NMAG][MAX_NLambdaFilter], FluxFilter[NMAG][MAX_NLambdaFilter];

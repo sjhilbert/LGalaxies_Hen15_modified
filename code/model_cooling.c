@@ -83,7 +83,7 @@
 
 /** @brief main cooling recipe, where the cooling rates are calculated */
 
-void compute_cooling(int p, double dt, int ngal)
+void compute_cooling(int p, double dt)
 {
   double Vvir, Rvir, x, lambda, tcool, rcool, temp, tot_hotMass, tot_metals, HotRadius;
   double coolingGas, logZ, rho_rcool, rho0;
@@ -186,13 +186,13 @@ void compute_cooling(int p, double dt, int ngal)
 //might be assigned the centre of a cluster leading to huge cooling. It is therefore
 //not necessary to do the same correction for satellites of subhalos.
 
-
-
+/** @todo fix BUG: dist is used in comparison, but never set
+*/
 void do_AGN_heating(double dt, int ngal)
 {
   double AGNrate, AGNheating, AGNaccreted, AGNcoeff, fraction, EDDrate, FreeFallRadius;
   double dist, HotGas, HotRadius, Rvir, Vvir, Mvir;
-  double LeftOverEnergy, CoolingGas, AGNAccretedFromCentral;
+  double LeftOverEnergy, CoolingGas;
   int p, FoFCentralGal;
 
   if(AGNRadioModeModel == 0)
@@ -289,8 +289,7 @@ void do_AGN_heating(double dt, int ngal)
 
 	  if(AGNRadioModeModel == 0 && Gal[p].Type==1)
 	    {
-//	      if(dist < Gal[FoFCentralGal].Rvir)
-        if(separation_gal(p, FoFCentralGal) < Gal[FoFCentralGal].Rvir)
+	      if(dist < Gal[FoFCentralGal].Rvir)
 		{
 		  if(AGNheating > (Gal[p].CoolingGas + Gal[FoFCentralGal].CoolingGas))
 		    {
