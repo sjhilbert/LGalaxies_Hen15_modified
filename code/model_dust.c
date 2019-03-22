@@ -75,9 +75,9 @@
 void dust_model(const int galaxy_number_, const int output_number_)
 {
 #ifndef OUTPUT_REST_MAGS
-#ifndef COMPUTE_OBS_MAGS
+#ifndef OUTPUT_OBS_MAGS
   return; /* early return if no mags to compute dust for */
-#endif /* not defined COMPUTE_OBS_MAGS */
+#endif /* not defined OUTPUT_OBS_MAGS */
 #endif /* not defined OUTPUT_REST_MAGS */ 
   
   double mu_, tau_, alam_, a_bc_;
@@ -168,7 +168,7 @@ void dust_model(const int galaxy_number_, const int output_number_)
       Gal[galaxy_number_].ObsLumDust[output_number_][filter_number_] -= dly_;
     }
 
-#ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z (snapshot_number_ - 1)
+#ifdef OUTPUT_FB_OBS_MAGS   // compute same thing at z (snapshot_number_ +/- 1)
     const int earlier_snapshot_number_ = (snapshot_number_ > 0) ? (snapshot_number_ - 1) : 0;
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
@@ -176,15 +176,15 @@ void dust_model(const int galaxy_number_, const int output_number_)
       alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
       a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-      Lum_disk_ = Gal[galaxy_number_].dObsLum[output_number_][filter_number_] - Gal[galaxy_number_].dObsLumBulge[output_number_][filter_number_];
-      Gal[galaxy_number_].dObsLumDust[output_number_][filter_number_] = Gal[galaxy_number_].dObsLumBulge[output_number_][filter_number_] + Lum_disk_ * alam_;
+      Lum_disk_ = Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_] - Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_];
+      Gal[galaxy_number_].backward_ObsLumDust[output_number_][filter_number_] = Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_] + Lum_disk_ * alam_;
 
-      dly_ = (Gal[galaxy_number_].dObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].dObsYLumBulge[output_number_][filter_number_]) * alam_ * a_bc_ +
-                      Gal[galaxy_number_].dObsYLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
+      dly_ = (Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_]) * alam_ * a_bc_ +
+                      Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
 
-      Gal[galaxy_number_].dObsLumDust[output_number_][filter_number_] -= dly_;
+      Gal[galaxy_number_].backward_ObsLumDust[output_number_][filter_number_] -= dly_;
     }
-#ifdef KITZBICHLER   // compute same thing at z (snapshot_number_ + 1)
+
     const int later_snapshot_number_ = (snapshot_number_ < LastDarkMatterSnapShot) ? (snapshot_number_ + 1) : LastDarkMatterSnapShot;
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
@@ -192,16 +192,15 @@ void dust_model(const int galaxy_number_, const int output_number_)
       alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
       a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[later_snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-      Lum_disk_ = Gal[galaxy_number_].dObsLum_forward[output_number_][filter_number_] - Gal[galaxy_number_].dObsLumBulge_forward[output_number_][filter_number_];
-      Gal[galaxy_number_].dObsLumDust_forward[output_number_][filter_number_] = Gal[galaxy_number_].dObsLumBulge_forward[output_number_][filter_number_] + Lum_disk_ * alam_;
+      Lum_disk_ = Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_];
+      Gal[galaxy_number_].forward_ObsLumDust[output_number_][filter_number_] = Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_] + Lum_disk_ * alam_;
 
-      dly_ = (Gal[galaxy_number_].dObsYLum_forward[output_number_][filter_number_] - Gal[galaxy_number_].dObsYLumBulge_forward[output_number_][filter_number_]) * alam_ * a_bc_ +
-                      Gal[galaxy_number_].dObsYLumBulge_forward[output_number_][filter_number_] * (1. - ExpTauBCBulge);
+      dly_ = (Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_] - Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_]) * alam_ * a_bc_ +
+                      Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] * (1. - ExpTauBCBulge);
 
-      Gal[galaxy_number_].dObsLumDust_forward[output_number_][filter_number_] -= dly_;
+      Gal[galaxy_number_].forward_ObsLumDust[output_number_][filter_number_] -= dly_;
     }
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
   }
 }

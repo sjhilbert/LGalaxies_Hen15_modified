@@ -25,38 +25,45 @@
 #include <math.h>
 #include <stdbool.h>
 
-double SAM(const int filenr);
+
+/* sam.c */
+double SAM(const int file_number_);
 
 void construct_galaxies(const int tree_number_, const int halo_number_);
 void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_halo_number_);
 void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof_group_, int *merger_center_);
-void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int cenngal);
+void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int cenngal_);
 
 size_t myfread (void *ptr, size_t size, size_t nmemb, FILE * stream);
 size_t myfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream);
 size_t myffill (void *ptr, size_t size, size_t nmemb, FILE * stream);
 int myfseek(FILE * stream, long offset, int whence);
 
-void load_all_auxdata(const int filenr);
+void load_all_auxdata(const int file_number_);
 
 int peano_hilbert_key(const int x, const int y, const int z,const  int bits);
+
 void update_type_two_coordinate_and_velocity(const int tree, const int i, const int centralgal);
-void output_galaxy(const int treenr, const int heap_index);
+void output_galaxy(const int tree_number_, const int heap_index_);
 
 void close_galaxy_tree_file(void);
-void create_galaxy_tree_file(const int filenr);
+void create_galaxy_tree_file(const int file_number_);
 void save_galaxy_tree_append(const int i);
 void update_galaxy_tree_ids(void);
-void save_galaxy_tree_finalize(const int filenr, const int tree);
-void prepare_galaxy_tree_info_for_output(const int filenr, const int tree, const struct galaxy_tree_data *g, struct GALAXY_OUTPUT *o);
+void save_galaxy_tree_finalize(const int file_number_, const int tree);
+void prepare_galaxy_tree_info_for_output(const int file_number_, const int tree, const struct galaxy_tree_data *g, struct GALAXY_OUTPUT *o);
 int walk_galaxy_tree(const int nr);
 int save_galaxy_tree_compare(const void *a, const void *b);
 
+void save_galaxy_tree_reorder_on_disk(void);
+int save_galaxy_tree_mp_comp(const void *mp_tree_data_a_, const void *mp_tree_data_b_);
+int output_galaxy_compare(const void *output_galaxy_a_, const void *output_galaxy_b_);
+
 void save_galaxy_append(const int tree, const int i, const int n);
 void close_galaxy_files(void);
-void create_galaxy_files(const int filenr);
+void create_galaxy_files(const int file_number_);
 
-long long calc_big_db_subid_index(const int snapnum, const int filenr, const int subhaloindex);
+long long calc_big_db_subid_index(const int snapshot_number_, const int file_number_, const int subhaloindex);
 
 void dump_memory_table(void);
 void *myrealloc_movable_fullinfo(void *p, size_t n, const char *func, const char *file, const int line);
@@ -68,10 +75,7 @@ void *mymalloc_fullinfo(const char *varname, size_t n, const char *func, const c
 void report_detailed_memory_usage_of_largest_task(size_t * OldHighMarkBytes, const char *label, const char *func, const char *file, const int line);
 void mymalloc_init(void);
 
-void save_galaxy_tree_reorder_on_disk(void);
-int save_galaxy_tree_mp_comp(const void *a, const void *b);
-
-void get_coordinates(float *pos, float *vel, const long long ID, const int tree, const int halonr, const int snapnum);
+void get_coordinates(float *pos, float *vel, const long long ID, const int tree, const int halo_number_, const int snapshot_number_);
 
 
 //functions used to scale to a different cosmology
@@ -82,14 +86,14 @@ void un_scale_cosmology(const int nhalos);
 #endif /* defined ALLOW_UNSCALE_COSMOLOGY */
 void read_zlist_original_cosm(void);
 void read_zlist_new(void);
-double c_correction(const float mass, const int snapnum);
+double c_correction(const float mass, const int snapshot_number_);
 double find_c(const double c_ori, const double ratio);
 double func_c(const double c);
 double func_c_p(const double c);
 double dgrowth_factor_dt(double a, double omega_m, double omega_l);
-double scale_v_cen(const int snapnum);
+double scale_v_cen(const int snapshot_number_);
 
-long long calc_big_db_offset(const int filenr, const int treenr);
+long long calc_big_db_offset(const int file_number_, const int tree_number_);
 
 void init(void);
 void read_parameter_file(char *fname);
@@ -105,7 +109,7 @@ void assign_files_to_tasks(int *FileToProcess, int *TaskToProcess, const int nfi
 void read_reionization(void);
 
 
-void load_tree_table(const int filenr);
+void load_tree_table(const int file_number_);
 void load_tree(const int nr);
 void prepare_galaxy_for_output(const int n, const struct GALAXY *g, struct GALAXY_OUTPUT *o);
 void fix_units_for_ouput(struct GALAXY_OUTPUT *o);
@@ -114,7 +118,7 @@ void free_galaxies_and_tree(void);
 void free_tree_table(void);
 void endrun(const int ierr);
 
-void finalize_galaxy_file(const int filenr);
+void finalize_galaxy_file(const int file_number_);
 
 void starformation(const int p, const int centralgal, const double time, const double dt);
 void update_stars_due_to_reheat(const int p, double *stars);
@@ -124,7 +128,7 @@ void update_from_feedback(const int p, const int centralgal, const double reheat
 void update_massweightage(const int p, const double stars, const double time);
 
 void add_galaxies_together(const int t, const int p);
-void init_galaxy(const int p, const int halonr);
+void init_galaxy(const int p, const int halo_number_);
 double infall_recipe(const int centralgal, const int ngal, const double Zcurr);
 void add_infall_to_hot(const int centralgal, const double infallingGas);
 void compute_cooling(const int p, const double dt);
@@ -181,20 +185,20 @@ locate_interpolation_index_and_fraction(met_index_, 0, SSP_NMETALLICITES, log10_
 
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
-double estimate_merging_time(const int halonr, const int mostmassive, const int p);
+double estimate_merging_time(const int halo_number_, const int mostmassive, const int p);
 
-double get_hubble_parameter_for_halo(const int halonr);
-double get_hubble_parameter_squared_for_halo(const int halonr);
-double get_virial_velocity(const int halonr);
-double get_virial_radius(const int halonr);
-double get_virial_mass(const int halonr);
+double get_hubble_parameter_for_halo(const int halo_number_);
+double get_hubble_parameter_squared_for_halo(const int halo_number_);
+double get_virial_velocity(const int halo_number_);
+double get_virial_radius(const int halo_number_);
+double get_virial_mass(const int halo_number_);
 double collisional_starburst_recipe(const double mass_ratio, const int merger_centralgal, const int centralgal, const double time, const double deltaT);
 
 void make_bulge_from_burst(const int p);
 void grow_black_hole(const int merger_centralgal, const double mass_ratio, const double deltaT);
 void check_disk_instability(const int p);
 
-double get_disk_radius(const int halonr, const int p);
+double get_disk_radius(const int halo_number_, const int p);
 void set_gas_disk_radius(const int p);
 void set_stellar_disk_radius(const int p);
 
@@ -209,14 +213,14 @@ void disrupt(const int p);
 
 double hot_retain_sat(const int i, const int centralgal);
 
-double get_initial_disk_radius(const int halonr, const int p);
+double get_initial_disk_radius(const int halo_number_, const int p);
 void update_bulge_from_disk(const int p, const double stars);
 void bulgesize_from_merger(const double mass_ratio, const int merger_centralgal, const int p, const double Mcstar, const double Mcbulge, const double Mcgas, const  double Mpstar, const double Mpbulge, const double Mpgas, double frac);
 
-void update_type_2(const int ngal, const int halonr, const int prog, int mostmassive);
-void update_centralgal(const  int ngal, const int halonr);
+void update_type_2(const int ngal, const int halo_number_, const int prog, int mostmassive);
+void update_centralgal(const  int ngal, const int halo_number_);
 void update_hotgas(const int ngal, const int centralgal);
-void update_type_1(const int ngal, const int halonr,const int prog);
+void update_type_1(const int ngal, const int halo_number_,const int prog);
 double separation_gal(const int p, const int q);
 double separation_halo(const int p, const int q);
 
@@ -272,7 +276,7 @@ void find_actual_ejecta_limits(const int channel_type, const double Mi_lower_act
 		double* EjectedMasses_lower_actual, double* EjectedMasses_upper_actual, double* TotalMetals_lower_actual, double* TotalMetals_upper_actual);
 #endif /* not defined INDIVIDUAL_ELEMENTS */
 
-void print_galaxy(char string[], const int p, const int halonr);
+void print_galaxy(char string[], const int p, const int halo_number_);
 
 //in elements.c:
 struct elements elements_init();

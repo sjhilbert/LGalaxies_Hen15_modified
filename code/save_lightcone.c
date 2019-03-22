@@ -246,7 +246,7 @@ init_lightcone(void)
   { 
     lightcone_radius_for_snapshot       [snapshot_number_] = lightcone_slice_upper_los_distance[snapshot_number_];
     is_outside_lightcone_for_snapshot   [snapshot_number_] = (lightcone_radius_for_snapshot[snapshot_number_] <= 0.);
-    check_outside_lightcone_for_snapshot[snapshot_number_] = 0.5 * BoxSize > lightcone_radius_for_snapshot[snapshot_number_];
+    check_outside_lightcone_for_snapshot[snapshot_number_] = 0.866 * BoxSize > lightcone_radius_for_snapshot[snapshot_number_];
   }
 
 #else /* not defined GALAXYTREE */ 
@@ -255,7 +255,7 @@ init_lightcone(void)
   {
     while(output_number_ < NOUT - 1 && ListOutputSnaps[output_number_ + 1] >= snapshot_number_)
     { output_number_++; }
-    lightcone_radius_for_snapshot       [snapshot_number_] = (output_number_ < 0) ? 0 : lightcone_slice_upper_los_distance[output_number_] + comoving_los_distance_for_redshift(ZZ[snapshot_number_]) - comoving_los_distance_for_redshift(ZZ[ListOutputSnaps[output_number_]]);
+    lightcone_radius_for_snapshot       [snapshot_number_] = (output_number_ < 0) ? 0    : lightcone_slice_upper_los_distance[output_number_] + comoving_los_distance_for_redshift(ZZ[snapshot_number_]) - comoving_los_distance_for_redshift(ZZ[ListOutputSnaps[output_number_]]);
     is_outside_lightcone_for_snapshot   [snapshot_number_] = (output_number_ < 0) ? true : (lightcone_radius_for_snapshot[snapshot_number_] <= 0.);
     check_outside_lightcone_for_snapshot[snapshot_number_] = 0.866 * BoxSize > lightcone_radius_for_snapshot[snapshot_number_];
   }
@@ -366,9 +366,9 @@ close_lightcone_galaxy_files(void)
   myfwrite(&one_, sizeof(long long), 1, FdLightconeGalTree);                   // write 1 (to determine endianess?)
   myfwrite(&size_of_struct_, sizeof(long long), 1, FdLightconeGalTree);        // size of an output structure (Galaxy_Output)
   myfwrite(&TotLightconeGalCount, sizeof(long long), 1, FdLightconeGalTree);   // the total number of galaxies
-#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+#ifdef SORT_GALAXY_OUTPUT
   //  sort_lightcone_galaxy_in_file(FdLightconeGalTree); /* sorting is already done during save_lightcone_galaxy_finalize */
-#endif /* defined SORT_LIGHTCONE_GALAXY_OUTPUT */
+#endif /* defined SORT_GALAXY_OUTPUT */
   fclose(FdLightconeGalTree);
 
 #else /* not defined GALAXYTREE */
@@ -378,9 +378,9 @@ close_lightcone_galaxy_files(void)
   {
     fseek(FdLightconeGalDumps[output_number_], 0, SEEK_SET);
     myfwrite(&TotLightconeGalaxies[output_number_], sizeof(long long), 1, FdLightconeGalDumps[output_number_]);  // total number of galaxies
-#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+#ifdef SORT_GALAXY_OUTPUT
     sort_lightcone_galaxy_in_file(FdLightconeGalDumps[output_number_]);
-#endif /* defined SORT_LIGHTCONE_GALAXY_OUTPUT */
+#endif /* defined SORT_GALAXY_OUTPUT */
     fclose(FdLightconeGalDumps[output_number_]);
   }
 #endif /* not defined GALAXYTREE */
@@ -459,16 +459,16 @@ myfread_lightcone_galaxy_number_of_entries(FILE* lightcone_galaxy_file_, long lo
  *          but MagDust, etc. are not updated to reflect extiction 
  *          for actual inclination w.r.t. l.o.s.
  * 
- * if defined OUTPUT_MOMAF_INPUTS
+ * if defined OUTPUT_FB_OBS_MAGS
  * ObsMag, etc. will be adjusted to absolute observer frame mags for galaxy
  * redshifted to ObsRedshift
  */
 void
 adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3], const int shift_index_[3], const int output_number_)
 {
-#ifndef OUTPUT_MOMAF_INPUTS 
+#ifndef OUTPUT_FB_OBS_MAGS 
   (void)output_number_;  /* suppress unused-parameter warning */
-#endif /* not defined OUTPUT_MOMAF_INPUTS */
+#endif /* not defined OUTPUT_FB_OBS_MAGS */
  
   apply_shift(shift_, &(galaxy_->Pos));
   apply_cartesian_to_ra_dec_r(&(galaxy_->Pos));
@@ -497,7 +497,7 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifdef OUTPUT_OBS_MAGS
-#ifdef OUTPUT_MOMAF_INPUTS
+#ifdef OUTPUT_FB_OBS_MAGS
   int filter_number_;
 
   const int   current_snapshot_number_   = ListOutputSnaps[output_number_];
@@ -506,7 +506,7 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
   const int   earlier_snapshot_number_   = current_snapshot_number_ > 0 ? current_snapshot_number_ - 1 : 0;
   const float earlier_snapshot_redshift_ = ZZ[earlier_snapshot_number_];
 
-#ifdef KITZBICHLER
+
   const int   later_snapshot_number_   = current_snapshot_number_ < LastDarkMatterSnapShot ? current_snapshot_number_ + 1 : LastDarkMatterSnapShot;
   const float later_snapshot_redshift_ = ZZ[later_snapshot_number_];
 
@@ -516,30 +516,29 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMagDust_forward [filter_number_]; 
-      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMag_forward     [filter_number_]; 
-      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMagBulge_forward[filter_number_]; 
+      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagDust [filter_number_]; 
+      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMag     [filter_number_]; 
+      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagBulge[filter_number_]; 
 #ifdef ICL
-      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMagICL_forward  [filter_number_]; 
+      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagICL  [filter_number_]; 
 #endif /* ICL */
     }
   }
   else /* galaxy_->ObsRedshift >= current_snapshot_redshift_ */
-#endif /* defined KITZBICHLER */  
   {
     const float obs_z_rel_dev_ = (galaxy_->ObsRedshift - current_snapshot_redshift_) / (earlier_snapshot_redshift_ - current_snapshot_redshift_);
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMagDust [filter_number_]; 
-      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMag     [filter_number_]; 
-      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMagBulge[filter_number_]; 
+      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagDust [filter_number_]; 
+      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMag     [filter_number_]; 
+      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagBulge[filter_number_]; 
 #ifdef ICL
-      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->dObsMagICL  [filter_number_]; 
+      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagICL  [filter_number_]; 
 #endif /* ICL */
     }
   }
 
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 }
@@ -678,7 +677,7 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
     // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
     qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
   
-#ifdef UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM
+#ifdef UPDATE_GALAXY_OUTPUT_IN_MEM
 /* updating done in memory */
 
     const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
@@ -696,16 +695,16 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
       for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
       { prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_[galaxy_in_file_number_ - galaxy_in_file_number_begin_]); }
 
-#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+#ifdef SORT_GALAXY_OUTPUT
     qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
-#endif /* not defined SORT_LIGHTCONE_GALAXY_OUTPUT */  
+#endif /* not defined SORT_GALAXY_OUTPUT */  
  
     myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
     myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
 
     myfree(galaxy_output_);
 
-#else /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */
+#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */
  /* updating done on disk with little memory overhead */
 
     lightcone_galaxy_output_type galaxy_output_;
@@ -723,13 +722,13 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
       }
     }
   
-#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
-#warning "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_LIGHTCONE_GALAXY_OUTPUT without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+#ifdef SORT_GALAXY_OUTPUT
+#warning "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_GALAXY_OUTPUT without UPDATE_GALAXY_OUTPUT_IN_MEM."
 /** @todo implement on-disk version for sorting galaxy output,
  *        taking inspiration from save_galaxy_tree_reorder_on_disk() */
 
-#endif /* not defined SORT_LIGHTCONE_GALAXY_OUTPUT */  
-#endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
+#endif /* not defined SORT_GALAXY_OUTPUT */  
+#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */  
    /* after updating tree info in file, make sure that file position indicator is put back to end of file.
     * note: file position indicator should be at end of file already,
     * if GalTree[].lightcone_galaxy_number_in_file_begin/end work as expected an are propery sorted)
@@ -750,7 +749,7 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
   */
 void sort_lightcone_galaxy_in_file(FILE * lightcone_galaxy_file_)
 {
-#ifdef UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM
+#ifdef UPDATE_GALAXY_OUTPUT_IN_MEM
   long long N_galaxies_ = 0;
   myfread_lightcone_galaxy_number_of_entries(lightcone_galaxy_file_, &N_galaxies_);
 
@@ -764,10 +763,10 @@ void sort_lightcone_galaxy_in_file(FILE * lightcone_galaxy_file_)
   myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
   myfwrite_lightcone_galaxy(galaxy_, N_galaxies_, lightcone_galaxy_file_);
   
-#else /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */    
-#warning "Sorry, sort_lightcone_galaxy_in_file() not yet implemented without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */    
+#warning "Sorry, sort_lightcone_galaxy_in_file() not yet implemented without UPDATE_GALAXY_OUTPUT_IN_MEM."
   (void)lightcone_galaxy_file_; /* avoid unused-parameter warning */
-#endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
+#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */  
 }
 
 

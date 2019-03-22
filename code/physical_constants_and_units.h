@@ -74,63 +74,69 @@
 #ifndef PHYSICAL_CONSTANTS_AND_UNITS_H
 #define PHYSICAL_CONSTANTS_AND_UNITS_H
 
-// /* physical constants: in external (CGS or astron.) units: */
-// #define GRAVITY                           6.67408e-8        /* in cgs */
-// #define SOLAR_MASS                        1.98855e33        /* in cgs */
-// #define SOLAR_LUM                         3.826e33          /* in cgs */
-// #define RAD_CONST                         7.565e-15         /* in cgs */
-// #define AVOGADRO                          6.02214086e23     /* in cgs */
-// #define BOLTZMANN                         1.38064852e-16    /* in cgs */
-// #define GAS_CONST                         8.3142598e7       /* in cgs */
-// #define SPEED_OF_LIGHT                    2.99792458e10     /* in cgs */
-// #define PLANCK                            6.62607004e-27    /* in cgs */
-// #define PROTONMASS                        1.67262190e-24    /* in cgs */
-// #define HUBBLE                            3.24077893e-18    /* in h/sec */
-// #define D_HUBBLE                          2997.92458        /* in Mpc/h */
-// 
-// 
-// /* standard unit conversions: */
-// #define SEC_PER_YEAR                      3.1536000e7
-// #define SEC_PER_MEGAYEAR                  3.1536000e13
-// #define SEC_PER_GIGAYEAR                  3.1536000e16
-// #define LENGTH_10_PC_IN_CM                3.08567758e19
-// 
-// 
-// /* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
-// #define UNITLENGTH_IN_CM                  3.08567758e+24    /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
-// #define UNITMASS_IN_G                     1.98855e+43	      /* 10^10Msun - WATCH OUT, masses in the code are in 10^10Msun/h */
-// #define UNITVELOCITY_IN_CM_PER_S          1.e5              /* Km/s - WATCH OUT, this are the correct units in the code km/s */
+#ifdef USE_UPDATED_UNITS
+/* These are new values for phys. constants and basic unit conversions,
+ * updated from recent meaurements and/or provided with increased precision
+ * compared to the values used by the public version of Henriques et al. (2015).
+ * (I would not hold my breath to wait for observations and models becoming 
+ * accurate enough for the differences between old and updated values to matter.) */
+
+/* physical constants: in external (CGS or astron.) units: */
+#define GRAVITY                           6.67408e-8        /* in cgs */
+#define SOLAR_MASS                        1.98855e33        /* in cgs */
+#define SOLAR_LUM                         3.826e33          /* in cgs */
+#define RAD_CONST                         7.565e-15         /* in cgs */
+#define AVOGADRO                          6.02214086e23     /* in cgs */
+#define BOLTZMANN                         1.38064852e-16    /* in cgs */
+#define GAS_CONST                         8.3142598e7       /* in cgs */
+#define SPEED_OF_LIGHT                    2.99792458e10     /* in cgs */
+#define PLANCK                            6.62607004e-27    /* in cgs */
+#define PROTONMASS                        1.67262190e-24    /* in cgs */
+#define HUBBLE                            3.24077893e-18    /* in h/sec */
+#define D_HUBBLE                          2997.92458        /* in Mpc/h */
+
+/* standard unit conversions: */
+#define SEC_PER_YEAR                      3.1557600e7       /* Julian year in cgs */
+#define SEC_PER_MEGAYEAR                  3.1557600e13      /* Julian Mega year in cgs */
+#define SEC_PER_GIGAYEAR                  3.1557600e16      /* Julian Giga year in cgs */
+#define LENGTH_10_PC_IN_CM                3.08567758e19     /* 10 parsec (standard distance for abs. mag.) in cgs */
 
 
+/* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
+#define UNITLENGTH_IN_CM                  3.08567758e+24    /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
+#define UNITMASS_IN_G                     1.98855e+43	      /* 10^10Msun - WATCH OUT, masses in the code are in 10^10Msun/h */
+#define UNITVELOCITY_IN_CM_PER_S          1.e5              /* Km/s - WATCH OUT, this are the correct units in the code km/s */
 
+#else /* not defined USE_UPDATED_UNITS */
 /* for reference: 
- * these are the old values used by the public Henriques 2015 version
- * if you prefer these, uncomment them and comment the new values above
- */
-#define GRAVITY                           6.672e-8
-#define SOLAR_MASS                        1.989e33
-#define SOLAR_LUM                         3.826e33
-#define RAD_CONST                         7.565e-15
-#define AVOGADRO                          6.0222e23
-#define BOLTZMANN                         1.3806e-16
-#define GAS_CONST                         8.31425e7
-#define SPEED_OF_LIGHT                    2.9979e10
-#define PLANCK                            6.6262e-27
-#define PROTONMASS                        1.6726e-24
-#define HUBBLE                            3.2407789e-18
-#define D_HUBBLE                          2997.92458 
+ * these are the old values used by the public Henriques 2015 version */
 
+/* physical constants: in external (CGS or astron.) units: */
+#define GRAVITY                           6.672e-8          /* in cgs */
+#define SOLAR_MASS                        1.989e33          /* in cgs */
+#define SOLAR_LUM                         3.826e33          /* in cgs */
+#define RAD_CONST                         7.565e-15         /* in cgs */
+#define AVOGADRO                          6.0222e23         /* in cgs */
+#define BOLTZMANN                         1.3806e-16        /* in cgs */
+#define GAS_CONST                         8.31425e7         /* in cgs */
+#define SPEED_OF_LIGHT                    2.9979e10         /* in cgs */
+#define PLANCK                            6.6262e-27        /* in cgs */
+#define PROTONMASS                        1.6726e-24        /* in cgs */
+#define HUBBLE                            3.2407789e-18     /* in h/sec */
+#define D_HUBBLE                          2997.92458        /* in Mpc/h */
 
-#define SEC_PER_YEAR                      3.155e7
-#define SEC_PER_MEGAYEAR                  3.155e13
-#define SEC_PER_GIGAYEAR                  3.155e16
-#define LENGTH_10_PC_IN_CM                3.08567758e19
+/* standard unit conversions: */
+#define SEC_PER_YEAR                      3.155e7           /* Julian year in cgs */
+#define SEC_PER_MEGAYEAR                  3.155e13          /* Julian Mega year in cgs */
+#define SEC_PER_GIGAYEAR                  3.155e16          /* Julian Giga year in cgs */
+#define LENGTH_10_PC_IN_CM                3.08567758e19     /* 10 parsec (standard distance for abs. mag.) in cgs */
 
+/* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
+#define UNITLENGTH_IN_CM                   3.08568e+24      /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
+#define UNITMASS_IN_G                      1.989e+43        /* 10^10Msun - WATCH OUT, masses in the code are in 10^10Msun/h */
+#define UNITVELOCITY_IN_CM_PER_S           100000           /* Km/s - WATCH OUT, this are the correct units in the code km/s */
 
-#define UNITLENGTH_IN_CM                   3.08568e+24
-#define UNITMASS_IN_G                      1.989e+43
-#define UNITVELOCITY_IN_CM_PER_S           100000
-
+#endif /* not defined USE_UPDATED_UNITS */
 
 #ifdef DERIVED_UNITS_AS_STATIC_CONSTANTS
 

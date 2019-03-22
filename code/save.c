@@ -124,15 +124,12 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 {
 #ifndef LIGHT_OUTPUT
 #ifndef POST_PROCESS_MAGS
+  int filter_number_;
 #ifdef OUTPUT_REST_MAGS
   const int r_band_filter_number_ = 17;
 #endif /* defined OUTPUT_REST_MAGS */
 #endif /* not defined POST_PROCESS_MAGS */
 #endif /* not defined LIGHT_OUTPUT */
-
-#ifdef COMPUTE_SPECPHOT_PROPERTIES
-  int filter_number_;
-#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */ 
  
   int j_;
 
@@ -384,7 +381,6 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 
 #endif  /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
-#ifdef COMPUTE_OBS_MAGS
   // Luminosities in various bands
   for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
   {
@@ -395,26 +391,23 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
     output_galaxy_->ObsMagICL           [filter_number_] = lum_to_lum_or_mag(galaxy_->ObsICL              [output_number_][filter_number_]);
 #endif /* defined ICL */
 
-#ifdef OUTPUT_MOMAF_INPUTS
-    output_galaxy_->dObsMag             [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLum             [output_number_][filter_number_]);
-    output_galaxy_->dObsMagBulge        [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge        [output_number_][filter_number_]);
-    output_galaxy_->dObsMagDust         [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumDust         [output_number_][filter_number_]);
+#ifdef OUTPUT_FB_OBS_MAGS
+    output_galaxy_->backward_ObsMag             [filter_number_] = lum_to_lum_or_mag(galaxy_->backward_ObsLum             [output_number_][filter_number_]);
+    output_galaxy_->backward_ObsMagBulge        [filter_number_] = lum_to_lum_or_mag(galaxy_->backward_ObsLumBulge        [output_number_][filter_number_]);
+    output_galaxy_->backward_ObsMagDust         [filter_number_] = lum_to_lum_or_mag(galaxy_->backward_ObsLumDust         [output_number_][filter_number_]);
 #ifdef ICL
-    output_galaxy_->dObsMagICL          [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsICL             [output_number_][filter_number_]);
+    output_galaxy_->backward_ObsMagICL          [filter_number_] = lum_to_lum_or_mag(galaxy_->backward_ObsICL             [output_number_][filter_number_]);
 #endif /* defined ICL */
 
-#ifdef KITZBICHLER
-    output_galaxy_->dObsMag_forward     [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLum_forward     [output_number_][filter_number_]);
-    output_galaxy_->dObsMagBulge_forward[filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumBulge_forward[output_number_][filter_number_]);
-    output_galaxy_->dObsMagDust_forward [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsLumDust_forward [output_number_][filter_number_]);
+    output_galaxy_->forward_ObsMag     [filter_number_] = lum_to_lum_or_mag(galaxy_->forward_ObsLum     [output_number_][filter_number_]);
+    output_galaxy_->forward_ObsMagBulge[filter_number_] = lum_to_lum_or_mag(galaxy_->forward_ObsLumBulge[output_number_][filter_number_]);
+    output_galaxy_->forward_ObsMagDust [filter_number_] = lum_to_lum_or_mag(galaxy_->forward_ObsLumDust [output_number_][filter_number_]);
 #ifdef ICL
-    output_galaxy_->dObsMagICL_forward  [filter_number_] = lum_to_lum_or_mag(galaxy_->dObsICL_forward     [output_number_][filter_number_]);
+    output_galaxy_->forward_ObsMagICL  [filter_number_] = lum_to_lum_or_mag(galaxy_->forward_ObsICL     [output_number_][filter_number_]);
 #endif /* defined ICL */
 
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
   }
-#endif /* defined COMPUTE_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 #endif /* not defined POST_PROCESS_MAGS */ 
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */

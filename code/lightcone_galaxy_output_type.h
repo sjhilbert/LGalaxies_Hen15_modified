@@ -30,10 +30,10 @@
 /** @brief struct for lightcone galaxies on disk
  * 
  * will be used as lightcone_galaxy_output_type,
- * if #defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT
+ * if #defined LIGHTCONE_CUSTOM_OUTPUT
  * (otherwise, GALAXY_OUTPUT will be used instead)
  */
-typedef struct custom_lightcone_galaxy_output_type_
+typedef struct lightcone_galaxy_custom_output_type_
 {
 #ifdef LIGHT_OUTPUT
   int       Type; // Galaxy type: 0 for central galaxies of a main halo, 1 for central galaxies in sub-halos, 2 for satellites without halo.
@@ -55,12 +55,12 @@ typedef struct custom_lightcone_galaxy_output_type_
 
   /* magnitudes in various bands */
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
-#ifdef OUTPUT_OBS_MAGS
-  float     ObsMagDust[NMAG]; // dust corrected, rest-frame absolute mags
-#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
   float     MagDust[NMAG]; // dust corrected, rest-frame absolute mags
 #endif /* defined OUTPUT_REST_MAGS */ 
+#ifdef OUTPUT_OBS_MAGS
+  float     ObsMagDust[NMAG]; // dust corrected, rest-frame absolute mags
+#endif /* defined OUTPUT_OBS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
 #else /* not defined LIGHT_OUTPUT */
@@ -145,26 +145,26 @@ typedef struct custom_lightcone_galaxy_output_type_
   float     MassWeightAge;
   float     rbandWeightAge;
 #endif /* not defined LIGHT_OUTPUT */
-} custom_lightcone_galaxy_output_type;
+} lightcone_galaxy_custom_output_type;
 
 
-#ifdef CUSTOM_LIGHTCONE_GALAXY_OUTPUT
-typedef custom_lightcone_galaxy_output_type lightcone_galaxy_output_type;
-#else /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#ifdef LIGHTCONE_CUSTOM_OUTPUT
+typedef lightcone_galaxy_custom_output_type lightcone_galaxy_output_type;
+#else /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 /* just use GALAXY_OUTPUT: */
 typedef struct GALAXY_OUTPUT lightcone_galaxy_output_type;
-#endif /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 
 
 /** @brief copies GALAXY_OUTPUT to lightcone_galaxy_output_type
 *
 *  @note  should only be needed (i.e. called) if 
-*         defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT.
+*         defined LIGHTCONE_CUSTOM_OUTPUT.
 */
 static inline void 
 galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy_, lightcone_galaxy_output_type *lightcone_galaxy_)
 {
-#ifdef CUSTOM_LIGHTCONE_GALAXY_OUTPUT
+#ifdef LIGHTCONE_CUSTOM_OUTPUT
   
   int i_;
   
@@ -190,14 +190,14 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
 
   /* magnitudes in various bands */
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
-#ifdef OUTPUT_OBS_MAGS
-  for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->ObsMagDust[i_]              = galaxy_->ObsMagDust[i_]             ;
-#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
   for(i_ = 0; i_ < NMAG; i_++) 
   lightcone_galaxy_->MagDust[i_]                 = galaxy_->MagDust[i_]                ;
 #endif /* defined OUTPUT_REST_MAGS */
+#ifdef OUTPUT_OBS_MAGS
+  for(i_ = 0; i_ < NMAG; i_++)
+  lightcone_galaxy_->ObsMagDust[i_]              = galaxy_->ObsMagDust[i_]             ;
+#endif /* defined OUTPUT_OBS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 #else /* not defined LIGHT_OUTPUT */
 
@@ -301,9 +301,9 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
   lightcone_galaxy_->rbandWeightAge              = galaxy_->rbandWeightAge             ;
 #endif /* not defined LIGHT_OUTPUT */
   
-#else /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#else /* not defined LIGHTCONE_CUSTOM_OUTPUT */
   *lightcone_galaxy_ = *galaxy_; 
-#endif /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 }
 
 
@@ -312,31 +312,33 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
 static inline void 
 prepare_galaxy_tree_info_for_lightcone_output(const int file_number_, const int tree_number_, const struct galaxy_tree_data *tree_gal_, lightcone_galaxy_output_type *galaxy_)
 {
-  long long big_offset_ = calc_big_db_offset(file_number_, tree_number_);
+  const long long big_db_offset_ = calc_big_db_offset(file_number_, tree_number_);
 
   galaxy_->GalID = tree_gal_->GalID;
   galaxy_->FOFCentralGal = tree_gal_->FOFCentralGal;
   
-#ifndef CUSTOM_LIGHTCONE_GALAXY_OUTPUT
+#ifndef LIGHTCONE_CUSTOM_OUTPUT
   galaxy_->FirstProgGal = tree_gal_->FirstProgGal;
   galaxy_->NextProgGal = tree_gal_->NextProgGal;
   galaxy_->LastProgGal = tree_gal_->LastProgGal;
   galaxy_->MainLeafId = tree_gal_->MainLeaf;
   galaxy_->TreeRootId = tree_gal_->TreeRoot;
   galaxy_->DescendantGal = tree_gal_->DescendantGal;
-  galaxy_->FileTreeNr = big_offset_;
-#endif /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+  galaxy_->FileTreeNr = big_db_offset_;
+#endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 
 #ifdef CONTINUOUS_TREES
   // Reset big_offset_ (so only FileTreeNr has original value)
   // Then new values should coincide with positions in the file
-  big_offset_ = TotGalCount;
-#endif
+  const long long big_offset_ = TotGalCount;
+#else  /* not defined CONTINUOUS_TREES */
+  const long long big_offset_ = big_db_offset_;
+#endif /* not defined CONTINUOUS_TREES */
 
   galaxy_->GalID += big_offset_;
   galaxy_->FOFCentralGal += big_offset_;
 
-#ifndef CUSTOM_LIGHTCONE_GALAXY_OUTPUT
+#ifndef LIGHTCONE_CUSTOM_OUTPUT
   if(galaxy_->FirstProgGal >= 0)
     galaxy_->FirstProgGal += big_offset_;
 
@@ -363,7 +365,7 @@ prepare_galaxy_tree_info_for_lightcone_output(const int file_number_, const int 
 
   if(galaxy_->DescendantGal >= 0)
     galaxy_->DescendantGal += big_offset_;
-#endif /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 }
 #endif /* defined GALAXYTREE */
 
@@ -384,7 +386,7 @@ myfwrite_lightcone_galaxy(lightcone_galaxy_output_type *galaxy_, const size_t n_
 static inline size_t 
 myfwrite_lightcone_galaxy_from_galaxy_output(struct GALAXY_OUTPUT *galaxy_, const size_t n_to_write_, FILE * stream_)
 { 
-#ifdef CUSTOM_LIGHTCONE_GALAXY_OUTPUT
+#ifdef LIGHTCONE_CUSTOM_OUTPUT
   lightcone_galaxy_output_type lightcone_galaxy_; 
   size_t i_;
   for(i_ = 0; i_ < n_to_write_; ++i_)
@@ -393,9 +395,9 @@ myfwrite_lightcone_galaxy_from_galaxy_output(struct GALAXY_OUTPUT *galaxy_, cons
     myfwrite(&lightcone_galaxy_, sizeof(lightcone_galaxy_output_type), 1, stream_);
   }
   return n_to_write_;
-#else  /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#else  /* not defined LIGHTCONE_CUSTOM_OUTPUT */
   return myfwrite(&galaxy_, sizeof(struct GALAXY_OUTPUT), 1, stream_);
-#endif /* not defined CUSTOM_LIGHTCONE_GALAXY_OUTPUT */
+#endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 }
 
 #endif /* header guard */

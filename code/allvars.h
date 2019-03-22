@@ -299,24 +299,22 @@ struct GALAXY_OUTPUT
 #ifdef ICL
   float ObsMagICL[NMAG];  // observer-frame absolute mags for intra-cluster light
 #endif /* defined ICL */
-#ifdef OUTPUT_MOMAF_INPUTS
+#ifdef OUTPUT_FB_OBS_MAGS
   // define luminosities as if the galaxy were one snapshot earlier, i.e. higher redshift, than its actual snapshot
-  float dObsMagDust[NMAG];
-  float dObsMag[NMAG];
-  float dObsMagBulge[NMAG];
+  float backward_ObsMagDust [NMAG];
+  float backward_ObsMag     [NMAG];
+  float backward_ObsMagBulge[NMAG];
 #ifdef ICL
-  float dObsMagICL[NMAG];
+  float backward_ObsMagICL  [NMAG];
 #endif /* defined ICL */
-#ifdef KITZBICHLER
   // define luminosities as if the galaxy were one snapshot later, i.e. lower redshift, than its actual snapshot
-  float dObsMagDust_forward[NMAG];
-  float dObsMag_forward[NMAG];
-  float dObsMagBulge_forward[NMAG];
+  float forward_ObsMagDust  [NMAG];
+  float forward_ObsMag      [NMAG];
+  float forward_ObsMagBulge [NMAG];
 #ifdef ICL
-  float dObsMagICL_forward[NMAG];
+  float forward_ObsMagICL   [NMAG];
 #endif /* defined ICL */
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
@@ -557,7 +555,7 @@ extern struct GALAXY
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
   float ObsLum      [NOUT][NMAG];
   float ObsYLum     [NOUT][NMAG];
   float ObsLumBulge [NOUT][NMAG];
@@ -567,27 +565,26 @@ extern struct GALAXY
   float ObsICL      [NOUT][NMAG];
 #endif /* defined ICL */
 
-#ifdef OUTPUT_MOMAF_INPUTS
-  float dObsLum      [NOUT][NMAG];
-  float dObsYLum     [NOUT][NMAG];
-  float dObsLumBulge [NOUT][NMAG];
-  float dObsYLumBulge[NOUT][NMAG];
-  float dObsLumDust  [NOUT][NMAG];
+#ifdef OUTPUT_FB_OBS_MAGS
+  float backward_ObsLum      [NOUT][NMAG];
+  float backward_ObsYLum     [NOUT][NMAG];
+  float backward_ObsLumBulge [NOUT][NMAG];
+  float backward_ObsYLumBulge[NOUT][NMAG];
+  float backward_ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                 
-  float dObsICL      [NOUT][NMAG];
+  float backward_ObsICL      [NOUT][NMAG];
 #endif /* defined ICL */
-#ifdef KITZBICHLER
-  float dObsLum_forward      [NOUT][NMAG];
-  float dObsYLum_forward     [NOUT][NMAG];
-  float dObsLumBulge_forward [NOUT][NMAG];
-  float dObsYLumBulge_forward[NOUT][NMAG];
-  float dObsLumDust_forward  [NOUT][NMAG];
+
+  float forward_ObsLum      [NOUT][NMAG];
+  float forward_ObsYLum     [NOUT][NMAG];
+  float forward_ObsLumBulge [NOUT][NMAG];
+  float forward_ObsYLumBulge[NOUT][NMAG];
+  float forward_ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                         
-  float dObsICL_forward      [NOUT][NMAG];
+  float forward_ObsICL      [NOUT][NMAG];
 #endif /* defined ICL */
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 
 #endif /* not defined POST_PROCESS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */

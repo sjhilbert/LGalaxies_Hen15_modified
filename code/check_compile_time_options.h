@@ -43,26 +43,13 @@
 static inline void 
 check_compile_time_options(void)
 {
-#ifdef OUTPUT_OBS_MAGS
-#ifndef COMPUTE_OBS_MAGS
-#error "Makefile option OUTPUT_OBS MAGS requires option COMPUTE_OBS_MAGS"
-/*  terminate("\n\n> Error : Makefile option OUTPUT_OBS MAGS requires option COMPUTE_OBS_MAGS \n"); */
-#endif /* not defined COMPUTE_OBS_MAGS */
-#endif /* defined OUTPUT_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+#ifndef OUTPUT_OBS_MAGS 
+#error "Makefile option OUTPUT_FB_OBS_MAGS requires option OUTPUT_OBS_MAGS"
+/*   terminate("\n\n> Error : Makefile option OUTPUT_FB_OBS_MAGS requires option OUTPUT_OBS_MAGS \n"); */
+#endif /* not defined OUTPUT_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 
-#ifdef OUTPUT_MOMAF_INPUTS
-#ifndef COMPUTE_OBS_MAGS 
-#error "Makefile option OUTPUT_MOMAF_INPUTS requires option COMPUTE_OBS_MAGS"
-/*   terminate("\n\n> Error : Makefile option OUTPUT_MOMAF_INPUTS requires option COMPUTE_OBS_MAGS \n"); */
-#endif /* not defined COMPUTE_OBS_MAGS */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-
-#ifdef KITZBICHLER
-#ifndef OUTPUT_MOMAF_INPUTS
-#error "Makefile option KITZBICHLER requires option OUTPUT_MOMAF_INPUTS"
-/*   terminate("\n\n> Error : Makefile option KITZBICHLER requires option OUTPUT_MOMAF_INPUTS \n"); */
-#endif /* not defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined KITZBICHLER */
 
 #ifdef GALAXYTREE
 #ifndef LOADIDS
@@ -108,10 +95,10 @@ check_compile_time_options(void)
 #error "Makefile option LIGHT_OUTPUT cannot be run with POST_PROCESS_MAGS"
 /* terminate("\n\n> Error : Makefile option LIGHT_OUTPUT cannot run with POST_PROCESS_MAGS \n"); */
 #endif /* defined POST_PROCESS_MAGS */
-#ifdef OUTPUT_MOMAF_INPUTS
-#error "Makefile option LIGHT_OUTPUT cannot be run with OUTPUT_MOMAF_INPUTS"
-/* terminate("\n\n> Error : Makefile option LIGHT_OUTPUT cannot run with OUTPUT_MOMAF_INPUTS \n"); */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#ifdef OUTPUT_FB_OBS_MAGS
+#error "Makefile option LIGHT_OUTPUT cannot be run with OUTPUT_FB_OBS_MAGS"
+/* terminate("\n\n> Error : Makefile option LIGHT_OUTPUT cannot run with OUTPUT_FB_OBS_MAGS \n"); */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined LIGHT_OUTPUT */
 
 #ifdef LIGHTCONE_OUTPUT

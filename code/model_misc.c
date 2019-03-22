@@ -253,7 +253,11 @@ void set_stellar_disk_radius(const int p_)
  *         elements to zero. */
 void init_galaxy(const int p_, const int halo_number_)
 {
-  int j_, output_number_, filter_number_;
+  int j_, output_number_;
+  
+#ifndef POST_PROCESS_MAGS
+  int filter_number_;
+#endif /* not defined POST_PROCESS_MAGS */
 
   /* make explicitly sure that the whole galaxy structure has defined 0 values */
   memset(&Gal[p_], 0, sizeof(struct GALAXY));
@@ -392,7 +396,7 @@ void init_galaxy(const int p_, const int halo_number_)
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
       Gal[p_].ObsLum[output_number_][filter_number_]        = 0.0;
       Gal[p_].ObsYLum[output_number_][filter_number_]       = 0.0;
       Gal[p_].ObsLumBulge[output_number_][filter_number_]   = 0.0;
@@ -402,28 +406,26 @@ void init_galaxy(const int p_, const int halo_number_)
       Gal[p_].ObsICL[output_number_][filter_number_]        = 0.0;
 #endif /* defined ICL */
           
-#ifdef OUTPUT_MOMAF_INPUTS
-      Gal[p_].dObsLum[output_number_][filter_number_]       = 0.0;
-      Gal[p_].dObsYLum[output_number_][filter_number_]      = 0.0;
-      Gal[p_].dObsLumBulge[output_number_][filter_number_]  = 0.0;
-      Gal[p_].dObsYLumBulge[output_number_][filter_number_] = 0.0;
-      Gal[p_].dObsLumDust[output_number_][filter_number_]   = 0.0;
+#ifdef OUTPUT_FB_OBS_MAGS
+      Gal[p_].backward_ObsLum[output_number_][filter_number_]       = 0.0;
+      Gal[p_].backward_ObsYLum[output_number_][filter_number_]      = 0.0;
+      Gal[p_].backward_ObsLumBulge[output_number_][filter_number_]  = 0.0;
+      Gal[p_].backward_ObsYLumBulge[output_number_][filter_number_] = 0.0;
+      Gal[p_].backward_ObsLumDust[output_number_][filter_number_]   = 0.0;
 #ifdef ICL
-      Gal[p_].dObsICL[output_number_][filter_number_]       = 0.0;
+      Gal[p_].backward_ObsICL[output_number_][filter_number_]       = 0.0;
 #endif /* defined ICL */
 
-#ifdef KITZBICHLER
-      Gal[p_].dObsLum[output_number_][filter_number_]       = 0.0;
-      Gal[p_].dObsYLum[output_number_][filter_number_]      = 0.0;
-      Gal[p_].dObsLumBulge[output_number_][filter_number_]  = 0.0;
-      Gal[p_].dObsYLumBulge[output_number_][filter_number_] = 0.0;
-      Gal[p_].dObsLumDust[output_number_][filter_number_]   = 0.0;
+      Gal[p_].forward_ObsLum[output_number_][filter_number_]       = 0.0;
+      Gal[p_].forward_ObsYLum[output_number_][filter_number_]      = 0.0;
+      Gal[p_].forward_ObsLumBulge[output_number_][filter_number_]  = 0.0;
+      Gal[p_].forward_ObsYLumBulge[output_number_][filter_number_] = 0.0;
+      Gal[p_].forward_ObsLumDust[output_number_][filter_number_]   = 0.0;
 #ifdef ICL
-      Gal[p_].dObsICL[output_number_][filter_number_]       = 0.0;
+      Gal[p_].forward_ObsICL[output_number_][filter_number_]       = 0.0;
 #endif /* defined ICL */
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
     }
   }
 #endif /* not defined POST_PROCESS_MAGS */

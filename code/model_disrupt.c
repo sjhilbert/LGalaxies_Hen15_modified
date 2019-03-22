@@ -270,15 +270,13 @@ void disrupt(const int galaxy_number_)
 #ifdef OUTPUT_REST_MAGS 
       	Gal[central_galaxy_number_].ICLLum [output_number_][filter_number_] += Gal[galaxy_number_].Lum    [output_number_][filter_number_];
 #endif                                                                                           
-#ifdef COMPUTE_OBS_MAGS                                                                          
+#ifdef OUTPUT_OBS_MAGS                                                                          
       	Gal[central_galaxy_number_].ObsICL [output_number_][filter_number_] += Gal[galaxy_number_].ObsLum [output_number_][filter_number_];
-#ifdef OUTPUT_MOMAF_INPUTS                                                                       
-      	Gal[central_galaxy_number_].dObsICL[output_number_][filter_number_] += Gal[galaxy_number_].dObsLum[output_number_][filter_number_];
-#ifdef KITZBICHLER                                                                       
-      	Gal[central_galaxy_number_].dObsICL_forward[output_number_][filter_number_] += Gal[galaxy_number_].dObsLum_forward[output_number_][filter_number_];
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS                                                                       
+      	Gal[central_galaxy_number_].backward_ObsICL[output_number_][filter_number_] += Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_];
+      	Gal[central_galaxy_number_].forward_ObsICL[output_number_][filter_number_] += Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_];
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
       }  
     }
 #endif /* defined ICL */

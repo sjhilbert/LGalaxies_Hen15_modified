@@ -508,7 +508,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
   }
 #endif /* defined OUTPUT_REST_MAGS */
 
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
@@ -538,14 +538,14 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       }
   }
       
-#ifdef OUTPUT_MOMAF_INPUTS
+#ifdef OUTPUT_FB_OBS_MAGS
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      Gal[central_galaxy_number_].dObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsLum[output_number_][filter_number_];
-      Gal[central_galaxy_number_].dObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsYLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].backward_ObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].backward_ObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
 #ifdef ICL
-      Gal[central_galaxy_number_].dObsICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].dObsICL[output_number_][filter_number_];
+      Gal[central_galaxy_number_].backward_ObsICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsICL[output_number_][filter_number_];
 #endif /* defined ICL */
     }
     
@@ -554,8 +554,8 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++) 
       {
-        Gal[central_galaxy_number_].dObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].dObsLum[output_number_][filter_number_];
-        Gal[central_galaxy_number_].dObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsYLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
       }
   }
   else
@@ -563,18 +563,17 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
-        Gal[central_galaxy_number_].dObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].dObsLumBulge[output_number_][filter_number_];
-        Gal[central_galaxy_number_].dObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsYLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_];
       }
   }
-#ifdef KITZBICHLER
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      Gal[central_galaxy_number_].dObsLum_forward[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsLum_forward[output_number_][filter_number_];
-      Gal[central_galaxy_number_].dObsYLum_forward[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsYLum_forward[output_number_][filter_number_];
+      Gal[central_galaxy_number_].forward_ObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].forward_ObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
 #ifdef ICL
-      Gal[central_galaxy_number_].dObsICL_forward[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].dObsICL_forward[output_number_][filter_number_];
+      Gal[central_galaxy_number_].forward_ObsICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsICL[output_number_][filter_number_];
 #endif /* defined ICL */
     }
     
@@ -583,8 +582,8 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++) 
       {
-        Gal[central_galaxy_number_].dObsLumBulge_forward[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].dObsLum_forward[output_number_][filter_number_];
-        Gal[central_galaxy_number_].dObsYLumBulge_forward[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsYLum_forward[output_number_][filter_number_];
+        Gal[central_galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsLum[output_number_][filter_number_];
+        Gal[central_galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
       }
   }
   else
@@ -592,13 +591,12 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
-        Gal[central_galaxy_number_].dObsLumBulge_forward[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].dObsLumBulge_forward[output_number_][filter_number_];
-        Gal[central_galaxy_number_].dObsYLumBulge_forward[output_number_][filter_number_] += Gal[satellite_galaxy_number_].dObsYLumBulge_forward[output_number_][filter_number_];
+        Gal[central_galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_];
+        Gal[central_galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_];
       }
   }
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif  /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif  /* defined OUTPUT_OBS_MAGS */
 #endif  /* not defined POST_PROCESS_MAGS */
 }
 
@@ -628,7 +626,7 @@ void make_bulge_from_burst(const int galaxy_number_)
     }
   }
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
@@ -637,27 +635,25 @@ void make_bulge_from_burst(const int galaxy_number_)
       Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].ObsYLum[output_number_][filter_number_];
     }
   }
-#ifdef OUTPUT_MOMAF_INPUTS
+#ifdef OUTPUT_FB_OBS_MAGS
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      Gal[galaxy_number_].dObsLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].dObsLum[output_number_][filter_number_];
-      Gal[galaxy_number_].dObsYLumBulge[output_number_][filter_number_] = Gal[galaxy_number_].dObsYLum[output_number_][filter_number_];
+      Gal[galaxy_number_].backward_ObsLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_];
+      Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] = Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
     }
   }
-#ifdef KITZBICHLER
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      Gal[galaxy_number_].dObsLumBulge_forward[output_number_][filter_number_]  = Gal[galaxy_number_].dObsLum_forward[output_number_][filter_number_];
-      Gal[galaxy_number_].dObsYLumBulge_forward[output_number_][filter_number_] = Gal[galaxy_number_].dObsYLum_forward[output_number_][filter_number_];
+      Gal[galaxy_number_].forward_ObsLumBulge[output_number_][filter_number_]  = Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_];
+      Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] = Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
     }
   }
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 #endif /* not defined POST_PROCESS_MAGS */
 }
 

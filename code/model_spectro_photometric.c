@@ -222,7 +222,7 @@ void init_SSP_log_age_jump_index(void)
   * The magnitudes are immediately calculated for each output bin, so that we know
   * the age of each population that contributed to a galaxy total population: the
   * age between creation and output. Apart from the different ages of the populations
-  * at a given output bin, if the option COMPUTE_OBS_MAGS is turned on, then we also
+  * at a given output bin, if the option OUTPUT_OBS_MAGS is turned on, then we also
   * need to know the K-corrections (going the opposite directions as in observations)
   * that will affect each population.
   *
@@ -240,9 +240,9 @@ void init_SSP_log_age_jump_index(void)
 void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double time_, double dt_, const double metallicity_)
 {
 #ifndef OUTPUT_REST_MAGS
-#ifndef COMPUTE_OBS_MAGS
+#ifndef OUTPUT_OBS_MAGS
   return; /* early return if no mags to compute */
-#endif /* not defined COMPUTE_OBS_MAGS */
+#endif /* not defined OUTPUT_OBS_MAGS */
 #endif /* not defined OUTPUT_REST_MAGS */
 
 #ifdef OUTPUT_REST_MAGS
@@ -345,7 +345,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
       }
 #endif /* defined OUTPUT_REST_MAGS */
 
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
       redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_number_];
 
       /* Note the zindex in LumTables[][][][] meaning the magnitudes are now
@@ -363,7 +363,7 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
           Gal[galaxy_number_].ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
       }
       
-#ifdef OUTPUT_MOMAF_INPUTS
+#ifdef OUTPUT_FB_OBS_MAGS
       redshift_index_ = (ListOutputSnaps[output_number_] > 0 ? LastDarkMatterSnapShot - ListOutputSnaps[output_number_] - 1 : LastDarkMatterSnapShot);
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
@@ -372,13 +372,12 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
                                               f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
                                                           f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[galaxy_number_].dObsLum[output_number_][filter_number_] += luminosity_to_add_;
+        Gal[galaxy_number_].backward_ObsLum[output_number_][filter_number_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].dObsYLum[output_number_][filter_number_] += luminosity_to_add_;
+          Gal[galaxy_number_].backward_ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
       }
       
-#ifdef KITZBICHLER
       redshift_index_ = (ListOutputSnaps[output_number_] < LastDarkMatterSnapShot ? LastDarkMatterSnapShot - ListOutputSnaps[output_number_] + 1 : 0);
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
@@ -387,14 +386,13 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
                                               f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_]  +
                                                           f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
                                                        
-        Gal[galaxy_number_].dObsLum_forward[output_number_][filter_number_] += luminosity_to_add_;
+        Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_] += luminosity_to_add_;
 
         if(is_affected_by_birthclould_)
-          Gal[galaxy_number_].dObsYLum_forward[output_number_][filter_number_] += luminosity_to_add_;
+          Gal[galaxy_number_].forward_ObsYLum[output_number_][filter_number_] += luminosity_to_add_;
       }
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
     }
 
 #ifdef FINE_AGE_BINS  

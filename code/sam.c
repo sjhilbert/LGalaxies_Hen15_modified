@@ -21,8 +21,6 @@
  * the galaxies, frees memory for galaxies and tree.
  * */
 
- /* own header for consistency: */
-// #include "sam.h"
  
  /* library headers: */
 #include <stdio.h>
@@ -146,12 +144,23 @@ double SAM(const int tree_file_number_)
 #endif /* defined HALOMODEL */
 #endif /* defined MCMC */
       int halo_number_;
+#ifdef FIRST_HALO_FIRST
+/* construct halos starting with "official" first halo in fof group,
+ * which then also takes care of all other halos in that fof group,
+ * assuming, all progenitors have been constructed already
+ * (i.e. acknowledge loop over snapshots) */
+     for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+       if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup &&  HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
+         construct_galaxies_in_fof(tree_number_, halo_number_);
+#else  /* not defined FIRST_HALO_FIRST */
+/* construct halos starting with whatever halos come first in input file,
+ * which then also takes care of all other halos in that fof group,
+ * not assuming, all progenitors have been constructed already
+ * (though they should have because of loop over snapshots) */
        for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
          if(HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
            construct_galaxies(tree_number_, halo_number_);
-//      for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
-//        if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup &&  HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
-//          construct_galaxies_in_fof(tree_number_, halo_number_);
+#endif /* not defined FIRST_HALO_FIRST */
     }
 
     /* output remaining galaxies as needed */
@@ -331,7 +340,7 @@ void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_ha
 //   if(Halo[first_in_fof_halo_number_].FirstHaloInFOFgroup != first_in_fof_halo_number_) /* halo not first in fof group */
 //   {
 //     printf("error: in construct_galaxies_in_fof_with_first_halo(): Halo[first_in_fof_halo_number_].FirstHaloInFOFgroup = %d != first_in_fof_halo_number_ = %d.\n", Halo[first_in_fof_halo_number_].FirstHaloInFOFgroup, first_in_fof_halo_number_);
-//     terminate("halo has already been done.");
+//     terminate("halo not officially first in fof group.");
 //   }
 //   
 //   if(HaloAux[first_in_fof_halo_number_].HaloFlag != 0) /* halo has been done */

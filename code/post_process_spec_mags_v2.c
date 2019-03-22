@@ -51,14 +51,12 @@
 #ifdef OUTPUT_OBS_MAGS                                                                              
 #ifdef ICL
 #endif /* defined ICL */
-#ifdef OUTPUT_MOMAF_INPUTS                                                                          
+#ifdef OUTPUT_FB_OBS_MAGS                                                                          
 #ifdef ICL
 #endif /* defined ICL */
-#ifdef KITZBICHLER                                                                                  
 #ifdef ICL
 #endif /* defined ICL */
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 
 
@@ -69,21 +67,19 @@ compute_post_process_luminosities (const double mass_,
                                    const int met_index_, const double f_met_1_, const double f_met_2_,
                                    const int age_index_, const double f_age_1_, const double f_age_2_,
                                    const int filter_number_, 
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                    const int snapshot_number_, 
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
                                    double *Lum_            , double *YLum_            , 
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                    double *ObsLum_         , double *ObsYLum_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                   double *dObsLum_        , double *dObsYLum_        , 
-#ifdef KITZBICHLER
-                                   double *dObsLum_forward_, double *dObsYLum_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+                                   double *backward_ObsLum_        , double *backward_ObsYLum_        , 
+                                   double *forward_ObsLum_, double *forward_ObsYLum_,
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
                                    const bool have_to_add_to_y_lum_)
 {
   int    redshift_index_;
@@ -101,7 +97,7 @@ compute_post_process_luminosities (const double mass_,
 
 #endif /* defined OUTPUT_REST_MAGS */
 
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
   redshift_index_ = LastDarkMatterSnapShot - snapshot_number_;
   lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_] +
                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
@@ -111,30 +107,28 @@ compute_post_process_luminosities (const double mass_,
   if(have_to_add_to_y_lum_)
   { *ObsYLum_ += lum_to_add_; }
 
-#ifdef OUTPUT_MOMAF_INPUTS
+#ifdef OUTPUT_FB_OBS_MAGS
   redshift_index_ = LastDarkMatterSnapShot - (snapshot_number_ > 0 ? snapshot_number_ - 1 : 0);
   lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_] +
                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
                              f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_] +
                                          f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
-  *dObsLum_ += lum_to_add_;
+  *backward_ObsLum_ += lum_to_add_;
   if(have_to_add_to_y_lum_)
-  { *dObsYLum_ += lum_to_add_; }
+  { *backward_ObsYLum_ += lum_to_add_; }
 
-#ifdef KITZBICHLER
   redshift_index_ = LastDarkMatterSnapShot - (snapshot_number_ < LastDarkMatterSnapShot ? snapshot_number_ + 1 : LastDarkMatterSnapShot);
   if(redshift_index_ < 0) redshift_index_ = 0;
   lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[age_index_    ][met_index_    ][redshift_index_][filter_number_] +
                                          f_age_2_ * LumTables[age_index_ + 1][met_index_    ][redshift_index_][filter_number_]) +
                              f_met_2_ * (f_age_1_ * LumTables[age_index_    ][met_index_ + 1][redshift_index_][filter_number_] +
                                          f_age_2_ * LumTables[age_index_ + 1][met_index_ + 1][redshift_index_][filter_number_]));
-  *dObsLum_forward_ += lum_to_add_;
+  *forward_ObsLum_ += lum_to_add_;
   if(have_to_add_to_y_lum_)
-  { *dObsYLum_forward_ += lum_to_add_; }
+  { *forward_ObsYLum_ += lum_to_add_; }
 
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 }
 
 
@@ -144,15 +138,13 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
 #ifdef OUTPUT_REST_MAGS
                                          , double *LumDisk_            , const double YLumDisk_
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                          , double *ObsLumDisk_         , const double ObsYLumDisk_
-#ifdef OUTPUT_MOMAF_INPUTS
-                                         , double *dObsLumDisk_        , const double dObsYLumDisk_
-#ifdef KITZBICHLER
-                                         , double *dObsLumDisk_forward_, const double dObsYLumDisk_forward_
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+                                         , double *backward_ObsLumDisk_, const double backward_ObsYLumDisk_
+                                         , double *forward_ObsLumDisk_ , const double forward_ObsYLumDisk_
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
                                           )
 {
   double tau_, alam_;
@@ -206,28 +198,26 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
   *ObsLumDisk_ -= ObsYLumDisk_ * a_bc_;
   *ObsLumDisk_ *= alam_;
 
-#ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z + 1
+#ifdef OUTPUT_FB_OBS_MAGS   // compute same thing at z + 1
   const int earlier_snapshot_number_ = (snapshot_number_ > 0) ? (snapshot_number_ - 1) : 0;
 //   taubc_ = tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda_ratio_, -0.7);
   a_bc_  = 1. - exp(-tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda_ratio_, -0.7));
   tau_   = get_extinction(filter_number_, Z_g_, ZZ[earlier_snapshot_number_]) * n_h_sec_;
   alam_  = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
 
-  *dObsLumDisk_ -= dObsYLumDisk_ * a_bc_;
-  *dObsLumDisk_ *= alam_;
+  *backward_ObsLumDisk_ -= backward_ObsYLumDisk_ * a_bc_;
+  *backward_ObsLumDisk_ *= alam_;
 
-#ifdef KITZBICHLER
   const int later_snapshot_number_ = (snapshot_number_ < LastDarkMatterSnapShot) ? (snapshot_number_ + 1) : LastDarkMatterSnapShot;
 //   taubc_ = tauvbc_ * pow((1. + ZZ[later_snapshot_number_]) * FilterLambda_ratio_, -0.7);
   a_bc_  = 1. - exp(-tauvbc_ * pow((1. + ZZ[later_snapshot_number_]) * FilterLambda_ratio_, -0.7));
   tau_   = get_extinction(filter_number_, Z_g_, ZZ[later_snapshot_number_]) * n_h_sec_;
   alam_  = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
 
-  *dObsLumDisk_forward_ -= dObsYLumDisk_forward_ * a_bc_;
-  *dObsLumDisk_forward_ *= alam_;
+  *forward_ObsLumDisk_ -= forward_ObsYLumDisk_ * a_bc_;
+  *forward_ObsLumDisk_ *= alam_;
   
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 }
 
@@ -379,20 +369,18 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 #ifdef ICL
     double ObsLumICL_   = 0.; double ObsYLumICL_   = 0.;
 #endif /* defined ICL */
-#ifdef OUTPUT_MOMAF_INPUTS                                                                          
-    double dObsLumDisk_  = 0.; double dObsYLumDisk_  = 0.;
-    double dObsLumBulge_ = 0.; double dObsYLumBulge_ = 0.;
+#ifdef OUTPUT_FB_OBS_MAGS                                                                          
+    double backward_ObsLumDisk_  = 0.; double backward_ObsYLumDisk_  = 0.;
+    double backward_ObsLumBulge_ = 0.; double backward_ObsYLumBulge_ = 0.;
 #ifdef ICL
-    double dObsLumICL_   = 0.; double dObsYLumICL_   = 0.;
+    double backward_ObsLumICL_   = 0.; double backward_ObsYLumICL_   = 0.;
 #endif /* defined ICL */
-#ifdef KITZBICHLER                                                                                  
-    double dObsLumDisk_forward_  = 0.; double dObsYLumDisk_forward_  = 0.;
-    double dObsLumBulge_forward_ = 0.; double dObsYLumBulge_forward_ = 0.;
+    double forward_ObsLumDisk_  = 0.; double forward_ObsYLumDisk_  = 0.;
+    double forward_ObsLumBulge_ = 0.; double forward_ObsYLumBulge_ = 0.;
 #ifdef ICL
-    double dObsLumICL_forward_   = 0.; double dObsYLumICL_forward_   = 0.;
+    double forward_ObsLumICL_   = 0.; double forward_ObsYLumICL_   = 0.;
 #endif /* defined ICL */
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 
 #ifdef OUTPUT_REST_MAGS
@@ -441,21 +429,19 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
                                             disk_met_index_[sfh_bin_number_], disk_f_met_1_[sfh_bin_number_], disk_f_met_2_[sfh_bin_number_], 
                                             age_index_     [sfh_bin_number_], f_age_1_     [sfh_bin_number_], f_age_2_     [sfh_bin_number_], 
                                             filter_number_,
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                             galaxy_->SnapNum, 
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
                                             &LumDisk_            , &YLumDisk_            , 
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                             &ObsLumDisk_         , &ObsYLumDisk_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                            &dObsLumDisk_        , &dObsYLumDisk_        , 
-#ifdef KITZBICHLER
-                                            &dObsLumDisk_forward_, &dObsYLumDisk_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+                                            &backward_ObsLumDisk_        , &backward_ObsYLumDisk_        , 
+                                            &forward_ObsLumDisk_, &forward_ObsYLumDisk_,
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
                                             is_affected_by_birthclould_);
 
         /* bulge luminosities */
@@ -464,21 +450,19 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
                                             bulge_met_index_[sfh_bin_number_], bulge_f_met_1_[sfh_bin_number_], bulge_f_met_2_[sfh_bin_number_], 
                                             age_index_     [sfh_bin_number_], f_age_1_     [sfh_bin_number_], f_age_2_     [sfh_bin_number_], 
                                             filter_number_,
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                             galaxy_->SnapNum, 
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
                                             &LumBulge_            , &YLumBulge_            , 
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                             &ObsLumBulge_         , &ObsYLumBulge_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                            &dObsLumBulge_        , &dObsYLumBulge_        , 
-#ifdef KITZBICHLER
-                                            &dObsLumBulge_forward_, &dObsYLumBulge_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+                                            &backward_ObsLumBulge_        , &backward_ObsYLumBulge_        , 
+                                            &forward_ObsLumBulge_, &forward_ObsYLumBulge_,
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
                                             is_affected_by_birthclould_);
 
 #ifdef ICL
@@ -489,21 +473,19 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
                                             icm_met_index_ [sfh_bin_number_], icm_f_met_1_ [sfh_bin_number_], icm_f_met_2_ [sfh_bin_number_], 
                                             age_index_     [sfh_bin_number_], f_age_1_     [sfh_bin_number_], f_age_2_     [sfh_bin_number_], 
                                             filter_number_,
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                             galaxy_->SnapNum, 
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 #ifdef OUTPUT_REST_MAGS
                                             &LumICL_            , &YLumICL_            , 
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                             &ObsLumICL_         , &ObsYLumICL_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                            &dObsLumICL_        , &dObsYLumICL_        , 
-#ifdef KITZBICHLER
-                                            &dObsLumICL_forward_, &dObsYLumICL_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+                                            &backward_ObsLumICL_        , &backward_ObsYLumICL_        , 
+                                            &forward_ObsLumICL_, &forward_ObsYLumICL_,
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
                                             false);
 #endif /* defined ICL */
 
@@ -534,28 +516,26 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
     galaxy_->MagICL              [filter_number_] = lum_to_lum_or_mag(LumICL_);
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
     galaxy_->ObsMag              [filter_number_] = lum_to_lum_or_mag(ObsLumDisk_ + ObsLumBulge_);
     galaxy_->ObsMagBulge         [filter_number_] = lum_to_lum_or_mag(ObsLumBulge_);
 #ifdef ICL
     galaxy_->ObsMagICL           [filter_number_] = lum_to_lum_or_mag(ObsLumICL_);
 #endif /* defined ICL */
 
-#ifdef OUTPUT_MOMAF_INPUTS
-    galaxy_->dObsMag             [filter_number_] = lum_to_lum_or_mag(dObsLumDisk_ + dObsLumBulge_);
-    galaxy_->dObsMagBulge        [filter_number_] = lum_to_lum_or_mag(dObsLumBulge_);
+#ifdef OUTPUT_FB_OBS_MAGS
+    galaxy_->backward_ObsMag             [filter_number_] = lum_to_lum_or_mag(backward_ObsLumDisk_ + backward_ObsLumBulge_);
+    galaxy_->backward_ObsMagBulge        [filter_number_] = lum_to_lum_or_mag(backward_ObsLumBulge_);
 #ifdef ICL
-    galaxy_->dObsMagICL          [filter_number_] = lum_to_lum_or_mag(dObsLumICL_);
+    galaxy_->backward_ObsMagICL          [filter_number_] = lum_to_lum_or_mag(backward_ObsLumICL_);
 #endif /* defined ICL */
-#ifdef KITZBICHLER
-    galaxy_->dObsMag_forward     [filter_number_] = lum_to_lum_or_mag(dObsLumDisk_forward_ + dObsLumBulge_forward_);
-    galaxy_->dObsMagBulge_forward[filter_number_] = lum_to_lum_or_mag(dObsLumBulge_forward_);
+    galaxy_->forward_ObsMag     [filter_number_] = lum_to_lum_or_mag(forward_ObsLumDisk_ + forward_ObsLumBulge_);
+    galaxy_->forward_ObsMagBulge[filter_number_] = lum_to_lum_or_mag(forward_ObsLumBulge_);
 #ifdef ICL
-    galaxy_->dObsMagICL_forward  [filter_number_] = lum_to_lum_or_mag(dObsLumICL_forward_);
+    galaxy_->forward_ObsMagICL  [filter_number_] = lum_to_lum_or_mag(forward_ObsLumICL_);
 #endif /* defined ICL */
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 
     /* inclination is needed for disk dust correction,
      * but not sure, inclination shouldn't already be computed elsewhere */
@@ -570,42 +550,36 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 #ifdef OUTPUT_REST_MAGS
                                                , &LumDisk_            , YLumDisk_
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
                                                , &ObsLumDisk_         , ObsYLumDisk_
-#ifdef OUTPUT_MOMAF_INPUTS
-                                               , &dObsLumDisk_        , dObsYLumDisk_
-#ifdef KITZBICHLER
-                                               , &dObsLumDisk_forward_, dObsYLumDisk_forward_
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+                                               , &backward_ObsLumDisk_        , backward_ObsYLumDisk_
+                                               , &forward_ObsLumDisk_, forward_ObsYLumDisk_
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
                                                 );
 
     /* dust correction for bulges (remove light from young stars absorbed by birth clouds) */
 #ifdef OUTPUT_REST_MAGS
     LumBulge_             -= YLumBulge_             * (1. - ExpTauBCBulge);
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
     ObsLumBulge_          -= ObsYLumBulge_          * (1. - ExpTauBCBulge);
-#ifdef OUTPUT_MOMAF_INPUTS
-    dObsLumBulge_         -= dObsYLumBulge_         * (1. - ExpTauBCBulge);
-#ifdef KITZBICHLER
-    dObsLumBulge_forward_ -= dObsYLumBulge_forward_ * (1. - ExpTauBCBulge);
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+    backward_ObsLumBulge_         -= backward_ObsYLumBulge_         * (1. - ExpTauBCBulge);
+    forward_ObsLumBulge_ -= forward_ObsYLumBulge_ * (1. - ExpTauBCBulge);
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
 
 #ifdef OUTPUT_REST_MAGS
     galaxy_->MagDust            [filter_number_] = lum_to_lum_or_mag(LumDisk_+LumBulge_);
 #endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
+#ifdef OUTPUT_OBS_MAGS
     galaxy_->ObsMagDust         [filter_number_] = lum_to_lum_or_mag(ObsLumDisk_+ObsLumBulge_);
-#ifdef OUTPUT_MOMAF_INPUTS
-    galaxy_->dObsMagDust        [filter_number_] = lum_to_lum_or_mag(dObsLumDisk_+dObsLumBulge_);
-#ifdef KITZBICHLER
-    galaxy_->dObsMagDust_forward[filter_number_] = lum_to_lum_or_mag(dObsLumDisk_forward_+dObsLumBulge_forward_);
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+#ifdef OUTPUT_FB_OBS_MAGS
+    galaxy_->backward_ObsMagDust        [filter_number_] = lum_to_lum_or_mag(backward_ObsLumDisk_+backward_ObsLumBulge_);
+    galaxy_->forward_ObsMagDust[filter_number_] = lum_to_lum_or_mag(forward_ObsLumDisk_+forward_ObsLumBulge_);
+#endif /* defined OUTPUT_FB_OBS_MAGS */
+#endif /* defined OUTPUT_OBS_MAGS */
   }//end of loop on bands
 }
