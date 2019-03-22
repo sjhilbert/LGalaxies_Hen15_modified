@@ -586,7 +586,7 @@ void read_yield_tables(void)
 #endif
 }
 
-double Chabrier_IMF(double M)
+double Chabrier_IMF(const double M)
 {
 	double e,phi;
 

@@ -156,7 +156,7 @@ float gasdev(long *idum)
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef POST_PROCESS_MAGS
 /** @brief main routine where the extinction is calculated */
-void dust_model(int p, int snap, int halonr)
+void dust_model(const int p, const int snap, const int halonr)
 {
   double nh, tau, alam, sec, Lum_disk, cosinc, Zg;
   double tauv, taubc, tauvbc, mu, dly;
@@ -279,7 +279,7 @@ void dust_model(int p, int snap, int halonr)
 #endif /* defined OUTPUT_OBS_MAGS */
     }
 }
-#endif /* defined  POST_PROCESS_MAGS */
+#endif /* not defined POST_PROCESS_MAGS */
 
 
 #ifndef CARDELLI_DUST

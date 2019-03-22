@@ -656,7 +656,6 @@ void read_parameter_file(char *file_name)
  */
 void check_program_parameters()
 {
-  
   if(!(
    (ReionizationModel == 0) ||
    (ReionizationModel == 1) ||

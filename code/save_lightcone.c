@@ -35,74 +35,11 @@
 #include "allvars.h"
 #include "proto.h"
 
-
+/*** nothing here unless defined LIGHTCONE_OUTPUT ***/
 #ifdef LIGHTCONE_OUTPUT
+/****************************************************/
 
-// // define your own output stucture
-// typedef struct 
-// {
-// 
-// 
-// 
-//   
-//   
-// }
-// lightcone_galaxy_output;
-
-
-/** if defined OUTPUT_MOMAF_INPUTS and OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT,
- * use pointer magic and fancy i_/o to avoid OUTPUT_MOMAF_INPUTS showing up on disk.
- *
- * currently, dObsMagDust is the first member of the MOMAF/KITZBICHLER dObsMag fields,
- * and MassWeightAge ist the first member after the MOMAF/KITZBICHLER dObsMag fields.
- * so first, data is read/written only up to before dObsMagDust,
- * and second, data is read/written from MassWeightAge onwards.
- *
- * warning: relies on particular layout of struct GALAXY_OUTPUT,
- * so need to check and possibly adjust, when GALAXY_OUTPUT changes.
- * 
- * @todo think about separate struct for lightcone galaxy to avoid this mess.
- */
-#if defined OUTPUT_MOMAF_INPUTS && defined OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT
-
-#define SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_1 offsetof(struct GALAXY_OUTPUT, dObsMagDust)
-#define OFFSETOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2 offsetof(struct GALAXY_OUTPUT, MassWeightAge)
-#define SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2 sizeof(struct GALAXY_OUTPUT) - OFFSETOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2
-#define SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_1 + SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2
-
-/** @brief Reading routine for galaxies in_ lightcone files  */
-static inline size_t 
-myfread_lightcone_galaxy(void *galaxy_, FILE * stream_)
-{ 
- const size_t n_1_ = myfread(galaxy_, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_1, 1, stream_);
- const size_t n_2_ = myfread(galaxy_ + OFFSETOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2, 1, stream_);
- return n_1_ + n_2_;
-}
-
-
-/** @brief writing routine for galaxies in_ lightcone files  */
-static inline size_t 
-myfwrite_lightcone_galaxy(void *galaxy_, FILE * stream_)
-{ 
- const size_t n_1_ = myfwrite(galaxy_, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_1, 1, stream_);
- const size_t n_2_ = myfwrite(galaxy_ + OFFSETOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE_PART_2, 1, stream_);
- return n_1_ + n_2_;
-}
-#else /* not defined OUTPUT_MOMAF_INPUTS || not defined OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT */
-
-#define SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE sizeof(struct GALAXY_OUTPUT)
-
-/**@brief Reading routine for galaxies in_ lightcone files  */
-static inline size_t 
-myfread_lightcone_galaxy(void *galaxy_, FILE * stream_)
-{ return myfread(galaxy_, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE, 1, stream_); }
-
-/**@brief writing routine for galaxies in_ lightcone files  */
-static inline size_t 
-myfwrite_lightcone_galaxy(void *galaxy_, FILE * stream_)
-{ return myfwrite(galaxy_, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE, 1, stream_); }
-
-#endif /* not defined OUTPUT_MOMAF_INPUTS || not defined OMIT_DOBSMAG_IN_LIGHTCONE_OUTPUT */
+#include "lightcone_galaxy_output_type.h"
 
 
 /** @brief proper integer modulo */
@@ -357,10 +294,10 @@ void show_lightcone_statistics(void)
   printf("\n  lightcone_N_galaxies_for_output = %lld", lightcone_N_galaxies_for_output                                                                    );
   printf("\n  lightcone_N_galaxies_for_output_not_skipped_early = %lld", lightcone_N_galaxies_for_output - lightcone_N_galaxies_skipped_output_early      );
   printf("\n  lightcone galaxies written = %lld", TotLightconeGalaxies_sum_                                                                               );
-  printf("\n  size of lightcone galaxy = %lu", sizeof(struct GALAXY_OUTPUT)                                                                               );
-  printf("\n  size of lightcone galaxy on disk = %lu", SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE                                                             );
+  printf("\n  size of GALAXY_OUTPUT = %lu", sizeof(struct GALAXY_OUTPUT)                                                                                  );
+  printf("\n  size of lightcone galaxy on disk = %lu", sizeof(lightcone_galaxy_output_type)                                                               );
 #ifdef GALAXYTREE
-  const unsigned long long expected_file_size_ = (unsigned long long)(SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE) * (unsigned long long)(1 + TotLightconeGalCount);
+  const unsigned long long expected_file_size_ = (unsigned long long)(sizeof(lightcone_galaxy_output_type)) * (unsigned long long)(1 + TotLightconeGalCount);
   printf("\n  expected size of lightcone galaxy file on disk = %llu", expected_file_size_                                                                 );
 #endif /* defined GALAXYTREE */
   printf("\n");
@@ -382,8 +319,9 @@ create_lightcone_galaxy_files(int file_number_)
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
-  /* skip one block to make room for header */
-  myfseek(FdLightconeGalTree, SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE, SEEK_SET);
+  /* fill one block to make room for header */
+  char zero = 0;
+  myffill(&zero, 1, sizeof(lightcone_galaxy_output_type), FdLightconeGalTree);
   TotLightconeGalCount = 0;
   
 #else /* not defined GALAXYTREE */
@@ -398,7 +336,9 @@ create_lightcone_galaxy_files(int file_number_)
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
-    fseek(FdLightconeGalDumps[output_number_], sizeof(long long int), SEEK_SET);                /* skip the space for the header */
+    
+    char zero = 0;
+    myffill(&zero, 1, sizeof(long long int), FdLightconeGalDumps[output_number_]);  /* space for the header */
     TotLightconeGalaxies[output_number_] = 0;
   }
 #endif /* not defined GALAXYTREE */
@@ -413,12 +353,15 @@ close_lightcone_galaxy_files(void)
 #ifdef GALAXYTREE
   
   long long one_ = 1;
-  long long size_of_struct_ = SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE;
+  long long size_of_struct_ = sizeof(lightcone_galaxy_output_type);
 
   myfseek(FdLightconeGalTree, 0, SEEK_SET);
   myfwrite(&one_, sizeof(long long), 1, FdLightconeGalTree);                   // write 1 (to determine endianess?)
   myfwrite(&size_of_struct_, sizeof(long long), 1, FdLightconeGalTree);        // size of an output structure (Galaxy_Output)
   myfwrite(&TotLightconeGalCount, sizeof(long long), 1, FdLightconeGalTree);   // the total number of galaxies
+#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+  //  sort_lightcone_galaxy_in_file(FdLightconeGalTree); /* sorting is already done during save_lightcone_galaxy_finalize */
+#endif /* defined SORT_LIGHTCONE_GALAXY_OUTPUT */
   fclose(FdLightconeGalTree);
 
 #else /* not defined GALAXYTREE */
@@ -428,8 +371,60 @@ close_lightcone_galaxy_files(void)
   {
     fseek(FdLightconeGalDumps[output_number_], 0, SEEK_SET);
     myfwrite(&TotLightconeGalaxies[output_number_], sizeof(long long), 1, FdLightconeGalDumps[output_number_]);  // total number of galaxies
+#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+    sort_lightcone_galaxy_in_file(FdLightconeGalDumps[output_number_]);
+#endif /* defined SORT_LIGHTCONE_GALAXY_OUTPUT */
     fclose(FdLightconeGalDumps[output_number_]);
   }
+#endif /* not defined GALAXYTREE */
+}
+
+
+/** @brief seeks to position of an entry in lightcone galaxy file
+ */
+static inline int
+myfseek_lightcone_galaxy(FILE* lightcone_galaxy_file_, const long long galaxy_in_file_number_)
+{
+#ifdef GALAXYTREE
+  myfseek(lightcone_galaxy_file_, (long)(1 + galaxy_in_file_number_) * (long)(sizeof(lightcone_galaxy_output_type)), SEEK_SET);
+#else  /* not defined GALAXYTREE */
+  myfseek(lightcone_galaxy_file_, (long)(sizeof(long long int)) + (long)(galaxy_in_file_number_) * (long)(sizeof(lightcone_galaxy_output_type)), SEEK_SET);
+#endif /* not defined GALAXYTREE */
+  return 0;
+}
+
+
+/** @brief reads header of lightcone galaxy file to get number of galaxies in file
+ */
+static inline size_t
+myfread_lightcone_galaxy_number_of_entries(FILE* lightcone_galaxy_file_, long long* n_lightcone_galaxies_in_file_)
+{
+  *n_lightcone_galaxies_in_file_ = 0;
+  fseek(lightcone_galaxy_file_, 0, SEEK_SET);
+  
+#ifdef GALAXYTREE
+  long long one_;
+  long long size_of_struct_;
+
+  myfread(&one_, sizeof(long long), 1, lightcone_galaxy_file_);                   // 1 (to determine endianess?)
+  myfread(&size_of_struct_, sizeof(long long), 1, lightcone_galaxy_file_);        // size of an output structure (Galaxy_Output)
+  myfread(n_lightcone_galaxies_in_file_, sizeof(long long), 1, lightcone_galaxy_file_); 
+ 
+  if(one_ != 1)
+  { 
+    printf("\nerror: in get_number_of_lightcone_galaxies_in_file(FILE* ): error reading file header: one on disk = %llu != 1 (supposed value).\n", one_);
+    terminate("error reading file header");
+  }
+  if(size_of_struct_ != sizeof(lightcone_galaxy_output_type))
+  { 
+    printf("\nerror: in get_number_of_lightcone_galaxies_in_file(FILE* ): error reading file header: size of struct on disk = %llu != %lu (supposed value).\n", size_of_struct_, sizeof(lightcone_galaxy_output_type));
+    terminate("error reading file header");
+  }
+  
+  return 3;
+#else /* not defined GALAXYTREE */
+  myfread(n_lightcone_galaxies_in_file_, sizeof(long long), 1, lightcone_galaxy_file_); 
+  return 1;
 #endif /* not defined GALAXYTREE */
 }
 
@@ -647,12 +642,12 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
     galaxy_output_.sfh_numbins = galaxy_output_.sfh_ibin;
 #endif /* defined STAR_FORMATION_HISTORY */
 
-    myfwrite_lightcone_galaxy(&galaxy_output_, FdLightconeGalTree);
+    myfwrite_lightcone_galaxy_from_galaxy_output(&galaxy_output_, 1, FdLightconeGalTree);
     TotLightconeGalCount++; //this will be written later
   
 #else /* not defined GALAXYTREE */
-    myfwrite_lightcone_galaxy(&galaxy_output_, FdLightconeGalDumps[output_number_]);
-    TotLightconeGalaxies[output_number_]++;                             //this will be written later
+    myfwrite_lightcone_galaxy_from_galaxy_output(&galaxy_output_, 1, FdLightconeGalDumps[output_number_]);
+    TotLightconeGalaxies[output_number_]++;  //this will be written later
 #endif /* not defined GALAXYTREE */
   }
 }
@@ -663,28 +658,66 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
  * requires that all galaxies in_ tree have been constructed and that tree info in_ memory
  * has been updated
  * 
- * then uses tree info in_ memory to update galaxies on disk
+ * then uses tree info in memory to update lightcone galaxies on disk
  */
 void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 {
 #ifdef GALAXYTREE
-   // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
-   qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
+  // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
+  qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
+  
+#ifdef UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM
+/* updating done in memory */
+  if(NGalTree > 0)
+  {
+    const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
+    const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
+    const long long N_galaxies_                  = galaxy_in_file_number_end_ - galaxy_in_file_number_begin_;
+
+    lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
+    
+    myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
+    myfread_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
+
+    int galaxy_in_tree_number_;
+    long long galaxy_in_file_number_;
+    for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
+      for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
+      { prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_[galaxy_in_file_number_ - galaxy_in_file_number_begin_]); }
+
+#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+    qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
+#endif /* not defined SORT_LIGHTCONE_GALAXY_OUTPUT */  
  
-  struct GALAXY_OUTPUT galaxy_output_;
+    myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
+    myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
+    
+    myfree(galaxy_output_);
+  }
+  
+#else /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */
+ /* updating done on disk with little memory overhead */
+
+  lightcone_galaxy_output_type galaxy_output_;
   int galaxy_in_tree_number_;
   long long galaxy_in_file_number_;
   for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
   { 
     for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
     {
-      myfseek(FdLightconeGalTree, (1 + galaxy_in_file_number_) * (long long)(SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE), SEEK_SET);
-      myfread_lightcone_galaxy(&galaxy_output_, FdLightconeGalTree);
-      prepare_galaxy_tree_info_for_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_);
-      myfseek(FdLightconeGalTree, (1 + galaxy_in_file_number_) * (long long)(SIZEOF_GALAXY_OUTPUT_IN_LIGHTCONE_FILE), SEEK_SET);
-      myfwrite_lightcone_galaxy(&galaxy_output_, FdLightconeGalTree);
+      myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
+      myfread_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
+      prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_);
+      myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_);
+      myfwrite_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
     }
   }
+  
+#ifdef SORT_LIGHTCONE_GALAXY_OUTPUT
+#error "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_LIGHTCONE_GALAXY_OUTPUT without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+#endif /* not defined SORT_LIGHTCONE_GALAXY_OUTPUT */  
+#endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
+
 #else /* not defined GALAXYTREE */
  (void) file_number_;  /* avoid unused-parameter warning */
  (void) tree_number_; /* avoid unused-parameter warning */
@@ -692,12 +725,38 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 }
 
 
+/** @brief sorts lightcone galaxies in output files
+  *
+  * currently, this is a straightforward version reading all galaxies, sorting them in memory,
+  * then writing back to disk.
+  */
+void sort_lightcone_galaxy_in_file(FILE * lightcone_galaxy_file_)
+{
+#ifdef UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM
+  long long N_galaxies_ = 0;
+  myfread_lightcone_galaxy_number_of_entries(lightcone_galaxy_file_, &N_galaxies_);
+
+  lightcone_galaxy_output_type *galaxy_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
+  
+  myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
+  myfread_lightcone_galaxy(galaxy_, N_galaxies_, lightcone_galaxy_file_);
+
+  qsort(galaxy_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
+  
+  myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
+  myfwrite_lightcone_galaxy(galaxy_, N_galaxies_, lightcone_galaxy_file_);
+  
+#else /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */    
+#warning "Sorry, sort_lightcone_galaxy_in_file() not yet implemented without UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM."
+#endif /* not defined UPDATE_LIGHTCONE_GALAXY_OUTPUT_IN_MEM */  
+}
+
+
 /** @brief compares galaxy_tree_data entries for sorting
  * 
  *  compares galaxy_tree_data entries for sorting for writing tree info data for lightcone output
  */
-int 
-save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const void *galaxy_tree_data_b_)
+int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const void *galaxy_tree_data_b_)
 {
   if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_begin < ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_begin)
     return -1;
@@ -708,4 +767,41 @@ save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const void *
   return 0;
 }
 
+
+/** @brief compares lightcone galaxy entries for sorting
+ * 
+ *  compares lightcone_galaxy_output_type entries for sorting output on disk
+ */
+int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightcone_galaxy_b_)
+{
+#ifdef GALAXYTREE 
+/* if GalID available, use GalID for primary sorting */
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+    return -1;
+
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+    return +1;
+#endif /* defined GALAXYTREE */
+
+/* next, use CubeShiftIndex for sorting (if GalID is available, (GalID,CubeShiftIndex) provide total order) */
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
+    return -1;
+
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
+    return +1;
+
+/* next, use ObsRedshift */
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
+    return -1;
+
+  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->ObsRedshift > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->ObsRedshift)
+    return +1;
+
+  return 0;
+}
+
+
+/****************************************************/
 #endif /* defined LIGHTCONE_OUTPUT */
+/*** nothing here unless defined LIGHTCONE_OUTPUT ***/
+

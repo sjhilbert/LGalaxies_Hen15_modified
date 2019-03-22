@@ -60,7 +60,115 @@
  *
  *  */
 
-void disrupt(int p)
+
+// static inline double get_isothermal_mass(const double Mvir, const double Rvir, const double dr)
+// {
+//   return Mvir/Rvir * dr;
+// }
+
+
+/** @brief Returns the mass of a disk within a given radius in units of the scale length
+ *         Disk profile -> exponential */
+static inline double
+get_disk_mass_for_radius(const double x)
+{ return 1.-(1.+x)*exp(-x); }
+
+
+/** @brief Returns the mass of a bulge at a certain radius.
+ *         Bulge profile -> de Vaucouleurs type r^{1/4} law */
+static inline double 
+get_bulge_mass_for_radius(const double x)
+{ return x/(1.+x); }
+
+
+/** @brief Calculates the distance of the satellite to the pericentre of the
+  *        main dark matter halo. */
+static inline double
+get_peri_radius_for_galaxy(const int p, const int centralgal)
+{
+  int i;
+  double a, b, v[3], r[3], x, x0;
+  for(i = 0; i < 3; i++)
+    {
+      r[i] = wrap(Gal[p].Pos[i]-Gal[centralgal].Pos[i],BoxSize);
+      r[i] /= (1 + ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
+      v[i] = Gal[p].Vel[i] - Gal[centralgal].Vel[i];
+    }
+
+  b = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / pow2(Gal[centralgal].Vvir);
+  a = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2] -
+                pow2(r[0] * v[0] + r[1] * v[1] + r[2] * v[2])/
+                    (r[0] * r[0] + r[1] * r[1] + r[2] * r[2])) / pow2(Gal[centralgal].Vvir);
+
+  x = sqrt(b / a);
+  x0 = 1000;
+  while(abs(x0 - x) >= 1.e-8)
+    {
+      x0 = x;
+      x = sqrt((log(x0) + b) / a);
+    }
+  if(x == 0)
+    {
+      terminate("wrong in peri_radius \n");
+    }
+
+  return sqrt(r[0]*r[0]+r[1]*r[1]+r[2]*r[2])/x;
+}
+
+
+/** @brief Calculates the half mass radius of satellite galaxies */
+static inline double 
+get_sat_radius_for_galaxy(const int p)
+{
+  double r, rd, rb, Mdisk, rmax, M;
+  double Mgas, Mbulge, rgd, dr, totmass;
+  int ii;
+  #define SAT_RADIUS_RMIN 5e-7
+  #define SAT_RADIUS_N 100
+
+  r=0.;
+  rgd = Gal[p].GasDiskRadius/3.;
+  rd=Gal[p].StellarDiskRadius/3.;
+  rb=Gal[p].BulgeSize;
+  Mgas = Gal[p].ColdGas;
+  Mdisk=Gal[p].DiskMass;
+  Mbulge = Gal[p].BulgeMass;
+  totmass = Mgas+Mdisk+Mbulge;
+
+  rmax=max(rb,1.68*max(rd,rgd));
+  if (rmax < 2.*SAT_RADIUS_RMIN)
+        return(rmax);
+  dr=(rmax-SAT_RADIUS_RMIN)/(float)SAT_RADIUS_N;
+
+    /* increases the search radius until it encompasses half the total mass taking
+     * into account the stellar disk, stellar bulge and cold gas disk. */
+  ii = 0;
+  do {
+      // Not sure that we need the 0.5 here - it's all a matter of definition
+      r = (SAT_RADIUS_RMIN) + (ii+0.5)* dr;
+      M = Mgas*get_disk_mass_for_radius(r/rgd)+Mdisk*get_disk_mass_for_radius(r/rd);
+
+#ifndef GUO10
+#ifndef GUO13
+#ifndef HENRIQUES13
+      if(Mbulge>0.)
+#endif
+#endif
+#endif
+        M +=Mbulge*get_bulge_mass_for_radius(r/rb);
+
+      ii++;
+      if(ii > 1000) terminate ("couldn't find half mass radius");
+  }
+  while(M < 0.5*totmass);
+
+  return (r);
+}
+
+
+/**  @brief checks if a type 2 satellite galaxy should be disrupted
+ *   due to tidal forces */
+void disrupt(const int p)
 {
   double rho_sat, rho_cen;
   double cen_mass, r_sat, radius;
@@ -78,7 +186,7 @@ void disrupt(int p)
   mass_checks("Top of disrupt",p);
 
   /* Radius calculated at the peri-point */
-  radius=peri_radius(p, centralgal);
+  radius = get_peri_radius_for_galaxy(p, centralgal);
   if (radius < 0) {
    terminate("must be wrong \n");
   }
@@ -93,7 +201,7 @@ void disrupt(int p)
   if (Gal[p].DiskMass+Gal[p].BulgeMass>0)
   {
     /* Calculate the rho according to the real geometry */
-    r_sat = sat_radius(p);
+    r_sat = get_sat_radius_for_galaxy(p);
     rho_sat=(Gal[p].DiskMass+Gal[p].BulgeMass+Gal[p].ColdGas)/pow3(r_sat);
   }
   else
@@ -102,7 +210,8 @@ void disrupt(int p)
   /* If density of the main halo is larger than that of the satellite baryonic
    * component, complete and instantaneous disruption is assumed. Galaxy becomes
    * a type 3 and all its material is transferred to the central galaxy. */
-  if (rho_cen > rho_sat) {
+  if (rho_cen > rho_sat)
+  {
     Gal[p].Type = 3;
 #ifdef GALAXYTREE
     int q;
@@ -175,118 +284,4 @@ void disrupt(int p)
   } //if (rho_cen > rho_sat)
   mass_checks("Bottom of disrupt",centralgal);
   mass_checks("Bottom of disrupt",p);
-  
 }
-
-/** @brief Calculates the distance of the satellite to the pericentre of the
-  *        main dark matter halo. */
-
-double peri_radius(int p, int centralgal)
-{
-  int i;
-  double a, b, v[3], r[3], x, x0;
-  for(i = 0; i < 3; i++)
-    {
-      r[i] = wrap(Gal[p].Pos[i]-Gal[centralgal].Pos[i],BoxSize);
-      r[i] /= (1 + ZZ[Halo[Gal[centralgal].HaloNr].SnapNum]);
-      v[i] = Gal[p].Vel[i] - Gal[centralgal].Vel[i];
-    }
-
-  b = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / pow2(Gal[centralgal].Vvir);
-  a = 1 / 2. * (v[0] * v[0] + v[1] * v[1] + v[2] * v[2] -
-	        pow2(r[0] * v[0] + r[1] * v[1] + r[2] * v[2])/
-		    (r[0] * r[0] + r[1] * r[1] + r[2] * r[2])) / pow2(Gal[centralgal].Vvir);
-
-  x = sqrt(b / a);
-  x0 = 1000;
-  while(abs(x0 - x) >= 1.e-8)
-    {
-      x0 = x;
-      x = sqrt((log(x0) + b) / a);
-    }
-  if(x == 0)
-    {
-      terminate("wrong in peri_radius \n");
-    }
-
-  return sqrt(r[0]*r[0]+r[1]*r[1]+r[2]*r[2])/x;
-}
-
-
-
-
-
-/** @brief Calculates the half mass radius of satellite galaxies */
-double sat_radius(int p)
-{
-  double r, rd, rb, Mdisk, rmax, M;
-  double Mgas, Mbulge, rgd, dr, totmass;
-  int ii;
-  #define SAT_RADIUS_RMIN 5e-7
-  #define SAT_RADIUS_N 100
-
-  r=0.;
-  rgd = Gal[p].GasDiskRadius/3.;
-  rd=Gal[p].StellarDiskRadius/3.;
-  rb=Gal[p].BulgeSize;
-  Mgas = Gal[p].ColdGas;
-  Mdisk=Gal[p].DiskMass;
-  Mbulge = Gal[p].BulgeMass;
-  totmass = Mgas+Mdisk+Mbulge;
-
-  rmax=max(rb,1.68*max(rd,rgd));
-  if (rmax < 2.*SAT_RADIUS_RMIN)
-  	return(rmax);
-  dr=(rmax-SAT_RADIUS_RMIN)/(float)SAT_RADIUS_N;
-
-    /* increases the search radius until it encompasses half the total mass taking
-     * into account the stellar disk, stellar bulge and cold gas disk. */
-  ii = 0;
-  do {
-      // Not sure that we need the 0.5 here - it's all a matter of definition
-      r = (SAT_RADIUS_RMIN) + (ii+0.5)* dr;
-      M = Mgas*diskmass(r/rgd)+Mdisk*diskmass(r/rd);
-
-#ifndef GUO10
-#ifndef GUO13
-#ifndef HENRIQUES13
-      if(Mbulge>0.)
-#endif
-#endif
-#endif
-	M +=Mbulge*bulgemass(r/rb);
-
-
-      ii++;
-      if(ii > 1000) terminate ("couldn't find half mass radius");
-  }
-  while(M < 0.5*totmass);
-
-
-  return (r);
-}
-
-
-double isothermal_mass(double Mvir, double Rvir, double dr)
-{
-  return Mvir/Rvir * dr;
-}
-
-/** @brief Returns the mass of a disk within a given radius in units of the scale length
- *         Disk profile -> exponential */
-double diskmass(double x)
-{
-  return 1.-(1.+x)*exp(-x);
-}
-
-/** @brief Returns the mass of a bulge at a certain radius.
- *         Bulge profile -> de Vaucouleurs type r^{1/4} law */
-double bulgemass(double x)
-{
-  return x/(1.+x);
-}
-
-
-
-
-

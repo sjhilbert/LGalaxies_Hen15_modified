@@ -51,7 +51,7 @@
  *        Makefile options.
  *
  * Reads the parameter file given as an argument at run time:
- * read_parameter_file(argv[1]).
+ * read_parameter_file(argv_[1]).
  *
  * Checks for consistency between some Makefile options: check_options().
  *
@@ -70,21 +70,16 @@
  * */
 
 /**@brief Main routine of L-Galaxies*/
-int main(int argc, char **argv)
+int main(int argc_, char **argv_)
 {
-  int filenr, *FileToProcess, *TaskToProcess, nfiles;
-  char buf[1000];
-  time_t start, current;
-
+  char buffer_[1000];
+  time_t start_time_, current_time_;
 
 #ifdef PARALLEL
-  MPI_Init(&argc, &argv);
+  MPI_Init(&argc_, &argv_);
   MPI_Comm_rank(MPI_COMM_WORLD, &ThisTask);
   MPI_Comm_size(MPI_COMM_WORLD, &NTask);
-#else /* not defined PARALLEL */
-  NTask = 1;
-  ThisTask = 0;
-#endif /* not defined PARALLEL */
+#endif /* defined PARALLEL */
 
 #ifdef MCMC
   time(&global_starting_time);
@@ -113,7 +108,7 @@ int main(int argc, char **argv)
     printf("**************************************************************************\n\n\n");
   }
 
-  if(2 > argc || argc > 3)
+  if(2 > argc_ || argc_ > 3)
   {
     printf("\n  Wrong number of runtime arguments\n\n");
     printf("\n  usage: ./L-Galaxies <parameterfile>\n\n");
@@ -127,7 +122,7 @@ int main(int argc, char **argv)
   check_compile_time_options();
 
   /*Reads the parameter file, given as an argument at run time. */
-  read_parameter_file(argv[1]);
+  read_parameter_file(argv_[1]);
   
   check_program_parameters();
 
@@ -142,15 +137,15 @@ int main(int argc, char **argv)
 
   sprintf(FinalOutputDir, "%s", OutputDir);
 #ifndef MCMC
-  if(argc == 3)
-  { sprintf(OutputDir, "%s", argv[2]); }
+  if(argc_ == 3)
+  { sprintf(OutputDir, "%s", argv_[2]); }
 #else /* defined MCMC */
   FirstChainNumber=0;
-  if(argc == 3)
-  { FirstChainNumber=atoi(argv[2]); }
+  if(argc_ == 3)
+  { FirstChainNumber=atoi(argv_[2]); }
 #endif /* defined MCMC */
 
-  //time(&start);
+  //time(&start_time_);
 
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
   //for dust_model
@@ -160,75 +155,75 @@ int main(int argc, char **argv)
   init();
 
 #ifdef STAR_FORMATION_HISTORY
-#ifdef PARALLEL
   if(ThisTask == 0)
-#endif /* defined PARALLEL */
-    write_sfh_bins();
+  { write_sfh_bins(); }
 #endif /* defined STAR_FORMATION_HISTORY */
 
-#ifndef MCMC
-  nfiles=get_nr_files_to_process();
-  FileToProcess=mymalloc("FileToProcess", sizeof(int) * nfiles);
-  TaskToProcess=mymalloc("TaskToProcess", sizeof(int) * nfiles);
-  assign_files_to_tasks(FileToProcess, TaskToProcess, nfiles);
+#ifdef MCMC
 
-  int file;
-  for(file = 0; file < nfiles; file++)
-  {
-    if(ThisTask==TaskToProcess[file])
-    { filenr=FileToProcess[file]; }
-    else
-    { continue; }
-#else /* defined MCMC */
   /* In MCMC mode only one file is loaded into memory
    * and the sampling for all the steps is done on it */
-    sprintf(SimulationDir, "%s/", SimulationDir);
-    for(filenr = MCMCTreeSampleFile; filenr <= MCMCTreeSampleFile; filenr++)
+  sprintf(SimulationDir, "%s/", SimulationDir);
+  time(&start_time_);
+  load_tree_table(MCMCTreeSampleFile);
+  Senna(); // run the model in MCMC MODE
+  free_tree_table();
+
+  //if temporary directory given as argument
+  if(argc_ == 3)
+  {
+#ifdef GALAXYTREE
+    sprintf(buffer_, "mv %s/%s_galtree_%d %s", OutputDir,FileNameGalaxies, MCMCTreeSampleFile, FinalOutputDir);
+#else /* not defined GALAXYTREE */
+    sprintf(buffer_, "mv %s/%s_z*_%d %s", OutputDir,FileNameGalaxies, MCMCTreeSampleFile, FinalOutputDir);
+#endif /* not defined GALAXYTREE */
+    system(buffer_);
+  }
+
+#else  /* not defined MCMC */
+
+  const int n_tree_files_ = get_nr_files_to_process();
+  int *tree_file_number_for_file_ = mymalloc("tree_file_number_for_file_", sizeof(int) * n_tree_files_);
+  int *task_for_file_ = mymalloc("task_for_file_", sizeof(int) * n_tree_files_);
+  assign_files_to_tasks(tree_file_number_for_file_, task_for_file_, n_tree_files_);
+
+  int file_index_;
+  for(file_index_ = 0; file_index_ < n_tree_files_; file_index_++)
+  {
+    if(ThisTask == task_for_file_[file_index_])
     {
-#endif /* defined MCMC */
-      time(&start);
+      const int tree_file_number_ = tree_file_number_for_file_[file_index_];
+
+      time(&start_time_);
 
 #ifdef PARALLEL
-#ifndef MCMC
-      time_t current;
       do
-      { time(&current); }
-      //while(difftime(current, start) < 5.0 * ThisTask);
-      while(difftime(current, start) < 1.0 * ThisTask);
-
-#endif /* not defined MCMC */
+      { time(&current_time_); }
+      while(difftime(current_time_, start_time_) < 1.0 * ThisTask);
 #endif /* defined PARALLEL */
 
-      load_tree_table(filenr);
-#ifdef MCMC
-      Senna(); // run the model in MCMC MODE
-#else /* not defined MCMC */
-      SAM(filenr); // run the model in NORMAL MODE
-#endif /* not defined MCMC */
+      load_tree_table(tree_file_number_);
+      SAM(tree_file_number_); // run the model in NORMAL MODE
 
-#ifdef MCMC
-      break;    //break loop on files since the MCMC is done on a single file
-#else /* not defined MCMC */
-      time(&current);
-      printf("\ndone tree file %d in %ldmin and %lds\n\n", filenr, (current - start)/60, (current - start)%60);
+      time(&current_time_);
+      printf("\ndone tree file %d in %ldmin and %lds\n\n", tree_file_number_, (current_time_ - start_time_) / 60, (current_time_ - start_time_) % 60);
 
-#endif /* not defined MCMC */
       free_tree_table();
       //if temporary directory given as argument
-      if(argc == 3)
+      if(argc_ == 3)
       {
 #ifdef GALAXYTREE
-        sprintf(buf, "mv %s/%s_galtree_%d %s", OutputDir,FileNameGalaxies, filenr, FinalOutputDir);
+        sprintf(buffer_, "mv %s/%s_galtree_%d %s", OutputDir,FileNameGalaxies, tree_file_number_, FinalOutputDir);
 #else /* not defined GALAXYTREE */
-        sprintf(buf, "mv %s/%s_z*_%d %s", OutputDir,FileNameGalaxies, filenr, FinalOutputDir);
+        sprintf(buffer_, "mv %s/%s_z*_%d %s", OutputDir,FileNameGalaxies, tree_file_number_, FinalOutputDir);
 #endif /* not defined GALAXYTREE */
-        system(buf);
+        system(buffer_);
       }
     }
-
-#ifndef MCMC
-  myfree(TaskToProcess);
-  myfree(FileToProcess);
+  }
+  myfree(task_for_file_);
+  myfree(tree_file_number_for_file_);
+  
 #endif /* not defined MCMC */
 
 #ifdef PARALLEL
@@ -236,4 +231,3 @@ int main(int argc, char **argv)
 #endif /* defined PARALLEL */
   return 0;
 }
-

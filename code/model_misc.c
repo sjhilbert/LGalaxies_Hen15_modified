@@ -349,7 +349,7 @@ void init_galaxy(const int p, const int halonr)
 }
 
 
-/**@brief Whenever star formation occurs, calculates the luminosity corresponding
+/** @brief Whenever star formation occurs, calculates the luminosity corresponding
   *        to the mass of stars formed, considering the metallicity and age of the
   *        material.
   *
@@ -373,112 +373,148 @@ void init_galaxy(const int p, const int halonr)
   *
   * If MetallicityOption = 0 -> only solar metallicity.
   * If MetallicityOption = 1 -> 6 metallicities.
+  *
+  * @bug MetallicityOption = 0 (-> only solar metallicity) used to only set tabindex,
+  *      but not fractions, now corrected (by Stefan Hilbert)
   * */
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef  POST_PROCESS_MAGS
-void add_to_luminosities(int p, double mstars, double time, double dt, double metallicity)
+void add_to_luminosities(const int p, double stellar_mass_, double time_, double dt_, const double metallicity_)
 {
-  int outputbin, metindex, tabindex, filter_number_;
-  double f1, f2, fmet1, fmet2, LuminosityToAdd, dLuminosityToAdd;
-  double X1, age, tbc;
-         int N_AgeBins=1, ii;
-  double upper_time;
+#ifndef OUTPUT_REST_MAGS
+#ifndef COMPUTE_OBS_MAGS
+  return; /* early return if no mags to compute */
+#endif /* not defined COMPUTE_OBS_MAGS */
+#endif /* not defined OUTPUT_REST_MAGS */
 
-  /* Time bellow which the luminosities are corrected for extinction due to
+  int output_bin_, filter_number_;
+  double LuminosityToAdd;
+   
+  int age_index_;  double f_age_1_, f_age_2_; 
+  int met_index_;  double f_met_1_, f_met_2_;
+  int redshift_index_;
+
+  //if one wants to have finner bins for the star formation then the STEPS
+  //of the calculation, N_FINE_AGE_BINS should be set to > 1
+  
+#if !((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  (void)dt_; /* suppress unused-parameter warning */
+#endif /* not defined N_FINE_AGE_BINS > 1 */
+
+  /* Time below which the luminosities are corrected for extinction due to
    * molecular birth clouds.  */
-   tbc = 10.0 / UnitTime_in_Megayears * Hubble_h;
-
+  const double birthcloud_age_ = 10.0 / UnitTime_in_Megayears * Hubble_h;
 
   /* mstars converted from 1.e10Msun/h to 1.e11 Msun */
-  X1 = mstars/N_AgeBins * 0.1 / Hubble_h;
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  stellar_mass_ *= 0.1 / (Hubble_h * N_FINE_AGE_BINS);
+#else  /* not defined FINE_AGE_BINS > 1 */
+  stellar_mass_ *= 0.1 / Hubble_h;
+#endif /* not defined FINE_AGE_BINS > 1 */
 
   /* now we have to change the luminosities accordingly. */
   /* note: we already know at which place we have to look up the tables,
-   * since we know the output times, the current time and the metallicity.
+   * since we know the output times, the current time_ and the metallicity.
    * find_interpolated_lum() finds the 2 closest points in the SPS table
    * in terms of age and metallicity. Time gives the time_to_present for
-   * the current step while NumToTime(ListOutputSnaps[outputbin]) gives
-   * the time of the output snap - units Mpc/Km/s/h */
-  upper_time=time+dt/2.;
-
-  //if one wants to have finner bins for the star formation then the STEPS
-  //of the calculation. if N_AgeBins=1 it doesn't do anything
-  for(ii=0;ii<N_AgeBins;ii++)
+   * the current step while NumToTime(ListOutputSnaps[output_bin_]) gives
+   * the time_ of the output snap - units Mpc/Km/s/h */
+  
+  if(MetallicityOption == 0) // reset met index to use only solar metallicity
+  { met_index_ = 4; f_met_1_ = 1., f_met_2_ = 0.; } 
+  else if(metallicity_ <= 0.)
+  { met_index_ = 0; f_met_1_ = 1., f_met_2_ = 0.; } 
+  else   
+  {  
+    const double log10_metallicity_ = log10(metallicity_);
+    find_metallicity_luminosity_interpolation_parameters(log10_metallicity_, met_index_, f_met_1_, f_met_2_);
+  }
+  
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  const double lower_time_ = time_ - 0.5 * dt;
+  dt_  /= N_FINE_AGE_BINS;
+  int fine_age_step_;
+  for(fine_age_step_ = 0; fine_age_step_< N_FINE_AGE_BINS; fine_age_step_++)
   {
-    time=upper_time-ii*dt/((float)N_AgeBins)-dt/((float)N_AgeBins)/2.;
+    time_ = lower_time_ + (fine_age_step_ + 0.5) * dt_;
+#endif /* defined N_FINE_AGE_BINS > 1 */
 
-#ifdef OUTPUT_REST_MAGS
-    for(outputbin = 0; outputbin < NOUT; outputbin++)
+#ifdef GALAXYTREE
+    const int output_bin_beg_ = Gal[p].SnapNum;
+    const int output_bin_end_ = NOUT;
+#else  /* not defined GALAXYTREE */
+    const int output_bin_beg_ = 0;
+    const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[p].SnapNum] + 1;
+#endif /* not defined GALAXYTREE */
+
+    for(output_bin_ = output_bin_beg_; output_bin_ < output_bin_end_; output_bin_++)
     {
-      find_interpolated_lum(time, NumToTime(ListOutputSnaps[outputbin]), metallicity,
-                            &metindex, &tabindex, &f1, &f2, &fmet1, &fmet2);
-
-      if(MetallicityOption == 0)
-        metindex = 4;                // reset met index to use only solar metallicity
-
-      age = time - NumToTime(ListOutputSnaps[outputbin]);
+      const double age_                        = time_ - NumToTime(ListOutputSnaps[output_bin_]);
+      
+      if(age_ <= 0) continue;
+      
+      const double log10_age_                  = log10(age_);
+      const bool   is_affected_by_birthclould_ = (age_ <= birthcloud_age_);
+      find_age_luminosity_interpolation_parameters(log10_age_, age_index_, f_age_1_, f_age_2_);
+      
+#ifdef OUTPUT_REST_MAGS
       /* For rest-frame, there is no K-correction on magnitudes,
-       * hence the 0 in LumTables[filter_number_][metindex][0][tabindex] */
+       * hence the 0 in LumTables[filter_number_][met_index_][0][age_index_] */
       for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
         //interpolation between the points found by find_interpolated_lum
-        LuminosityToAdd = X1 * (fmet1 * (f1 * LumTables[filter_number_][metindex    ][0][tabindex    ] +
-                                         f2 * LumTables[filter_number_][metindex    ][0][tabindex + 1]) +
-                                fmet2 * (f1 * LumTables[filter_number_][metindex + 1][0][tabindex    ] +
-                                         f2 * LumTables[filter_number_][metindex + 1][0][tabindex + 1]));
-        Gal[p].Lum[filter_number_][outputbin] += LuminosityToAdd;
+        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][0][age_index_    ]  +
+                                                       f_age_2_ * LumTables[filter_number_][met_index_    ][0][age_index_ + 1]) +
+                                           f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][0][age_index_    ]  +
+                                                       f_age_2_ * LumTables[filter_number_][met_index_ + 1][0][age_index_ + 1]));
+                                         
+        Gal[p].Lum[filter_number_][output_bin_] += LuminosityToAdd;
 
         /*luminosity used for extinction due to young birth clouds */
-        if(age <= tbc)
-          Gal[p].YLum[filter_number_][outputbin] += LuminosityToAdd;
+        if(is_affected_by_birthclould_)
+          Gal[p].YLum[filter_number_][output_bin_] += LuminosityToAdd;
       }
-    }
 #endif //OUTPUT_REST_MAGS
 
 #ifdef COMPUTE_OBS_MAGS
-  for(outputbin = 0; outputbin < NOUT; outputbin++)
-  {
-    find_interpolated_lum(time, NumToTime(ListOutputSnaps[outputbin]), metallicity,
-                          &metindex, &tabindex, &f1, &f2, &fmet1, &fmet2);
+      redshift_index_ = LastDarkMatterSnapShot - ListOutputSnaps[output_bin_];
 
-    if(MetallicityOption == 0)
-          metindex = 4;                // reset met index to use only solar metallicity
-
-    int zindex = ((LastDarkMatterSnapShot+1) - 1) - ListOutputSnaps[outputbin];
-
-    age = time - NumToTime(ListOutputSnaps[outputbin]);
-
-    /* Note the zindex in LumTables[][][][] meaning the magnitudes are now
-      * "inversely k-corrected to get observed frame at output bins" */
-    for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
-    {
-      //interpolation between the points found by find_interpolated_lum
-      LuminosityToAdd = X1 * (fmet1 * (f1 * LumTables[filter_number_][metindex][zindex][tabindex] +
-                                        f2 * LumTables[filter_number_][metindex][zindex][tabindex + 1]) +
-                          fmet2 * (f1 * LumTables[filter_number_][metindex + 1][zindex][tabindex] +
-                                    f2 * LumTables[filter_number_][metindex + 1][zindex][tabindex + 1]));
-      Gal[p].ObsLum[filter_number_][outputbin] += LuminosityToAdd;
-
-#ifdef OUTPUT_MOMAF_INPUTS
-      dLuminosityToAdd = X1 * (fmet1 * (f1 * LumTables[filter_number_][metindex][zindex + 1][tabindex] +
-                                    f2 * LumTables[filter_number_][metindex][zindex + 1][tabindex + 1]) +
-                            fmet2 * (f1 * LumTables[filter_number_][metindex + 1][zindex + 1][tabindex] +
-                                    f2 * LumTables[filter_number_][metindex + 1][zindex + 1][tabindex + 1]));
-      Gal[p].dObsLum[filter_number_][outputbin] += dLuminosityToAdd;
-#endif
-
-      /*luminosity used for extinction due to young birth clouds */
-      if(age <= tbc)
+      /* Note the zindex in LumTables[][][][] meaning the magnitudes are now
+        * "inversely k-corrected to get observed frame at output bins" */
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
       {
-        Gal[p].ObsYLum[filter_number_][outputbin] += LuminosityToAdd;
-#ifdef OUTPUT_MOMAF_INPUTS
-        Gal[p].dObsYLum[filter_number_][outputbin] += dLuminosityToAdd;
-#endif
+        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ]  +
+                                                       f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
+                                           f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ]  +
+                                                       f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
+                                                       
+        Gal[p].ObsLum[filter_number_][output_bin_] += LuminosityToAdd;
+  
+        if(is_affected_by_birthclould_)
+          Gal[p].ObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
       }
+      
+#ifdef OUTPUT_MOMAF_INPUTS
+      redshift_index_ = LastDarkMatterSnapShot - (ListOutputSnaps[output_bin_] > 0 ? ListOutputSnaps[output_bin_] - 1 : 0);
+      for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+      {
+        LuminosityToAdd = stellar_mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ]  +
+                                                       f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
+                                           f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ]  +
+                                                       f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
+                                                       
+        Gal[p].dObsLum[filter_number_][output_bin_] += LuminosityToAdd;
+
+        if(is_affected_by_birthclould_)
+          Gal[p].dObsYLum[filter_number_][output_bin_] += LuminosityToAdd;
+      }
+#endif
     }
-  }
 #endif //COMPUTE_OBS_MAGS
+
+#ifdef FINE_AGE_BINS  
   }//end loop on small age bins
+#endif /* defined FINE_AGE_BINS */
 }
 #endif  //POST_PROCESS_MAGS
 #endif  //COMPUTE_SPECPHOT_PROPERTIES
@@ -1369,7 +1405,7 @@ double separation_halo(const int p, const  int q)
  * 
  * @note  MATH MISC - PROBABLY SHOULD GO INTO SEPARATE FILE
  */
-void locate(double *xx, int n, double x, int *j)
+void locate(double *xx, const int n, const double x, int *j)
 {
   unsigned long ju,jm,jl;
   int ascnd;
@@ -1401,7 +1437,7 @@ void locate(double *xx, int n, double x, int *j)
  * 
  * erg/s/A --> erg/s/Hz --> erg/s
  */
-double integrate(double *flux, int Grid_Length)
+double integrate(double *flux, const int Grid_Length)
 {
   double sum[3], I[3], f[4];
   double integral=0.0;
@@ -1445,7 +1481,7 @@ double integrate(double *flux, int Grid_Length)
  * 
  * given xa and ya, returns polynomial y and error dy
  */
-void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
+void polint(double xa[], double ya[], const int n, const double x, double *y, double *dy)
 {
   int i,m,ns=1;
   double den, dif, dift, ho, hp;
@@ -1497,7 +1533,7 @@ void nrerror(char error_text[])
 
 
 /** @brief allocate a double vector with subscript range v[nl..nh] */
-double *new_vector(long nl, long nh)
+double *new_vector(const long nl, const long nh)
 {
   double *v;
 
@@ -1508,7 +1544,7 @@ double *new_vector(long nl, long nh)
 
 
 /** @brief free a double vector allocated with vector() */
-void free_vector(double *v, long nl, long nh)
+void free_vector(double *v, const long nl, const long nh)
 {
   (void)nh; /* avoid unused-parameter warning */
   free((FREE_ARG) (v+nl-NREND));
@@ -1516,7 +1552,7 @@ void free_vector(double *v, long nl, long nh)
 
 
 /** @brief print galaxy properties */
-void print_galaxy(char string[], int p, int halonr)
+void print_galaxy(char string[], const int p, const int halonr)
 {
 /*        printf("%s Hnr=%d firstinFOF=%d prog=%d nestprog=%d Descendant=%d gal=%d Type=%d\n",
                         string, Gal[p].HaloNr, Halo[halonr].FirstHaloInFOFgroup, Halo[halonr].FirstProgenitor,

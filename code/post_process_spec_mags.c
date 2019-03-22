@@ -13,16 +13,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/* Created on: April 10, 2012
- *         by: Bruno Henriques (bmh20)
- *
- * modified on 2018 Jan 15+ by Stefan Hilbert (hilbert)
+/* Created on 2018 Jan 15+ by Stefan Hilbert (hilbert)
+ * orignially based on version by Bruno Henriques (bmh20)
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "allvars.h"
 #include "proto.h"
@@ -38,7 +37,8 @@
  *  just before output.
  * */
 
-/* standard #ifdef pattern for dealing with GALAXY_OUTPUT magnitudes: */
+
+// standard #ifdef pattern for dealing with GALAXY_OUTPUT magnitudes:
 #ifdef OUTPUT_REST_MAGS
 #ifdef ICL
 #endif /* defined ICL */
@@ -59,10 +59,7 @@
 
 /** @brief Converts luminosities into magnitudes
  *
- * if galaxy output has full spectra, 
- * just returns input as is,
- * else
- * converts luminosities into magnitudes:
+ * Converts luminosities into magnitudes:
  * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
 static inline double 
 lum_to_lum_or_mag(const double lum_)
@@ -78,178 +75,76 @@ lum_to_lum_or_mag(const double lum_)
 }
 
 
-/** @brief Used by interpolated_luminosity() to interpolates into
- *         the age in the SSP tables.*/
-static inline void 
-find_age_luminosity_interpolation_parameters(double log10_age_, int *age_index_, double *f_age_1_, double *f_age_2_)
-{
-  if(log10_age_ <= SSP_logAgeTab[0])        /* age younger than 1st enty, take 1st entry */
-  {
-    *age_index_ = 0;
-    *f_age_1_ = 0;
-    *f_age_2_ = 1;
-  }
-  else if(log10_age_ >= SSP_logAgeTab[SSP_NAGES - 1])        /* beyond table, take latest entry */
-  {
-    *age_index_ = SSP_NAGES - 2;
-    *f_age_1_ = 0;
-    *f_age_2_ = 1;
-  }
-  else
-  {
-    int idx_ = get_jump_index(log10_age_);
-    while(SSP_logAgeTab[idx_ + 1] < log10_age_) ++idx_;
-    *age_index_ = idx_;
-    const double frac_ = (log10_age_ - SSP_logAgeTab[idx_]) / (SSP_logAgeTab[idx_ + 1] - SSP_logAgeTab[idx_]);
-    *f_age_1_ = 1 - frac_;
-    *f_age_2_ =     frac_;
-  }
-}
-
-
-/** @brief Used by interpolated_luminosity() to interpolates into
- *         the metallicity in the SSP tables.*/
-static inline void 
-find_metallicity_luminosity_interpolation_parameters(const double log10_metallicity_, int *met_index_, double *f_met_1_, double *f_met_2_)
-{
-  if(log10_metallicity_ <= SSP_logMetalTab[0])        /* mettallicity smaller than 1st enty, take 1st entry */
-  {
-    *met_index_ = 0;
-    *f_met_1_ = 1;
-    *f_met_2_ = 0;
-  }
-  else if(log10_metallicity_ >= SSP_logMetalTab[SSP_NMETALLICITES - 1]) /* beyond table, take last entry */
-  {
-    *met_index_ = SSP_NMETALLICITES - 2;
-    *f_met_1_ = 0;
-    *f_met_2_ = 1;
-  }
-  else
-  {
-    int idx_ = 0;
-    while(SSP_logMetalTab[idx_ + 1] < log10_metallicity_) ++idx_;
-    *met_index_ = idx_;
-    const double frac_ = (log10_metallicity_ - SSP_logMetalTab[idx_]) / (SSP_logMetalTab[idx_ + 1] - SSP_logMetalTab[idx_]);
-    *f_met_1_ = 1 - frac_;
-    *f_met_2_ =     frac_;
-  }
-}
-
-
 /** @brief computes lumsinosities for galaxies */
-static inline void 
-//compute_post_process_luminosities (const double mass_, const double age_, const double metal_fraction_, const int snapshot_number_, const int filter_number_,
-compute_post_process_luminosities (const double mass_,
-                                   const int met_index_, const double f_met_1_, const double f_met_2_,
-                                   const int age_index_, const double f_age_1_, const double f_age_2_,
-                                   const int filter_number_, 
-#ifdef COMPUTE_OBS_MAGS
-                                   const int snapshot_number_, 
-#endif /* defined COMPUTE_OBS_MAGS */
-#ifdef OUTPUT_REST_MAGS
-                                   double *Lum_            , double *YLum_            , 
-#endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
-                                   double *ObsLum_         , double *ObsYLum_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                   double *dObsLum_        , double *dObsYLum_        , 
-#ifdef KITZBICHLER
-                                   double *dObsLum_forward_, double *dObsYLum_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
-                                   const bool have_to_add_to_y_lum_)
+static inline double
+interpolated_luminosity(const double mass_, const int filter_number_, 
+                        const int met_index_, const double f_met_1_, const double f_met_2_,
+                        const int age_index_, const double f_age_1_, const double f_age_2_, 
+                        const int z_index_)
 {
-  int    redshift_index_;
-  double lum_to_add_;
-  
-#ifdef OUTPUT_REST_MAGS
-  redshift_index_ = 0;
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ]  +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ]  +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1])  );
+  return mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][z_index_][age_index_    ]  +
+                              f_age_2_ * LumTables[filter_number_][met_index_    ][z_index_][age_index_ + 1]) +
+                  f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][z_index_][age_index_    ]  +
+                              f_age_2_ * LumTables[filter_number_][met_index_ + 1][z_index_][age_index_ + 1])   );
+}
 
-  *Lum_ += lum_to_add_;
-  if(have_to_add_to_y_lum_)
-  { *YLum_ += lum_to_add_; }
 
-#endif /* defined OUTPUT_REST_MAGS */
-
-#ifdef COMPUTE_OBS_MAGS
-  redshift_index_ = (LastDarkMatterSnapShot+1) - 1 - snapshot_number_;
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
-
-  *ObsLum_ += lum_to_add_;
-  if(have_to_add_to_y_lum_)
-  { *ObsYLum_ += lum_to_add_; }
-
-#ifdef OUTPUT_MOMAF_INPUTS
-  redshift_index_ = (LastDarkMatterSnapShot+1) - 1 - (snapshot_number_-1);
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
-
-  *dObsLum_ += lum_to_add_;
-  if(have_to_add_to_y_lum_)
-  { *dObsYLum_ += lum_to_add_; }
-
-#ifdef KITZBICHLER
-  redshift_index_ = (LastDarkMatterSnapShot+1) - 1 - (snapshot_number_+1);
-  if(redshift_index_ < 0) redshift_index_ = 0;
-  lum_to_add_     = mass_ * (f_met_1_ * (f_age_1_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_    ][redshift_index_][age_index_ + 1]) +
-                             f_met_2_ * (f_age_1_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_    ] +
-                                         f_age_2_ * LumTables[filter_number_][met_index_ + 1][redshift_index_][age_index_ + 1]));
-
-  *dObsLum_forward_ += lum_to_add_;
-  if(have_to_add_to_y_lum_)
-  { *dObsYLum_forward_ += lum_to_add_; }
-
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
+/** @brief computes lumsinosities for galaxies and adds them to fields */
+static inline void
+add_interpolated_luminosities(const double mass_,
+                              const int met_index_, const double f_met_1_, const double f_met_2_,
+                              const int age_index_, const double f_age_1_, const double f_age_2_, 
+                              const int z_index_,
+                              double (*lum_) [NMAG], double (*y_lum_) [NMAG],
+                              const bool have_to_add_to_y_lum_
+                             )
+{
+  int filter_number_;
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+  { 
+    const double lum_to_add_ = interpolated_luminosity(mass_, filter_number_, 
+                                                      met_index_, f_met_1_, f_met_2_,
+                                                      age_index_, f_age_1_, f_age_2_,
+                                                      z_index_);
+    (*lum_) [filter_number_] += lum_to_add_;
+    if(have_to_add_to_y_lum_)
+    { (*y_lum_) [filter_number_] += lum_to_add_; }
+  }
 }
 
 
 /** @brief computes dust corrections for lums. */
 static inline void
-make_dust_correction_for_disk_luminosities(const int filter_number_, const int snapshot_number_, const double Z_g_, const double ColdGas_, const double GasDiskRadius_, const double CosInclination_ 
+make_dust_correction_for_post_processing(const int snapshot_number_, const double Z_g_, const double cold_gas_, const double gas_disk_radius_, const double cos_inclination_
 #ifdef OUTPUT_REST_MAGS
-                                         , double *LumDisk_            , const double YLumDisk_
+                                       , double (*LumDisk_            )[NMAG], const double YLumDisk_            [NMAG]
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef COMPUTE_OBS_MAGS
-                                         , double *ObsLumDisk_         , const double ObsYLumDisk_
+                                       , double (*ObsLumDisk_         )[NMAG], const double ObsYLumDisk_         [NMAG]
 #ifdef OUTPUT_MOMAF_INPUTS
-                                         , double *dObsLumDisk_        , const double dObsYLumDisk_
+                                       , double (*dObsLumDisk_        )[NMAG], const double dObsYLumDisk_        [NMAG]
 #ifdef KITZBICHLER
-                                         , double *dObsLumDisk_forward_, const double dObsYLumDisk_forward_
+                                       , double (*dObsLumDisk_forward_)[NMAG], const double dObsYLumDisk_forward_[NMAG]
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined COMPUTE_OBS_MAGS */
-                                          )
+                                        )
 {
-  double tau_, alam_;
-//  double taubc_,
-  double a_bc_;
-  double mu_;
+  int filter_number_;
+  double tau_, alam_, a_bc_, mu_;
   
-  const double FilterLambda_ratio_ = FilterLambda[filter_number_] * (1. / 0.55); /* filter wavelength / V band wavelength (reference) */
+  const double inv_VBand_WaveLength_ = 1./ 0.55;
 
   /* 0.94 = 2.83/3. - 3 to get scale lenght and 2.83 = 1.68^2 */
-  /* n_h_ = ColdGas_ / (M_PI * pow(GasDiskRadius_ * 0.56, 2) * 1.4); */
+  /* n_h_ = cold_gas_ / (M_PI * pow(gas_disk_radius_ * 0.56, 2) * 1.4); */
   /* now convert from 10^10 M_sun/h / (Mpc/h)^2 to (2.1 10^21 atoms/cm^2) */
   /* note: 3252.37 = 10^(3.5122) */
-  /* add  redshift dependence of dust-to-ColdGas_ ratio */
-//  const double n_h_ = ColdGas_ / (M_PI * pow(GasDiskRadius_ * 0.94, 2) * 1.4 * 3252.37 * (1 + ZZ[snapshot_number_]));
+  /* add redshift dependence of dust-to-cold_gas ratio */
+  //  const double n_h_ = ColdGas_ / (M_PI * pow(GasDiskRadius_ * 0.94, 2) * 1.4 * 3252.37 * (1 + ZZ[snapshot_number_]));
   const double n_h_ = cold_gas_ / ((M_PI * 0.94 * 0.94 * 1.4 * 3252.37) * gas_disk_radius_ * gas_disk_radius_ * (1 + ZZ[snapshot_number_]));
 
- /* minimum inclination ~80 degrees, i.e. CosInclination_ == 0.2 */
-  const double n_h_sec_ = (CosInclination_ < 0.2) ? (5. * n_h_) : (n_h_ / CosInclination_);
+ // minimum inclination ~80 degrees, i.e. cos(inclination) == 0.2
+  const double n_h_sec_ = (cos_inclination_ < 0.2) ? (5. * n_h_) : (n_h_ / cos_inclination_);
 
   /* mu_ for YS extinction, given by a Gaussian with centre 0.3 (MUCENTER)
    * and width 0.2 (MUWIDTH), truncated at 0.1 and 1.  */
@@ -261,49 +156,52 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
 
   // extinction on Vband used as reference for the BC extinction
   const double tauvbc_ = get_extinction(NMAG, Z_g_, 0) * n_h_ * (1. / mu_ - 1.);
-
-#ifdef OUTPUT_REST_MAGS
-  //extinction due to ISM and light from young stars absorbed by birth clouds
-//   taubc_ = tauvbc_ * pow(FilterLambda_ratio_, -0.7);
-  a_bc_  = 1. - exp(-tauvbc_ * pow(FilterLambda_ratio_, -0.7));
-  tau_   = get_extinction(filter_number_, Z_g_, 0) * n_h_sec_;
-  alam_  = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
-
-  *LumDisk_ -= YLumDisk_ * a_bc_;
-  *LumDisk_ *= alam_;
   
+  //extinction due to ISM and light from young stars absorbed by birth clouds
+#ifdef OUTPUT_REST_MAGS
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+  {
+    tau_  = get_extinction(filter_number_, Z_g_, 0) * n_h_sec_;
+    alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+    a_bc_ = 1. - exp(-tauvbc_ * pow(FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
+
+    (*LumDisk_)[filter_number_] -= YLumDisk_[filter_number_] * a_bc_;
+    (*LumDisk_)[filter_number_] *= alam_;
+  }
 #endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef OUTPUT_OBS_MAGS
-  //extinction due to ISM and light from young stars absorbed by birth clouds
-//   taubc_ = tauvbc_ * pow((1. + ZZ[snapshot_number_]) * FilterLambda_ratio_, -0.7);
-  a_bc_  = 1. - exp(-tauvbc_ * pow((1. + ZZ[snapshot_number_]) * FilterLambda_ratio_, -0.7));
-  tau_   = get_extinction(filter_number_, Z_g_, ZZ[snapshot_number_]) * n_h_sec_;
-  alam_  = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+  {
+    tau_  = get_extinction(filter_number_, Z_g_, ZZ[snapshot_number_]) * n_h_sec_;
+    alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+    a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-  *ObsLumDisk_ -= ObsYLumDisk_ * a_bc_;
-  *ObsLumDisk_ *= alam_;
-
+    (*ObsLumDisk_)[filter_number_] -= ObsYLumDisk_[filter_number_] * a_bc_;
+    (*ObsLumDisk_)[filter_number_] *= alam_;
+  }
 #ifdef OUTPUT_MOMAF_INPUTS   // compute same thing at z + 1
   const int earlier_snapshot_number_ = (snapshot_number_ > 0) ? (snapshot_number_ - 1) : 0;
-//   taubc_ = tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda_ratio_, -0.7);
-  a_bc_  = 1. - exp(-tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda_ratio_, -0.7));
-  tau_   = get_extinction(filter_number_, Z_g_, ZZ[earlier_snapshot_number_]) * n_h_sec_;
-  alam_  = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+  {
+    tau_  = get_extinction(filter_number_, Z_g_, ZZ[earlier_snapshot_number_]) * n_h_sec_;
+    alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+    a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[earlier_snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-  *dObsLumDisk_ -= dObsYLumDisk_ * a_bc_;
-  *dObsLumDisk_ *= alam_;
-
+    (*dObsLumDisk_)[filter_number_] -= dObsYLumDisk_[filter_number_] * a_bc_;
+    (*dObsLumDisk_)[filter_number_] *= alam_;
+  }
 #ifdef KITZBICHLER
   const int later_snapshot_number_ = (snapshot_number_ < LastDarkMatterSnapShot) ? (snapshot_number_ + 1) : LastDarkMatterSnapShot;
-//   taubc_ = tauvbc_ * pow((1. + ZZ[later_snapshot_number_]) * FilterLambda_ratio_, -0.7);
-  a_bc_  = 1. - exp(-tauvbc_ * pow((1. + ZZ[later_snapshot_number_]) * FilterLambda_ratio_, -0.7));
-  tau_   = get_extinction(filter_number_, Z_g_, ZZ[later_snapshot_number_]) * n_h_sec_;
-  alam_  = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
+  {
+    tau_  = get_extinction(filter_number_, Z_g_, ZZ[later_snapshot_number_]) * n_h_sec_;
+    alam_ = (tau_ > 0.0) ? (1.0 - exp(-tau_)) / tau_ : 1.;
+    a_bc_ = 1. - exp(-tauvbc_ * pow((1. + ZZ[later_snapshot_number_]) * FilterLambda[filter_number_] * inv_VBand_WaveLength_, -0.7));
 
-  *dObsLumDisk_forward_ -= dObsYLumDisk_forward_ * a_bc_;
-  *dObsLumDisk_forward_ *= alam_;
-  
+    (*dObsLumDisk_forward_)[filter_number_] -= dObsYLumDisk_forward_[filter_number_] * a_bc_;
+    (*dObsLumDisk_forward_)[filter_number_] *= alam_;
+  }
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined OUTPUT_OBS_MAGS */
@@ -311,133 +209,140 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
 
 
 /** @brief computes lums./mags. for galaxies */
-void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
+void
+post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 {
-  /* Time below which the luminosities are corrected for extinction due to
+   /* Time below which the luminosities are corrected for extinction due to
    * molecular birth clouds.  */
   const double birthcloud_age_ = 10.0 / UnitTime_in_Megayears * Hubble_h;
 
-  /* used for dust corrections: */
-  const double Z_g_        = 50. * metals_total(galaxy_->MetalsColdGas) / galaxy_->ColdGas;
-  const double t_snapshot_ = NumToTime(galaxy_->SnapNum);
-
-  /* used for interpolating luminosities: */
-  int       age_index_ [SFH_NBIN];  double       f_age_1_ [SFH_NBIN];  double       f_age_2_ [SFH_NBIN];
-  int  disk_met_index_ [SFH_NBIN];  double  disk_f_met_1_ [SFH_NBIN];  double  disk_f_met_2_ [SFH_NBIN];
-  int bulge_met_index_ [SFH_NBIN];  double bulge_f_met_1_ [SFH_NBIN];  double bulge_f_met_2_ [SFH_NBIN];
-#ifdef ICL
-  int   icm_met_index_ [SFH_NBIN];  double   icm_f_met_1_ [SFH_NBIN];  double   icm_f_met_2_ [SFH_NBIN];
-#endif /* defined ICL */
-
-  int sfh_bin_number_, filter_number_;
-  /* precompute parameters for interpolating luminosities: */
-  for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
-  {
-    const double log10_age_ = log10(SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_ );
-    find_age_luminosity_interpolation_parameters(log10_age_ , &(age_index_[sfh_bin_number_]), &(f_age_1_[sfh_bin_number_]), &(f_age_2_[sfh_bin_number_]));
-  }
+  /* metallicity parameter for dust corrections: */
+  const double Z_g_ = metals_total(galaxy_->MetalsColdGas)/galaxy_->ColdGas/0.02;
   
-  /** @bug (fixed by Stefan Hilbert) before, for MetallicityOption == 0 (only solar mets.) just the met. indices be set, but not the f_met_ factors,
-  *       now also  f_met_ factors are set.
-  */
-  if(MetallicityOption == 0)
-  {
-    for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
-    {
-      disk_met_index_ [sfh_bin_number_] = 4;  disk_f_met_1_ [sfh_bin_number_] = 1.;  disk_f_met_2_ [sfh_bin_number_] = 0.;
-      bulge_met_index_[sfh_bin_number_] = 4; bulge_f_met_1_ [sfh_bin_number_] = 1.; bulge_f_met_2_ [sfh_bin_number_] = 0.;
-#ifdef ICL
-      icm_met_index_  [sfh_bin_number_] = 4;   icm_f_met_1_ [sfh_bin_number_] = 1.;   icm_f_met_2_ [sfh_bin_number_] = 0.;
-#endif /* defined ICL */
-    }
-  }
-  else
-  {  
-    for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
-    {
-      if(galaxy_->sfh_DiskMass [sfh_bin_number_] > 0.)
-      {
-        const double log10_disk_metal_fraction_  = log10(metals_total(galaxy_->sfh_MetalsDiskMass [sfh_bin_number_]) / galaxy_->sfh_DiskMass [sfh_bin_number_]);
-        find_metallicity_luminosity_interpolation_parameters(log10_disk_metal_fraction_ , &(disk_met_index_ [sfh_bin_number_]), &(disk_f_met_1_ [sfh_bin_number_]), &(disk_f_met_2_ [sfh_bin_number_]));
-      }
-      
-      if(galaxy_->sfh_BulgeMass[sfh_bin_number_] > 0.)
-      {
-        const double log10_bulge_metal_fraction_ = log10(metals_total(galaxy_->sfh_MetalsBulgeMass[sfh_bin_number_]) / galaxy_->sfh_BulgeMass[sfh_bin_number_]);
-        find_metallicity_luminosity_interpolation_parameters(log10_bulge_metal_fraction_, &(bulge_met_index_[sfh_bin_number_]), &(bulge_f_met_1_[sfh_bin_number_]), &(bulge_f_met_2_[sfh_bin_number_]));
-      }
-#ifdef ICL
-      if(galaxy_->sfh_ICM      [sfh_bin_number_] > 0.)
-      {
-        const double log10_icm_metal_fraction_   = log10(metals_total(galaxy_->sfh_MetalsICM      [sfh_bin_number_]) / galaxy_->sfh_ICM      [sfh_bin_number_]);
-        find_metallicity_luminosity_interpolation_parameters(log10_icm_metal_fraction_  , &(icm_met_index_  [sfh_bin_number_]), &(icm_f_met_1_  [sfh_bin_number_]), &(icm_f_met_2_  [sfh_bin_number_]));
-      }
-#endif /* defined ICL */
-    }
-  }
+  /* for computing stellar ages: */
+  const double t_snapshot_ = NumToTime(galaxy_->SnapNum);
+  
+  /** if one wants to have finner bins for the star formation then the STEPS
+    * of the calculation, N_FINE_AGE_BINS should be set to > 1 */
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+  int fine_age_step_;
+#endif /* defined N_FINE_AGE_BINS > 1 */
 
-  /** r-band weighted ages
-   * 
-   *  @bug (fixed by Stefan Hilbert)
-   *       if not defined OUTPUT_REST_MAGS,
-   *       but 0 < (galaxy_->DiskMass + galaxy_->BulgeMass),
-   *       galaxy_->rbandWeightAge would compute to 0./0. (i.e. NaN).
-   *       nowg alaxy_->rbandWeightAg is set to 0 and stays 0 
-   *       if not fefined OUTPUT_REST_MAG
-   * 
-   * @bug  filter_number_==17 is not necessarily r-band,
-   *       since filters are assigned from info in parameter file
+#ifdef OUTPUT_REST_MAGS
+  /** @bug  filter_number_ = 17 is not necessarily r-band, since filters are assigned from info in parameter file
    *
-   * @todo parametrize filter band number for computing weighted stellar age
+   *  @todo  parametrize filter band number for computing weighted stellar age_
    */
-#ifdef OUTPUT_REST_MAGS
   const int r_band_filter_number_ = 17;
-#endif /* defined OUTPUT_REST_MAGS */
+  double previous_r_band_luminosity_ = 0.;
+#endif /* defined OUTPUT_REST_MAGS */                                                               
+ 
   galaxy_->rbandWeightAge = 0.;
-
-  for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
-  {
+ 
+  /* for accumulating luminosities, 
+   * incl. that of young stellar populations affected by molecular birth cloud.
+   * note: consider going to float arrays and possibly using galaxy_'s fields */
 #ifdef OUTPUT_REST_MAGS
-    double LumDisk_  = 0.; double YLumDisk_  = 0.;
-    double LumBulge_ = 0.; double YLumBulge_ = 0.;
+  double LumDisk_               [NMAG]; set_array_to(LumDisk_              , 0.);
+  double YLumDisk_              [NMAG]; set_array_to(YLumDisk_             , 0.);
+  double LumBulge_              [NMAG]; set_array_to(LumBulge_             , 0.);
+  double YLumBulge_             [NMAG]; set_array_to(YLumBulge_            , 0.);
 #ifdef ICL
-    double LumICL_   = 0.; double YLumICL_   = 0.;
+  double LumICL_                [NMAG]; set_array_to(LumICL_               , 0.);
 #endif /* defined ICL */
-#endif /* defined OUTPUT_REST_MAGS */
+#endif /* defined OUTPUT_REST_MAGS */                                                               
 #ifdef OUTPUT_OBS_MAGS                                                                              
-    double ObsLumDisk_  = 0.; double ObsYLumDisk_  = 0.;
-    double ObsLumBulge_ = 0.; double ObsYLumBulge_ = 0.;
+  double ObsLumDisk_            [NMAG]; set_array_to(ObsLumDisk_           , 0.);
+  double ObsYLumDisk_           [NMAG]; set_array_to(ObsYLumDisk_          , 0.);
+  double ObsLumBulge_           [NMAG]; set_array_to(ObsLumBulge_          , 0.);
+  double ObsYLumBulge_          [NMAG]; set_array_to(ObsYLumBulge_         , 0.);
 #ifdef ICL
-    double ObsLumICL_   = 0.; double ObsYLumICL_   = 0.;
+  double ObsLumICL_             [NMAG]; set_array_to(ObsLumICL_            , 0.);
 #endif /* defined ICL */
 #ifdef OUTPUT_MOMAF_INPUTS                                                                          
-    double dObsLumDisk_  = 0.; double dObsYLumDisk_  = 0.;
-    double dObsLumBulge_ = 0.; double dObsYLumBulge_ = 0.;
+  double dObsLumDisk_           [NMAG]; set_array_to(dObsLumDisk_          , 0.);
+  double dObsYLumDisk_          [NMAG]; set_array_to(dObsYLumDisk_         , 0.);
+  double dObsLumBulge_          [NMAG]; set_array_to(dObsLumBulge_         , 0.);
+  double dObsYLumBulge_         [NMAG]; set_array_to(dObsYLumBulge_        , 0.);
 #ifdef ICL
-    double dObsLumICL_   = 0.; double dObsYLumICL_   = 0.;
+  double dObsLumICL_            [NMAG]; set_array_to(dObsLumICL_           , 0.);
 #endif /* defined ICL */
 #ifdef KITZBICHLER                                                                                  
-    double dObsLumDisk_forward_  = 0.; double dObsYLumDisk_forward_  = 0.;
-    double dObsLumBulge_forward_ = 0.; double dObsYLumBulge_forward_ = 0.;
+  double dObsLumDisk_forward_   [NMAG]; set_array_to(dObsLumDisk_forward_  , 0.);
+  double dObsYLumDisk_forward_  [NMAG]; set_array_to(dObsYLumDisk_forward_ , 0.);
+  double dObsLumBulge_forward_  [NMAG]; set_array_to(dObsLumBulge_forward_ , 0.);
+  double dObsYLumBulge_forward_ [NMAG]; set_array_to(dObsYLumBulge_forward_, 0.);
 #ifdef ICL
-    double dObsLumICL_forward_   = 0.; double dObsYLumICL_forward_   = 0.;
+  double dObsLumICL_forward_    [NMAG]; set_array_to(dObsLumICL_forward_   , 0.);
 #endif /* defined ICL */
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined OUTPUT_OBS_MAGS */
 
-#ifdef OUTPUT_REST_MAGS
-    double previous_r_band_luminosity_ = 0.;
-#endif /* defined OUTPUT_REST_MAGS */                                                               
+  /* ICL does not seem to get corrected for m.b.c. yet,
+   * but we use a dummy field to meet function parameter signature */
+#ifdef ICL
+  double YLumICL_dummy_ [NMAG];
+#endif /* defined ICL */
 
-    //loop on SFH bins
-    for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
+  /* indices and fractions for interpolating luminosities: */
+  int age_index_      ; double f_age_1_      ; double f_age_2_      ;
+  int disk_met_index_ ; double disk_f_met_1_ ; double disk_f_met_2_ ;
+  int bulge_met_index_; double bulge_f_met_1_; double bulge_f_met_2_;
+#ifdef ICL  
+  int icm_met_index_  ; double icm_f_met_1_  ; double icm_f_met_2_  ;
+ #endif /* defined ICL */
+
+#ifdef OUTPUT_REST_MAGS
+  const int redshift_index_              = 0;
+#endif /* defined OUTPUT_REST_MAGS */                                                               
+#ifdef OUTPUT_OBS_MAGS  
+  const int redshift_index_obs_          = LastDarkMatterSnapShot -  galaxy_->SnapNum;
+#ifdef OUTPUT_MOMAF_INPUTS                                                                          
+  const int redshift_index_dobs_         = LastDarkMatterSnapShot - (galaxy_->SnapNum > 0                      ? galaxy_->SnapNum - 1 : 0                     );
+#ifdef KITZBICHLER                                                                                  
+  const int redshift_index_dobs_forward_ = LastDarkMatterSnapShot - (galaxy_->SnapNum < LastDarkMatterSnapShot ? galaxy_->SnapNum + 1 : LastDarkMatterSnapShot);
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_OBS_MAGS */
+
+  int sfh_bin_number_;
+  for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
+  {
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+    for(fine_age_step_ = 0; fine_age_step_< N_FINE_AGE_BINS; fine_age_step_++)
     {
-      const double age_                        = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_;
+      const double age_ = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + (0.5 + fine_age_step_) * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] / N_FINE_AGE_BINS - t_snapshot_;
+
+#else  /* not defined N_FINE_AGE_BINS > 1 */
+      const double age_ = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_;
+#endif /* not defined N_FINE_AGE_BINS > 1 */
+    
+      if(age_ <= 0.)
+        continue;
+      
+      const double log10_age_                  = log10(age_);
       const bool   is_affected_by_birthclould_ = (age_ <= birthcloud_age_);
+  
+      find_age_luminosity_interpolation_parameters(log10_age_, age_index_, f_age_1_, f_age_2_);
 
       /* The stellar populations tables have magnitudes for all the mass
-       * formed in stars including what will be shortly lost by SNII   */
+      * formed in stars including what will be shortly lost by SNII   */
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
+#ifdef DETAILED_METALS_AND_MASS_RETURN
+      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / Hubble_h;
+      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / Hubble_h;
+#ifdef ICL
+      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / Hubble_h;
+#endif /* defined ICL */
+#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */        
+      const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / (Hubble_h * (1 - RecycleFraction) );
+      const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / (Hubble_h * (1 - RecycleFraction) );
+#ifdef ICL
+      const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / N_FINE_AGE_BINS / (Hubble_h * (1 - RecycleFraction) );
+#endif /* defined ICL */
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
+#else  /* not defined N_FINE_AGE_BINS > 1 */
 #ifdef DETAILED_METALS_AND_MASS_RETURN
       const double disk_mass_  = galaxy_->sfh_DiskMass [sfh_bin_number_] * 0.1 / Hubble_h;
       const double bulge_mass_ = galaxy_->sfh_BulgeMass[sfh_bin_number_] * 0.1 / Hubble_h;
@@ -451,175 +356,209 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
       const double icm_mass_   = galaxy_->sfh_ICM      [sfh_bin_number_] * 0.1 / (Hubble_h * (1 - RecycleFraction) );
 #endif /* defined ICL */
 #endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
+#endif /* not defined N_FINE_AGE_BINS > 1 */
 
-      /* disk luminosities */
-      if(galaxy_->sfh_DiskMass[sfh_bin_number_] > 0.)
-        compute_post_process_luminosities (disk_mass_,
-                                           disk_met_index_[sfh_bin_number_], disk_f_met_1_[sfh_bin_number_], disk_f_met_2_[sfh_bin_number_], 
-                                           age_index_     [sfh_bin_number_], f_age_1_     [sfh_bin_number_], f_age_2_     [sfh_bin_number_], 
-                                           filter_number_,
-#ifdef COMPUTE_OBS_MAGS
-                                           galaxy_->SnapNum, 
-#endif /* defined COMPUTE_OBS_MAGS */
-#ifdef OUTPUT_REST_MAGS
-                                           &LumDisk_            , &YLumDisk_            , 
-#endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
-                                           &ObsLumDisk_         , &ObsYLumDisk_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                           &dObsLumDisk_        , &dObsYLumDisk_        , 
-#ifdef KITZBICHLER
-                                           &dObsLumDisk_forward_, &dObsYLumDisk_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
-                                           is_affected_by_birthclould_);
-
-      /* bulge luminosities */
-      if(galaxy_->sfh_BulgeMass[sfh_bin_number_] > 0.)
-        compute_post_process_luminosities (bulge_mass_,  
-                                           bulge_met_index_[sfh_bin_number_], bulge_f_met_1_[sfh_bin_number_], bulge_f_met_2_[sfh_bin_number_], 
-                                           age_index_     [sfh_bin_number_], f_age_1_     [sfh_bin_number_], f_age_2_     [sfh_bin_number_], 
-                                           filter_number_,
-#ifdef COMPUTE_OBS_MAGS
-                                           galaxy_->SnapNum, 
-#endif /* defined COMPUTE_OBS_MAGS */
-#ifdef OUTPUT_REST_MAGS
-                                           &LumBulge_            , &YLumBulge_            , 
-#endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
-                                           &ObsLumBulge_         , &ObsYLumBulge_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                           &dObsLumBulge_        , &dObsYLumBulge_        , 
-#ifdef KITZBICHLER
-                                           &dObsLumBulge_forward_, &dObsYLumBulge_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
-                                           is_affected_by_birthclould_);
-
-#ifdef ICL
-      /** @note ICL does not seem to get correction  by dust or birth clouds */
-      /* ICL luminosities */
-      if(galaxy_->sfh_ICM[sfh_bin_number_] > 0.)
-        compute_post_process_luminosities (icm_mass_,  
-                                           icm_met_index_ [sfh_bin_number_], icm_f_met_1_ [sfh_bin_number_], icm_f_met_2_ [sfh_bin_number_], 
-                                           age_index_     [sfh_bin_number_], f_age_1_     [sfh_bin_number_], f_age_2_     [sfh_bin_number_], 
-                                           filter_number_,
-#ifdef COMPUTE_OBS_MAGS
-                                           galaxy_->SnapNum, 
-#endif /* defined COMPUTE_OBS_MAGS */
-#ifdef OUTPUT_REST_MAGS
-                                           &LumICL_            , &YLumICL_            , 
-#endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
-                                           &ObsLumICL_         , &ObsYLumICL_         , 
-#ifdef OUTPUT_MOMAF_INPUTS
-                                           &dObsLumICL_        , &dObsYLumICL_        , 
-#ifdef KITZBICHLER
-                                           &dObsLumICL_forward_, &dObsYLumICL_forward_,
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
-                                           false);
-#endif /* defined ICL */
-
-#ifdef OUTPUT_REST_MAGS
-      if((galaxy_->DiskMass+galaxy_->BulgeMass) > 0. && filter_number_ == r_band_filter_number_)
+      if(disk_mass_ > 0.)
       {
-        galaxy_->rbandWeightAge += age_ * (LumDisk_ + LumBulge_ - previous_r_band_luminosity_);
-        previous_r_band_luminosity_= LumDisk_ + LumBulge_;
+        if(MetallicityOption == 0)
+        { disk_met_index_  = 4;  disk_f_met_1_ = 1.;  disk_f_met_2_ = 0.; }
+        else if(metals_total(galaxy_->sfh_MetalsDiskMass [sfh_bin_number_]) <= 0.)
+        { disk_met_index_  = 0;  disk_f_met_1_ = 1.;  disk_f_met_2_ = 0.; }
+        else  
+        {
+          const double log10_disk_metal_fraction_  = log10(metals_total(galaxy_->sfh_MetalsDiskMass [sfh_bin_number_]) / galaxy_->sfh_DiskMass [sfh_bin_number_]);
+          find_metallicity_luminosity_interpolation_parameters(log10_disk_metal_fraction_ , disk_met_index_ , disk_f_met_1_ , disk_f_met_2_);
+        }
+      
+#ifdef OUTPUT_REST_MAGS
+        add_interpolated_luminosities(disk_mass_, disk_met_index_, disk_f_met_1_, disk_f_met_2_,
+                                                      age_index_,      f_age_1_,      f_age_2_, 
+                                                  redshift_index_, &LumDisk_, &YLumDisk_, is_affected_by_birthclould_);
+#endif /* defined OUTPUT_REST_MAGS */     
+#ifdef OUTPUT_OBS_MAGS           
+        add_interpolated_luminosities(disk_mass_, disk_met_index_, disk_f_met_1_, disk_f_met_2_,
+                                                      age_index_,      f_age_1_,      f_age_2_, 
+                                                  redshift_index_obs_, &ObsLumDisk_, &ObsYLumDisk_, is_affected_by_birthclould_);
+#ifdef OUTPUT_MOMAF_INPUTS   
+        add_interpolated_luminosities(disk_mass_, disk_met_index_, disk_f_met_1_, disk_f_met_2_,
+                                                      age_index_,      f_age_1_,      f_age_2_, 
+                                                  redshift_index_dobs_, &dObsLumDisk_, &dObsYLumDisk_, is_affected_by_birthclould_);
+#ifdef KITZBICHLER       
+        add_interpolated_luminosities(disk_mass_, disk_met_index_, disk_f_met_1_, disk_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                  redshift_index_dobs_forward_, &dObsLumDisk_forward_, &dObsYLumDisk_forward_, is_affected_by_birthclould_);
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_OBS_MAGS */
       }
-#endif /* defined OUTPUT_REST_MAGS */
-    }//end of loop on sfh bins
-
+    
+      if(bulge_mass_ > 0.)
+      {
+        if(MetallicityOption == 0)
+        { bulge_met_index_ = 4; bulge_f_met_1_ = 1.; bulge_f_met_2_ = 0.; }
+        else if(metals_total(galaxy_->sfh_MetalsBulgeMass [sfh_bin_number_]) <= 0.)
+        { bulge_met_index_ = 0; bulge_f_met_1_ = 1.; bulge_f_met_2_ = 0.; }
+        else
+        {
+          const double log10_bulge_metal_fraction_ = log10(metals_total(galaxy_->sfh_MetalsBulgeMass[sfh_bin_number_]) / galaxy_->sfh_BulgeMass[sfh_bin_number_]);
+          find_metallicity_luminosity_interpolation_parameters(log10_bulge_metal_fraction_, bulge_met_index_, bulge_f_met_1_, bulge_f_met_2_);
+        }
+      
 #ifdef OUTPUT_REST_MAGS
-    if((galaxy_->DiskMass+galaxy_->BulgeMass) > 0. && filter_number_ == r_band_filter_number_)
-    {
-      galaxy_->rbandWeightAge /= (LumDisk_ + LumBulge_);
-      galaxy_->rbandWeightAge = galaxy_->rbandWeightAge / 1000. * UnitTime_in_Megayears / Hubble_h; //conversion in age_ from code units/h -> Gyr
+        add_interpolated_luminosities(bulge_mass_, bulge_met_index_, bulge_f_met_1_, bulge_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_, &LumBulge_, &YLumBulge_, is_affected_by_birthclould_);
+#endif /* defined OUTPUT_REST_MAGS */     
+#ifdef OUTPUT_OBS_MAGS           
+        add_interpolated_luminosities(bulge_mass_, bulge_met_index_, bulge_f_met_1_, bulge_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_obs_, &ObsLumBulge_, &ObsYLumBulge_, is_affected_by_birthclould_);
+#ifdef OUTPUT_MOMAF_INPUTS   
+        add_interpolated_luminosities(bulge_mass_, bulge_met_index_, bulge_f_met_1_, bulge_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_dobs_, &dObsLumBulge_, &dObsYLumBulge_, is_affected_by_birthclould_);
+#ifdef KITZBICHLER       
+        add_interpolated_luminosities(bulge_mass_, bulge_met_index_, bulge_f_met_1_, bulge_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_dobs_forward_, &dObsLumBulge_forward_, &dObsYLumBulge_forward_, is_affected_by_birthclould_);
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_OBS_MAGS */
+      }
+
+#ifdef ICL
+      if(icm_mass_ > 0.)
+      {
+        if(MetallicityOption == 0)
+        { icm_met_index_   = 4;   icm_f_met_1_ = 1.;   icm_f_met_2_ = 0.; }
+        else if(metals_total(galaxy_->sfh_MetalsICMMass [sfh_bin_number_]) <= 0.)
+        { icm_met_index_   = 0;   icm_f_met_1_ = 1.;   icm_f_met_2_ = 0.; }
+        else
+        {
+          const double log10_icm_metal_fraction_   = log10(metals_total(galaxy_->sfh_MetalsICM      [sfh_bin_number_]) / galaxy_->sfh_ICM      [sfh_bin_number_]);
+          find_metallicity_luminosity_interpolation_parameters(log10_icm_metal_fraction_  , icm_met_index_  , icm_f_met_1_  , icm_f_met_2_  );
+        }
+        
+#ifdef OUTPUT_REST_MAGS
+        add_interpolated_luminosities(icm_mass_, icm_met_index_, icm_f_met_1_, icm_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_, &LumICL_, &YLumICL_dummy_, false);
+#endif /* defined OUTPUT_REST_MAGS */     
+#ifdef OUTPUT_OBS_MAGS           
+        add_interpolated_luminosities(icm_mass_, icm_met_index_, icm_f_met_1_, icm_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_obs_, &ObsLumICL_, &YLumICL_dummy_, false);
+#ifdef OUTPUT_MOMAF_INPUTS   
+        add_interpolated_luminosities(icm_mass_, icm_met_index_, icm_f_met_1_, icm_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_dobs_, &dObsLumICL_, &YLumICL_dummy_, false);
+#ifdef KITZBICHLER       
+        add_interpolated_luminosities(icm_mass_, icm_met_index_, icm_f_met_1_, icm_f_met_2_,
+                                                        age_index_,      f_age_1_,      f_age_2_, 
+                                                    redshift_index_dobs_forward_, &dObsLumICL_forward_, &YLumICL_dummy_, false);
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined OUTPUT_OBS_MAGS */
+      }
+#endif /* defined ICL */ 
+   
+#ifdef OUTPUT_REST_MAGS
+      galaxy_->rbandWeightAge += (age_ * (LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_] - previous_r_band_luminosity_));
+      previous_r_band_luminosity_ = LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_];
+#endif /* defined OUTPUT_REST_MAGS */
+
+#if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
     }
-#endif /* defined OUTPUT_REST_MAGS */
-
+#endif /* defined N_FINE_AGE_BINS > 1 */
+  }
+  
 #ifdef OUTPUT_REST_MAGS
-    galaxy_->Mag                 [filter_number_] = lum_to_lum_or_mag(LumDisk_ + LumBulge_);
-    galaxy_->MagBulge            [filter_number_] = lum_to_lum_or_mag(LumBulge_);
+  if(LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_] > 0.)
+  { 
+    galaxy_->rbandWeightAge /= LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_];
+    galaxy_->rbandWeightAge *= UnitTime_in_Megayears / Hubble_h / 1000.; //conversion in age_ from code units/h -> Gyr
+  }
+#endif /* defined OUTPUT_REST_MAGS */    
+  
+  int i_;
+#ifdef OUTPUT_REST_MAGS
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->Mag     [i_] = lum_to_lum_or_mag(LumBulge_[i_] + LumDisk_[i_]); }
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagBulge[i_] = lum_to_lum_or_mag(LumBulge_[i_]               ); }
 #ifdef ICL
-    galaxy_->MagICL              [filter_number_] = lum_to_lum_or_mag(LumICL_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagICL  [i_] = lum_to_lum_or_mag(LumICL_  [i_]               ); }
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef COMPUTE_OBS_MAGS
-    galaxy_->ObsMag              [filter_number_] = lum_to_lum_or_mag(ObsLumDisk_ + ObsLumBulge_);
-    galaxy_->ObsMagBulge         [filter_number_] = lum_to_lum_or_mag(ObsLumBulge_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMag     [i_] = lum_to_lum_or_mag(ObsLumBulge_[i_] + ObsLumDisk_[i_]); }
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagBulge[i_] = lum_to_lum_or_mag(ObsLumBulge_[i_]                  ); }
 #ifdef ICL
-    galaxy_->ObsMagICL           [filter_number_] = lum_to_lum_or_mag(ObsLumICL_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagICL  [i_] = lum_to_lum_or_mag(ObsLumICL_  [i_]                  ); }
 #endif /* defined ICL */
-
 #ifdef OUTPUT_MOMAF_INPUTS
-    galaxy_->dObsMag             [filter_number_] = lum_to_lum_or_mag(dObsLumDisk_ + dObsLumBulge_);
-    galaxy_->dObsMagBulge        [filter_number_] = lum_to_lum_or_mag(dObsLumBulge_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMag     [i_] = lum_to_lum_or_mag(dObsLumBulge_[i_] + dObsLumDisk_[i_]); }
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagBulge[i_] = lum_to_lum_or_mag(dObsLumBulge_[i_]                   ); }
 #ifdef ICL
-    galaxy_->dObsMagICL          [filter_number_] = lum_to_lum_or_mag(dObsLumICL_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagICL  [i_] = lum_to_lum_or_mag(dObsLumICL_  [i_]                   ); }
 #endif /* defined ICL */
 #ifdef KITZBICHLER
-    galaxy_->dObsMag_forward     [filter_number_] = lum_to_lum_or_mag(dObsLumDisk_forward_ + dObsLumBulge_forward_);
-    galaxy_->dObsMagBulge_forward[filter_number_] = lum_to_lum_or_mag(dObsLumBulge_forward_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMag_forward     [i_] = lum_to_lum_or_mag(dObsLumBulge_forward_[i_] + dObsLumDisk_forward_[i_]); }
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagBulge_forward[i_] = lum_to_lum_or_mag(dObsLumBulge_forward_[i_]                           ); }
 #ifdef ICL
-    galaxy_->dObsMagICL_forward  [filter_number_] = lum_to_lum_or_mag(dObsLumICL_forward_);
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagICL_forward  [i_] = lum_to_lum_or_mag(dObsLumICL_forward_  [i_]                           ); }
 #endif /* defined ICL */
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined COMPUTE_OBS_MAGS */
 
-    /* inclination is needed for disk dust correction,
-     * but not sure, inclination shouldn't already be computed elsewhere */
-    galaxy_->CosInclination = fabs(galaxy_->StellarSpin[2]) /
-        sqrt(galaxy_->StellarSpin[0] * galaxy_->StellarSpin[0] +
-             galaxy_->StellarSpin[1] * galaxy_->StellarSpin[1] +
-             galaxy_->StellarSpin[2] * galaxy_->StellarSpin[2]);
-                                          
-    /* dust correction for disk (remove light from dust and young stars absorbed by birth clouds) */
-    if(galaxy_->ColdGas > 0.0)
-      make_dust_correction_for_disk_luminosities(filter_number_, galaxy_->SnapNum, Z_g_, galaxy_->ColdGas, galaxy_->GasDiskRadius, galaxy_->CosInclination
-#ifdef OUTPUT_REST_MAGS
-                                               , &LumDisk_            , YLumDisk_
-#endif /* defined OUTPUT_REST_MAGS */
-#ifdef COMPUTE_OBS_MAGS
-                                               , &ObsLumDisk_         , ObsYLumDisk_
-#ifdef OUTPUT_MOMAF_INPUTS
-                                               , &dObsLumDisk_        , dObsYLumDisk_
-#ifdef KITZBICHLER
-                                               , &dObsLumDisk_forward_, dObsYLumDisk_forward_
-#endif /* defined KITZBICHLER */
-#endif /* defined OUTPUT_MOMAF_INPUTS */
-#endif /* defined COMPUTE_OBS_MAGS */
-                                                );
+  /* inclination is needed for disk dust correction,
+   * but not sure, inclination shouldn't already be computed elsewhere */
+  galaxy_->CosInclination = fabs(galaxy_->StellarSpin[2]) / sqrt(galaxy_->StellarSpin[0]*galaxy_->StellarSpin[0]+
+                                                                 galaxy_->StellarSpin[1]*galaxy_->StellarSpin[1]+
+                                                                 galaxy_->StellarSpin[2]*galaxy_->StellarSpin[2]);
 
-    /* dust correction for bulges (remove light from young stars absorbed by birth clouds) */
+  /* Dust correction for disks (Inter-stellar Medium  + birth clouds) */
+  if(galaxy_->ColdGas > 0.0)
+  {
+    make_dust_correction_for_post_processing(galaxy_->SnapNum, Z_g_, galaxy_->ColdGas, galaxy_->GasDiskRadius, galaxy_->CosInclination
 #ifdef OUTPUT_REST_MAGS
-    LumBulge_             -= YLumBulge_             * (1. - ExpTauBCBulge);
+                                           , &LumDisk_            , YLumDisk_           
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef COMPUTE_OBS_MAGS
-    ObsLumBulge_          -= ObsYLumBulge_          * (1. - ExpTauBCBulge);
+                                           , &ObsLumDisk_         , ObsYLumDisk_        
 #ifdef OUTPUT_MOMAF_INPUTS
-    dObsLumBulge_         -= dObsYLumBulge_         * (1. - ExpTauBCBulge);
+                                           , &dObsLumDisk_        , dObsYLumDisk_       
 #ifdef KITZBICHLER
-    dObsLumBulge_forward_ -= dObsYLumBulge_forward_ * (1. - ExpTauBCBulge);
+                                           , &dObsLumDisk_forward_, dObsYLumDisk_forward_
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined COMPUTE_OBS_MAGS */
+                                            );
+  }
 
+   /* dust correction for bulges (only remove light from young stars absorbed by birth clouds) */
 #ifdef OUTPUT_REST_MAGS
-    galaxy_->MagDust            [filter_number_] = lum_to_lum_or_mag(LumDisk_+LumBulge_);
+  for(i_= 0; i_ < NMAG; i_++) { LumBulge_            [i_] -= YLumBulge_            [i_] * (1. - ExpTauBCBulge); }
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef COMPUTE_OBS_MAGS
-    galaxy_->ObsMagDust         [filter_number_] = lum_to_lum_or_mag(ObsLumDisk_+ObsLumBulge_);
+  for(i_= 0; i_ < NMAG; i_++) { ObsLumBulge_         [i_] -= ObsYLumBulge_         [i_] * (1. - ExpTauBCBulge); }
 #ifdef OUTPUT_MOMAF_INPUTS
-    galaxy_->dObsMagDust        [filter_number_] = lum_to_lum_or_mag(dObsLumDisk_+dObsLumBulge_);
+  for(i_= 0; i_ < NMAG; i_++) { dObsLumBulge_        [i_] -= dObsYLumBulge_        [i_] * (1. - ExpTauBCBulge); }
 #ifdef KITZBICHLER
-    galaxy_->dObsMagDust_forward[filter_number_] = lum_to_lum_or_mag(dObsLumDisk_forward_+dObsLumBulge_forward_);
+  for(i_= 0; i_ < NMAG; i_++) { dObsLumBulge_forward_[i_] -= dObsYLumBulge_forward_[i_] * (1. - ExpTauBCBulge); }
 #endif /* defined KITZBICHLER */
 #endif /* defined OUTPUT_MOMAF_INPUTS */
 #endif /* defined COMPUTE_OBS_MAGS */
-  }//end of loop on bands
+                                         
+#ifdef OUTPUT_REST_MAGS
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagDust             [i_] = lum_to_lum_or_mag(LumBulge_            [i_] + LumDisk_            [i_]); }
+#endif /* defined OUTPUT_REST_MAGS */                        
+#ifdef COMPUTE_OBS_MAGS                                      
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagDust          [i_] = lum_to_lum_or_mag(ObsLumBulge_         [i_] + ObsLumDisk_         [i_]); }
+#ifdef OUTPUT_MOMAF_INPUTS                                   
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagDust         [i_] = lum_to_lum_or_mag(dObsLumBulge_        [i_] + dObsLumDisk_        [i_]); }
+#ifdef KITZBICHLER                                           
+  for(i_= 0; i_ < NMAG; i_++) { galaxy_->dObsMagDust_forward [i_] = lum_to_lum_or_mag(dObsLumBulge_forward_[i_] + dObsLumDisk_forward_[i_]); }
+#endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined COMPUTE_OBS_MAGS */
 }

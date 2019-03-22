@@ -714,7 +714,8 @@ int find_initial_metallicity_comp(int Zi, int sfh_bin, int table_type)
 	return Zi_bin;
 }
 
-int find_initial_mass(double lifetime, int Zi_bin)
+
+int find_initial_mass(const double lifetime, const int Zi_bin)
 {
     if (lifetime == 0.0) return LIFETIME_MASS_NUM-1; //If the bin 'touches now', then return max mass (ie: star of shortest lifetime) ie: bin for 120Msun
     else if (lifetime > lifetimes[Zi_bin][0]) return 0; //If true lifetime is longer than max lifetime in table (shouldn't be), then return element number 0
@@ -781,7 +782,7 @@ int max_Mi_lower(int Mi_lower, int channel_type)
 		}
 }
 
-int min_Mi_upper(int Mi_upper, int channel_type)
+int min_Mi_upper(const int Mi_upper, const int channel_type)
 {
 	switch (channel_type)
 		{
@@ -825,7 +826,7 @@ int min_Mi_upper(int Mi_upper, int channel_type)
 		}
 }
 
-int find_SNII_mass_bin(double masslimit)
+int find_SNII_mass_bin(const double masslimit)
 {
     if (masslimit == SNII_MAX_MASS) return SNII_MASS_NUM-1;
     else
@@ -848,7 +849,7 @@ int find_SNII_mass_bin(double masslimit)
     }
 }
 
-int find_agb_mass_bin(double masslimit)
+int find_agb_mass_bin(const double masslimit)
 {
 	if (masslimit == AGB_MAX_MASS) return AGB_MASS_NUM-1;
 	else
@@ -872,7 +873,7 @@ int find_agb_mass_bin(double masslimit)
 }
 
 #ifdef DTD
-double DTDcalc (double timevalue)
+double DTDcalc (const double timevalue)
 {
 #ifdef BIMODALDTD
 	double timevalueM, DTDvalueM;
@@ -936,11 +937,11 @@ double DTDcalc (double timevalue)
 #endif
 
 #ifdef INDIVIDUAL_ELEMENTS
-void find_actual_ejecta_limits(int channel_type, double Mi_lower_actual, double Mi_upper_actual, int Mi_lower, int Mi_upper, int Zi,
+void find_actual_ejecta_limits(const int channel_type, const double Mi_lower_actual, const double Mi_upper_actual, const int Mi_lower, const int Mi_upper, const int Zi,
 		double* EjectedMasses_lower_actual, double* EjectedMasses_upper_actual, double* TotalMetals_lower_actual, double* TotalMetals_upper_actual,
 		double* Yields_lower_actual, double* Yields_upper_actual)
 #else
-void find_actual_ejecta_limits(int channel_type, double Mi_lower_actual, double Mi_upper_actual, int Mi_lower, int Mi_upper, int Zi,
+void find_actual_ejecta_limits(const int channel_type, const double Mi_lower_actual, const double Mi_upper_actual, const int Mi_lower, const int Mi_upper, const int Zi,
 		double* EjectedMasses_lower_actual, double* EjectedMasses_upper_actual, double* TotalMetals_lower_actual, double* TotalMetals_upper_actual)
 #endif
 {

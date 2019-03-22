@@ -23,8 +23,6 @@
 #include "proto.h"
 
 
-
-
 static char quadrants[24][2][2][2] = {
   /* rotx=0, roty=0-3 */
   {{{0, 7}, {1, 6}}, {{3, 4}, {2, 5}}},
@@ -73,7 +71,7 @@ static char roty_table[8] = { 0, 1, 1, 2, 2, 3, 3, 0 };
 static char sense_table[8] = { -1, -1, -1, +1, +1, -1, -1, -1 };
 
 
-int peano_hilbert_key(int x, int y, int z, int bits)
+int peano_hilbert_key(const int x, const int y, const int z, const int bits)
 {
   int i, bitx, bity, bitz, mask, quad, rotation;
   char sense, rotx, roty;
@@ -85,32 +83,32 @@ int peano_hilbert_key(int x, int y, int z, int bits)
   sense = 1;
 
   for(i = 0; i < bits; i++, mask >>= 1)
+  {
+    bitx = (x & mask) ? 1 : 0;
+    bity = (y & mask) ? 1 : 0;
+    bitz = (z & mask) ? 1 : 0;
+
+    quad = quadrants[rotation][bitx][bity][bitz];
+
+    key <<= 3;
+    key += (sense == 1) ? (quad) : (7 - quad);
+
+    rotx = rotx_table[quad];
+    roty = roty_table[quad];
+    sense *= sense_table[quad];
+
+    while(rotx > 0)
     {
-      bitx = (x & mask) ? 1 : 0;
-      bity = (y & mask) ? 1 : 0;
-      bitz = (z & mask) ? 1 : 0;
-
-      quad = quadrants[rotation][bitx][bity][bitz];
-
-      key <<= 3;
-      key += (sense == 1) ? (quad) : (7 - quad);
-
-      rotx = rotx_table[quad];
-      roty = roty_table[quad];
-      sense *= sense_table[quad];
-
-      while(rotx > 0)
-	{
-	  rotation = rotxmap_table[rotation];
-	  rotx--;
-	}
-
-      while(roty > 0)
-	{
-	  rotation = rotymap_table[rotation];
-	  roty--;
-	}
+      rotation = rotxmap_table[rotation];
+      rotx--;
     }
+
+    while(roty > 0)
+    {
+      rotation = rotymap_table[rotation];
+      roty--;
+    }
+  }
 
   return key;
 }

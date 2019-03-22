@@ -101,63 +101,55 @@ void read_cooling_functions(void)
 }
 
 
-
-
-/* pass: log10(temperatue/Kelvin), log10(metallicity) */
-
-double get_metaldependent_cooling_rate(double logTemp, double logZ)
+static inline double 
+get_metaldependent_cooling_rate_temperature_part(const int tab, const double logTemp)
 {
-  int i;
-  double rate1, rate2, rate;
-
-
-  if(logZ < metallicities[0])
-    logZ = metallicities[0];
-
-  if(logZ > metallicities[7])
-    logZ = metallicities[7];
-
-  i = 0;
-  while(logZ > metallicities[i + 1])
-    {
-      i++;
-    }
-  /* look up at i and i+1 */
-
-
-  rate1 = get_rate(i, logTemp);
-  rate2 = get_rate(i + 1, logTemp);
-
-  rate = rate1 + (rate2 - rate1) / (metallicities[i + 1] - metallicities[i]) * (logZ - metallicities[i]);
-
-  return pow(10, rate);
+  if(logTemp <= 4.0)
+  {
+    return CoolRate[tab][0];
+  }
+  else if(logTemp >= 8.5)
+  {
+    return CoolRate[tab][90];
+  }
+  else
+  {
+    const int    index = 20. * (logTemp - 4.0);
+    const double x     = 20. * (logTemp - 4.0) - index;
+    return (1. - x) * CoolRate[tab][index] + x * CoolRate[tab][index + 1];
+  }
 }
 
 
-double get_rate(int tab, double logTemp)
+/** @brief compute metal dependent cooling rate
+ * 
+ *  @param [in] logTemp log10(temperatue/Kelvin)
+ *  @param [in] logZ    log10(metallicity) 
+ */
+double get_metaldependent_cooling_rate(const double logTemp, const double logZ)
 {
-  int index;
-  double rate1, rate2, rate, logTindex;
+  if(logZ <= metallicities[0])
+  {
+    return pow(10, get_metaldependent_cooling_rate_temperature_part(0, logTemp));
+  }
+  else if(logZ >= metallicities[7])
+  {
+    return pow(10, get_metaldependent_cooling_rate_temperature_part(7, logTemp));
+  }
+  else
+  {
+    int i = 0;
+    while(logZ > metallicities[i + 1]) ++i;
 
-
-  if(logTemp < 4.0)
-    logTemp = 4.0;
-
-  index = (logTemp - 4.0) / 0.05;
-  if(index >= 90)
-    index = 89;
-
-  logTindex = 4.0 + 0.05 * index;
-
-  rate1 = CoolRate[tab][index];
-  rate2 = CoolRate[tab][index + 1];
-
-  rate = rate1 + (rate2 - rate1) / (0.05) * (logTemp - logTindex);
-
-  return rate;
+    const double rate1 = get_metaldependent_cooling_rate_temperature_part(i    , logTemp);
+    const double rate2 = get_metaldependent_cooling_rate_temperature_part(i + 1, logTemp);
+ 
+    return pow(10, rate1 + (rate2 - rate1) * (logZ - metallicities[i]) / (metallicities[i + 1] - metallicities[i]));
+  }
 }
 
-void test(void)
+
+void test_metaldependent_cooling_rate(void)
 {
   double z;
 

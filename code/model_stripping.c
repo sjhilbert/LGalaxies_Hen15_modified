@@ -51,7 +51,7 @@
  *
  *         */
 
-void deal_with_satellites(int centralgal, int ngal)
+void deal_with_satellites(const int centralgal, const int ngal)
 {
   int i, merger_centre;
   double dis, gasfraction_intotype1, stripped_fraction;
@@ -227,11 +227,7 @@ void deal_with_satellites(int centralgal, int ngal)
   } /* End of HotGasStrippingModel choice */
 
    return;
-
 }
-
-
-
 
 
 /** Gradual stripping of hot and ejected gas from type 1 satellites. 
@@ -269,7 +265,7 @@ void deal_with_satellites(int centralgal, int ngal)
  *  \f$R_{\rm{strip}}=min(R_{\rm{tidal}},R_{\rm{r.p.}})\f$
  *
  * */
-double hot_retain_sat(int i, int centralgal)
+double hot_retain_sat(const int i, const int centralgal)
 {
   double hotremain;
   double R_Stripping, R_Tidal, R_RamPressure, R_Orbit, TotalMass_sat, Vorbit;

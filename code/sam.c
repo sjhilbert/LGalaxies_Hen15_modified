@@ -22,7 +22,7 @@
  * */
 
  /* own header for consistency: */
-#include "sam.h"
+// #include "sam.h"
  
  /* library headers: */
 #include <stdio.h>
@@ -47,17 +47,16 @@
 #endif /* defined MCMC */
 
 
-
 /**@brief SAM() loops on trees and calls construct_galaxies.*/
-double SAM(const int filenr)
+double SAM(const int tree_file_number_)
 {
-  int treenr, halonr;
-
 #ifdef MCMC
-  int ii;
   MCMC_GAL = mymalloc("MCMC_Gal", sizeof(struct MCMC_GALAXY) * MCMCAllocFactor);
-  for(ii=0;ii<NOUT;ii++)
-  { TotMCMCGals[ii] = 0; }
+  {
+    int output_number_;
+    for(output_number_ = 0; output_number_<NOUT; output_number_++)
+    { TotMCMCGals[output_number_] = 0; }
+  }
 
 #ifdef MR_PLUS_MRII
   change_dark_matter_sim("MR");
@@ -67,10 +66,10 @@ double SAM(const int filenr)
 #ifdef HALOMODEL
   else
   {
-    int snap, ii;
-    for(snap=0;snap<NOUT;snap++)
-      for(ii=0;ii<NFofsInSample[snap];ii++)
-        MCMC_FOF[ii].NGalsInFoF[snap]=0;
+    int output_number_, fof_number_;
+    for(output_number_=0;output_number_<NOUT;output_number_++)
+      for(fof_number_=0;fof_number_<NFofsInSample[output_number_];fof_number_++)
+        MCMC_FOF[fof_number_].NGalsInFoF[output_number_]=0;
   }
 #endif /* defined HALOMODEL */
 #endif /* not defined MR_PLUS_MRII */
@@ -83,70 +82,73 @@ double SAM(const int filenr)
 
 #ifndef LIGHTCONE_OUTPUT_ONLY
 #ifdef GALAXYTREE
-  create_galaxy_tree_file(filenr);
+  create_galaxy_tree_file(tree_file_number_);
 #else /* not defined GALAXYTREE */
-  create_galaxy_files(filenr);
+  create_galaxy_files(tree_file_number_);
 #endif /* not defined GALAXYTREE */
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */
   
 #ifdef LIGHTCONE_OUTPUT
-  create_lightcone_galaxy_files(filenr);
+  create_lightcone_galaxy_files(tree_file_number_);
 #endif /* defined LIGHTCONE_OUTPUT */ 
   
 #endif /* not defined MCMC */
   
 #ifndef LIGHTCONE_OUTPUT_ONLY
 #ifdef GALAXYTREE /* defined GALAXYTREE */
-  FILE *fdg = fopen("treengal.dat", "w");
+  FILE *tree_n_gal_file_ = fopen("treengal.dat", "w");
 #endif /* defined GALAXYTREE */
 #endif /* defined LIGHTCONE_OUTPUT */ 
 
 //***************************************************************************************
 //***************************************************************************************
 
-  //for(treenr = 0; treenr < NTrees_Switch_MR_MRII; treenr++)
-  for(treenr = 0; treenr < Ntrees; treenr++)
+  //for(tree_number_ = 0; tree_number_ < NTrees_Switch_MR_MRII; tree_number_++)
+  int tree_number_;  
+  for(tree_number_ = 0; tree_number_ < Ntrees; tree_number_++)
   {
-  //printf("doing tree %d of %d\n", treenr, Ntrees);
+  //printf("doing tree %d of %d\n", tree_number_, Ntrees);
 #ifdef MR_PLUS_MRII
-    if(treenr == NTrees_Switch_MR_MRII)
+    if(tree_number_ == NTrees_Switch_MR_MRII)
     { change_dark_matter_sim("MRII"); }
 #endif /* defined MR_PLUS_MRII */
 
-    load_tree(treenr);
+    load_tree(tree_number_);
 #ifdef MCMC
 #ifdef PRELOAD_TREES
     if(CurrentMCMCStep==1)
 #endif /* defined PRELOAD_TREES */
 #endif /* defined MCMC */
-    { scale_cosmology(TreeNHalos[treenr]); }
+    { scale_cosmology(TreeNHalos[tree_number_]); }
 
-    gsl_rng_set(random_generator, filenr * 100000 + treenr);
+    gsl_rng_set(random_generator, tree_file_number_ * 100000 + tree_number_);
     NumMergers = 0;
     NHaloGal = 0;
 #ifdef GALAXYTREE
     NGalTree = 0;
     IndexStored = 0;
 #endif/* defined GALAXYTREE */
-    int snapnum;
-    //LastSnapShotNr is the highest output snapshot
+
     /* we process the snapshots now in temporal order 
-      * (as a means to reduce peak memory usage) */
-    for(snapnum = 0; snapnum <= LastSnapShotNr; snapnum++)
+     * (as a means to reduce peak memory usage).
+     * LastSnapShotNr is the highest output snapshot. */
+    int snapshot_number_;
+    for(snapshot_number_ = 0; snapshot_number_ <= LastSnapShotNr; snapshot_number_++)
     {
 #ifdef MCMC
-      /* read the appropriate parameter list for current snapnum
+      /* read the appropriate parameter list for current snapshot_number_
        * into the parameter variables to be used in construct_galaxies */
-      read_mcmc_par(snapnum);
+      read_mcmc_par(snapshot_number_);
 #ifdef HALOMODEL
       //because we need halo masses even for FOFs
       //with no galaxies it needs to be done here
-      assign_FOF_masses(snapnum, treenr);
+      assign_FOF_masses(snapshot_number_, tree_number_);
 #endif /* defined HALOMODEL */
 #endif /* defined MCMC */
-      for(halonr = 0; halonr < TreeNHalos[treenr]; halonr++)
-        if(HaloAux[halonr].DoneFlag == 0 && Halo[halonr].SnapNum == snapnum)
-          construct_galaxies(treenr, halonr);
+      int halo_number_;
+      for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+        if( /* halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup && */ HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
+          construct_galaxies(tree_number_, halo_number_);
     }
 
     /* output remaining galaxies as needed */
@@ -155,29 +157,29 @@ double SAM(const int filenr)
 #ifdef LIGHTCONE_OUTPUT
       lightcone_N_galaxies_remaining_for_output_past_construct_galaxies++;
 #endif /* defined LIGHTCONE_OUTPUT */              
-      output_galaxy(treenr, 0);
+      output_galaxy(tree_number_, 0);
     }
 
 #ifndef MCMC
 #ifdef GALAXYTREE
     update_galaxy_tree_ids();
 #ifndef LIGHTCONE_OUTPUT_ONLY
-    save_galaxy_tree_finalize(filenr, treenr);
+    save_galaxy_tree_finalize(tree_file_number_, tree_number_);
 #endif /*not defined LIGHTCONE_OUTPUT_ONLY */
 #ifdef LIGHTCONE_OUTPUT
-    save_lightcone_galaxy_finalize(filenr, treenr);
+    save_lightcone_galaxy_finalize(tree_file_number_, tree_number_);
 #endif /* defined LIGHTCONE_OUTPUT */
    
 #ifndef PARALLEL
 #ifdef LIGHTCONE_OUTPUT
-    if((treenr/100)*100==treenr) printf("treenr=%d  TotGalCount=%d   TotLightconeGalCount=%lld\n", treenr, TotGalCount, TotLightconeGalCount);
+    if(0 == tree_number_ % 100) printf("tree_number_=%d  TotGalCount=%d   TotLightconeGalCount=%lld\n", tree_number_, TotGalCount, TotLightconeGalCount);
 #else /* not defined LIGHTCONE_OUTPUT */
-    if((treenr/100)*100==treenr) printf("treenr=%d  TotGalCount=%d\n", treenr, TotGalCount);
+    if(0 == tree_number_ % 100) printf("tree_number_=%d  TotGalCount=%d\n", tree_number_, TotGalCount);
 #endif /* not defined LIGHTCONE_OUTPUT */
 #endif /* note defined PARALLEL*/
     fflush(stdout);
 #ifndef LIGHTCONE_OUTPUT_ONLY
-    fprintf(fdg, "%d\n", NGalTree);
+    fprintf(tree_n_gal_file_, "%d\n", NGalTree);
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */
 #endif /* defined GALAXYTREE */
 #else /* defined MCMC */
@@ -186,7 +188,7 @@ double SAM(const int filenr)
   }//loop on trees
 
 #ifdef MCMC
-  double lhood = get_likelihood();
+  const double likelihood_ = get_likelihood();
 
 #ifdef MR_PLUS_MRII
   free(MCMC_FOF);
@@ -196,7 +198,7 @@ double SAM(const int filenr)
 #endif /* not defined MR_PLUS_MRII */
 
   myfree(MCMC_GAL);
-  return lhood;
+  return likelihood_;
 
 #else /* not defined MCMC */
 
@@ -227,27 +229,26 @@ double SAM(const int filenr)
   *
   *         When it finds a halo that needs to be done it calls
   *         join_galaxies_of_progenitors and evolve_galaxies. */
-void construct_galaxies(const int treenr, const int halonr)
+void construct_galaxies(const int tree_number_, const int halo_number_)
 {
-  static int halosdone = 0;
-  int prog, fofhalo, ngal, cenngal;
+  int progenitor_halo_number_, halo_in_fof_number_, ngal, cenngal;
   
 #ifdef LIGHTCONE_OUTPUT_ONLY
 #ifdef LIGHTCONE_MAY_SKIP_CONSTRUCT_GALAXY
   /* if halos is outside lightcone, don't construct, but return early */
-  if(is_outside_lightcone_for_snapshot[Halo[halonr].SnapNum])
+  if(is_outside_lightcone_for_snapshot[Halo[halo_number_].SnapNum])
   {
     lightcone_N_galaxies_skipped_construction++;
     return;  
   }
   
-  if(check_outside_lightcone_for_snapshot[Halo[halonr].SnapNum])
+  if(check_outside_lightcone_for_snapshot[Halo[halo_number_].SnapNum])
   {
-    float d_0_ = Halo[halonr].Pos[0] - lightcone_observer_position[0]; d_0_ = wrap(d_0_, BoxSize);
-    float d_1_ = Halo[halonr].Pos[1] - lightcone_observer_position[1]; d_1_ = wrap(d_1_, BoxSize);
-    float d_2_ = Halo[halonr].Pos[2] - lightcone_observer_position[2]; d_2_ = wrap(d_2_, BoxSize);
+    float d_0_ = Halo[halo_number_].Pos[0] - lightcone_observer_position[0]; d_0_ = wrap(d_0_, BoxSize);
+    float d_1_ = Halo[halo_number_].Pos[1] - lightcone_observer_position[1]; d_1_ = wrap(d_1_, BoxSize);
+    float d_2_ = Halo[halo_number_].Pos[2] - lightcone_observer_position[2]; d_2_ = wrap(d_2_, BoxSize);
 
-    if(d_0_ * d_0_ + d_1_ * d_1_ + d_2_ * d_2_ > pow2(lightcone_radius_for_snapshot[Halo[halonr].SnapNum]))
+    if(d_0_ * d_0_ + d_1_ * d_1_ + d_2_ * d_2_ > pow2(lightcone_radius_for_snapshot[Halo[halo_number_].SnapNum]))
     {
       lightcone_N_galaxies_skipped_construction++;
       return;
@@ -256,34 +257,39 @@ void construct_galaxies(const int treenr, const int halonr)
 #endif /* defined LIGHTCONE_MAY_SKIP_CONSTRUCT_GALAXY */
 #endif /* defined LIGHTCONE_OUTPUT_ONLY */
 
-  HaloAux[halonr].DoneFlag = 1;
-  halosdone++;
+  HaloAux[halo_number_].DoneFlag = 1;
 
-  prog = Halo[halonr].FirstProgenitor;
-
-  while(prog >= 0) //If halo has a progenitor
+  /* construct all galaxies in all progenitors of this halo (if not already done): */
+  progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor;
+  while(progenitor_halo_number_ >= 0) /* halo still has a progenitor to process */
   {
-    if(HaloAux[prog].DoneFlag == 0) //If progenitor hasn't been done yet
-    { construct_galaxies(treenr, prog); }
-    prog = Halo[prog].NextProgenitor;         //Jump to next halo in progenitors FOF
+    if(HaloAux[progenitor_halo_number_].DoneFlag == 0) /* progenitor hasn't been done yet */
+    { construct_galaxies(tree_number_, progenitor_halo_number_); }/* so construct progenitor's galaxies now */
+    progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor; /* on to next progenitor */
   }
 
-  //Now check for the progenitors of all the halos in the current FOF group
-  fofhalo = Halo[halonr].FirstHaloInFOFgroup;   //Starting at the first halo in current FOF
-  if(HaloAux[fofhalo].HaloFlag == 0)            //If it hasn't been done
+  /* Now construct all galaxies in all progenitors of all the halos in the
+   * current FOF group, unless laready done.
+   * First call to construct_galaxies for a halo of a fof group will construct
+   * all progenitors of all halos in the group. So, later calls to
+   * construct_galaxies for other halos of the same fof group will find that
+   * work already done. 
+   */
+  halo_in_fof_number_ = Halo[halo_number_].FirstHaloInFOFgroup;
+  if(HaloAux[halo_in_fof_number_].HaloFlag == 0) /* halo hasn't been done */
   {
-    HaloAux[fofhalo].HaloFlag = 1;            //mark as to do
-    while(fofhalo >= 0)       //go through all the halos in current FOF
+    HaloAux[halo_in_fof_number_].HaloFlag = 1;  /* mark as to do */
+    while(halo_in_fof_number_ >= 0)  /* fof still has a halo to process */
     {
-      prog = Halo[fofhalo].FirstProgenitor;
-      while(prog >= 0)              //build its progenitors
+      progenitor_halo_number_ = Halo[halo_in_fof_number_].FirstProgenitor;
+      while(progenitor_halo_number_ >= 0)              //build its progenitors
       {
-        if(HaloAux[prog].DoneFlag == 0)
-        { construct_galaxies(treenr, prog); }
-        prog = Halo[prog].NextProgenitor;
+        if(HaloAux[progenitor_halo_number_].DoneFlag == 0)
+        { construct_galaxies(tree_number_, progenitor_halo_number_); }
+        progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor;
       }
 
-      fofhalo = Halo[fofhalo].NextHaloInFOFgroup;   //Jump to next halo in FOF
+      halo_in_fof_number_ = Halo[halo_in_fof_number_].NextHaloInFOFgroup; /* on to next halo in FOF */
     }
   }
 
@@ -293,24 +299,24 @@ void construct_galaxies(const int treenr, const int halonr)
    * ahead and construct all galaxies for the subhalos in this FOF halo, and
    * evolve them in time. */
 
-  fofhalo = Halo[halonr].FirstHaloInFOFgroup;
-  if(HaloAux[fofhalo].HaloFlag == 1)            //If it is marked as an halo to do
+  halo_in_fof_number_ = Halo[halo_number_].FirstHaloInFOFgroup;
+  if(HaloAux[halo_in_fof_number_].HaloFlag == 1)            //If it is marked as an halo to do
   {
     ngal = 0;
-    HaloAux[fofhalo].HaloFlag = 2;
+    HaloAux[halo_in_fof_number_].HaloFlag = 2;
 
-    cenngal = get_merger_center(fofhalo);     //Find type 0 for type 1 to merge into
+    cenngal = get_merger_center(halo_in_fof_number_);     //Find type 0 for type 1 to merge into
 
     /*For all the halos in the current FOF join all the progenitor galaxies together
       * ngals will be the total number of galaxies in the current FOF*/
-    while(fofhalo >= 0)
+    while(halo_in_fof_number_ >= 0)
     {
-      ngal = join_galaxies_of_progenitors(fofhalo, ngal, &cenngal);
-      fofhalo = Halo[fofhalo].NextHaloInFOFgroup;
+      ngal = join_galaxies_of_progenitors(halo_in_fof_number_, ngal, &cenngal);
+      halo_in_fof_number_ = Halo[halo_in_fof_number_].NextHaloInFOFgroup;
     }
 
     /*Evolve the Galaxies -> SAM! */
-    evolve_galaxies(Halo[halonr].FirstHaloInFOFgroup, ngal, treenr, cenngal);
+    evolve_galaxies(Halo[halo_number_].FirstHaloInFOFgroup, ngal, tree_number_, cenngal);
 
     int p;
     for (p =0;p<ngal;p++)
@@ -335,62 +341,62 @@ void construct_galaxies(const int treenr, const int halonr)
  *         into a type 0 all its satellites will have the merging clock
  *         into the type 0 reset .
  * */
-int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cenngal)
+int join_galaxies_of_progenitors(const int halo_number_, const int ngalstart, int *cenngal)
 {
-  int ngal, i, j, prog, first_occupied, lenmax, centralgal, mostmassive;
+  int ngal, i, j, progenitor_halo_number_, first_occupied, lenmax, centralgal, mostmassive;
 
   /* When there is no galaxy in the Halo of FirstProgenitor, the first_occupied
    * pointer is changed to a subhalo which have the maximum mass (This should
    * only happen in the case that the leaf on the firstprogenitor branch occurs
    * as a subhalo, in that case no galaxy would be assigned to it). */
-  prog = Halo[halonr].FirstProgenitor;
-  first_occupied = Halo[halonr].FirstProgenitor;
+  progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor;
+  first_occupied = Halo[halo_number_].FirstProgenitor;
   lenmax = 0;
-  if(prog >= 0)                                 //If halo has progenitors
+  if(progenitor_halo_number_ >= 0)                                 //If halo has progenitors
   {
-    if(HaloAux[prog].NGalaxies == 0)          //if progenitor has no galaxies
-      while(prog >= 0)
+    if(HaloAux[progenitor_halo_number_].NGalaxies == 0)          //if progenitor has no galaxies
+      while(progenitor_halo_number_ >= 0)
       {
         int currentgal;
-        for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)
+        for(i = 0, currentgal = HaloAux[progenitor_halo_number_].FirstGalaxy; i < HaloAux[progenitor_halo_number_].NGalaxies; i++)
         {
           if(HaloGal[currentgal].Type == 0 || HaloGal[currentgal].Type == 1)
           {
-            if(Halo[prog].Len > lenmax)
+            if(Halo[progenitor_halo_number_].Len > lenmax)
             {
-              lenmax = Halo[prog].Len;
-              first_occupied = prog;          //define the new first_occupied
+              lenmax = Halo[progenitor_halo_number_].Len;
+              first_occupied = progenitor_halo_number_;          //define the new first_occupied
             }
           }
           currentgal = HaloGal[currentgal].NextGalaxy;
         }
-        prog = Halo[prog].NextProgenitor;
+        progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor;
       }
   }
    
   lenmax = 0;
-  prog = Halo[halonr].FirstProgenitor;
-  mostmassive = Halo[halonr].FirstProgenitor;
+  progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor;
+  mostmassive = Halo[halo_number_].FirstProgenitor;
 
   /* loop through all the progenitors and get the halo mass and ID
    * of the most massive*/
-  while(prog >= 0)
+  while(progenitor_halo_number_ >= 0)
   {
-    if(Halo[prog].Len > lenmax)
+    if(Halo[progenitor_halo_number_].Len > lenmax)
     {
-      lenmax = Halo[prog].Len;
-      mostmassive = prog;
+      lenmax = Halo[progenitor_halo_number_].Len;
+      mostmassive = progenitor_halo_number_;
     }
-    prog = Halo[prog].NextProgenitor;
+    progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor;
   }
 
   ngal = ngalstart;
-  prog = Halo[halonr].FirstProgenitor;
+  progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor;
 
-  while(prog >= 0)
+  while(progenitor_halo_number_ >= 0)
   {
     int currentgal;
-    for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)
+    for(i = 0, currentgal = HaloAux[progenitor_halo_number_].FirstGalaxy; i < HaloAux[progenitor_halo_number_].NGalaxies; i++)
     {
       if(ngal >= MaxGal)
       {
@@ -406,7 +412,7 @@ int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cen
         * except for those that need initialising */
       Gal[ngal] = HaloGal[currentgal];
 
-      Gal[ngal].HaloNr = halonr;
+      Gal[ngal].HaloNr = halo_number_;
       Gal[ngal].CoolingRadius = 0.0;
       Gal[ngal].CoolingGas = 0.0;
 
@@ -427,43 +433,43 @@ int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cen
       /* this deals with the central galaxies of subhalos */
       if(Gal[ngal].Type == 0 || Gal[ngal].Type == 1)
       {
-        if(prog == first_occupied)
+        if(progenitor_halo_number_ == first_occupied)
         {
 #ifdef HALOPROPERTIES
-          Gal[ngal].HaloM_Mean200 = Halo[halonr].M_Mean200;
-          Gal[ngal].HaloM_Crit200 = Halo[halonr].M_Crit200;
-          Gal[ngal].HaloM_TopHat = Halo[halonr].M_TopHat;
-          Gal[ngal].HaloVelDisp = Halo[halonr].VelDisp;
-          Gal[ngal].HaloVmax = Halo[halonr].Vmax;
+          Gal[ngal].HaloM_Mean200 = Halo[halo_number_].M_Mean200;
+          Gal[ngal].HaloM_Crit200 = Halo[halo_number_].M_Crit200;
+          Gal[ngal].HaloM_TopHat = Halo[halo_number_].M_TopHat;
+          Gal[ngal].HaloVelDisp = Halo[halo_number_].VelDisp;
+          Gal[ngal].HaloVmax = Halo[halo_number_].Vmax;
 #endif /* defined HALOPROPERTIES */
-          Gal[ngal].MostBoundID = Halo[halonr].MostBoundID;
+          Gal[ngal].MostBoundID = Halo[halo_number_].MostBoundID;
           for(j = 0; j < 3; j++)
           {
-            Gal[ngal].Pos[j] = Halo[halonr].Pos[j];
-            Gal[ngal].Vel[j] = Halo[halonr].Vel[j];
+            Gal[ngal].Pos[j] = Halo[halo_number_].Pos[j];
+            Gal[ngal].Vel[j] = Halo[halo_number_].Vel[j];
 #ifdef HALOPROPERTIES
-            Gal[ngal].HaloPos[j] = Halo[halonr].Pos[j];
-            Gal[ngal].HaloVel[j] = Halo[halonr].Vel[j];
+            Gal[ngal].HaloPos[j] = Halo[halo_number_].Pos[j];
+            Gal[ngal].HaloVel[j] = Halo[halo_number_].Vel[j];
 #endif /* defined HALOPROPERTIES */
           }
 
-          Gal[ngal].Len = Halo[halonr].Len;
+          Gal[ngal].Len = Halo[halo_number_].Len;
 
           // FOFCentralGal property in case that is different from FirstGalaxy
-          if(halonr == Halo[halonr].FirstHaloInFOFgroup)
-          { update_centralgal(ngal, halonr); }
+          if(halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup)
+          { update_centralgal(ngal, halo_number_); }
           else
-          { update_type_1(ngal, halonr, prog); }
+          { update_type_1(ngal, halo_number_, progenitor_halo_number_); }
 
           if(DiskRadiusModel == 1 || DiskRadiusModel == 2)
           {
-            Gal[ngal].GasDiskRadius     = get_disk_radius(halonr, ngal);
+            Gal[ngal].GasDiskRadius     = get_disk_radius(halo_number_, ngal);
             Gal[ngal].StellarDiskRadius = Gal[ngal].GasDiskRadius;
           }
-          Gal[ngal].Vmax = Halo[halonr].Vmax;
+          Gal[ngal].Vmax = Halo[halo_number_].Vmax;
         }
         else //type 2 galaxies
-        { update_type_2(ngal, halonr, prog, mostmassive); }
+        { update_type_2(ngal, halo_number_, progenitor_halo_number_, mostmassive); }
       }
 
       /* Note: Galaxies that are already type=2 do not need a special treatment at this point */
@@ -473,7 +479,7 @@ int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cen
       ngal++;
       currentgal = HaloGal[currentgal].NextGalaxy;
     }
-    prog = Halo[prog].NextProgenitor;
+    progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor;
   }
 
   /* If there are no progenitors with galaxies, a new galaxy is created.
@@ -482,9 +488,9 @@ int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cen
   if(ngal == 0)
   {
     *cenngal=0;
-    if(Halo[halonr].FirstHaloInFOFgroup == halonr)
+    if(Halo[halo_number_].FirstHaloInFOFgroup == halo_number_)
     {
-      init_galaxy(ngal, halonr);
+      init_galaxy(ngal, halo_number_);
       ngal++;
     }
   }
@@ -544,9 +550,9 @@ int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cen
   *        All these calculations are done in time steps of 1/STEPS the time
   *        between each snapshot (STEPS=20).
   * 
-  * Note: halonr is here the FOF-background subhalo (i.e. main halo) 
+  * Note: halo_number_ is here the FOF-background subhalo (i.e. main halo) 
   */
-void evolve_galaxies(const int halonr, const int ngal, const int treenr, const int cenngal)
+void evolve_galaxies(const int halo_number_, const int ngal, const int tree_number_, const int cenngal)
 {
   int p, q, nstep, centralgal, merger_centralgal, currenthalo, prevgal, /* start,*/ i;
   double infallingGas, deltaT, Zcurr;
@@ -561,22 +567,22 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
 //   const double t_Edd=1.42e16*Hubble_h/UnitTime_in_s;
 
   //previoustime = NumToTime(Gal[0].SnapNum);
-  previoustime = NumToTime(Halo[halonr].SnapNum-1);
-  newtime = NumToTime(Halo[halonr].SnapNum);
+  previoustime = NumToTime(Halo[halo_number_].SnapNum-1);
+  newtime = NumToTime(Halo[halo_number_].SnapNum);
 
   /* Time between snapshots */
   deltaT = previoustime - newtime;
   /* Redshift of current Snapnum */
-  Zcurr = ZZ[Halo[halonr].SnapNum];
+  Zcurr = ZZ[Halo[halo_number_].SnapNum];
 
   centralgal = Gal[0].CentralGal;
 
   for (p =0;p<ngal;p++)
   { mass_checks("Evolve_galaxies #0",p); }
 
-  //print_galaxy("\n\ncheck1", centralgal, halonr);
+  //print_galaxy("\n\ncheck1", centralgal, halo_number_);
 
-  if(Gal[centralgal].Type != 0 || Gal[centralgal].HaloNr != halonr)
+  if(Gal[centralgal].Type != 0 || Gal[centralgal].HaloNr != halo_number_)
   { terminate("Something wrong here ..... \n"); }
 
   /* Update all galaxies to same star-formation history time-bins.
@@ -585,7 +591,7 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
   age_in_years=(Age[0]-previoustime)*UnitTime_in_years/Hubble_h; //ROB: age_in_years is in units of "real years"!
   nstep=0;
   for (p=0; p<ngal; p++)
-  { sfh_update_bins(p,Halo[halonr].SnapNum-1,nstep,age_in_years); }
+  { sfh_update_bins(p,Halo[halo_number_].SnapNum-1,nstep,age_in_years); }
 #endif /* defined STAR_FORMATION_HISTORY */
 
   /* Handle the transfer of mass between satellites and central galaxies */
@@ -616,7 +622,7 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
 #ifdef STAR_FORMATION_HISTORY
     age_in_years=(Age[0]-time)*UnitTime_in_years/Hubble_h;
     for (p=0; p<ngal; p++)
-    { sfh_update_bins(p,Halo[halonr].SnapNum-1,nstep,age_in_years); }
+    { sfh_update_bins(p,Halo[halo_number_].SnapNum-1,nstep,age_in_years); }
 
 #endif /* defined STAR_FORMATION_HISTORY */
 
@@ -659,7 +665,7 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
       mass_checks("Evolve_galaxies #2",p);
       starformation(p, centralgal, time, deltaT / STEPS, nstep);
       mass_checks("Evolve_galaxies #3",p);
-      //print_galaxy("check3", centralgal, halonr);
+      //print_galaxy("check3", centralgal, halo_number_);
     }
 
     /* Check for merger events */
@@ -737,10 +743,10 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
   /* If this is an output snapshot apply the dust model to each galaxy */
   for(n = 0; n < NOUT; n++)
     {
-      if(Halo[halonr].SnapNum == ListOutputSnaps[n])
+      if(Halo[halo_number_].SnapNum == ListOutputSnaps[n])
       {
         for(p = 0; p < ngal; p++)
-        { dust_model(p, n, halonr); }
+        { dust_model(p, n, halo_number_); }
         break;
       }
     }
@@ -748,23 +754,24 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   /* now save the galaxies of all the progenitors (and free the associated storage) */
-  int prog = Halo[halonr].FirstProgenitor;
+  int progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor;
 
-  while(prog >= 0)
+  while(progenitor_halo_number_ >= 0)
   {
     int currentgal;
-    for(i = 0, currentgal = HaloAux[prog].FirstGalaxy; i < HaloAux[prog].NGalaxies; i++)
+    for(i = 0, currentgal = HaloAux[progenitor_halo_number_].FirstGalaxy; i < HaloAux[progenitor_halo_number_].NGalaxies; i++)
     {
       int nextgal = HaloGal[currentgal].NextGalaxy;
       /* this will write this galaxy to an output file and free the storage associate with it */
-      output_galaxy(treenr, HaloGal[currentgal].HeapIndex);
+      output_galaxy(tree_number_, HaloGal[currentgal].HeapIndex);
       currentgal = nextgal;
     }
-    prog = Halo[prog].NextProgenitor;
+    progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor;
   }
     
   /** @todo check why start was set here, and why it was set to start = NGalTree */
-  for(p = 0, prevgal = -1, currenthalo = -1, centralgal = -1 /*, start = NGalTree */; p < ngal; p++)
+  int start = NGalTree;
+  for(p = 0, prevgal = -1, currenthalo = -1, centralgal = -1; p < ngal; p++)
   {
     if(Gal[p].HaloNr != currenthalo)
     {
@@ -794,7 +801,7 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
 
 #ifndef GUO10
 #ifdef UPDATETYPETWO
-      update_type_two_coordinate_and_velocity(treenr, p, Gal[0].CentralGal);
+      update_type_two_coordinate_and_velocity(tree_number_, p, Gal[0].CentralGal);
 #endif /* defined UPDATETYPETWO */
 #endif /* not defined GUO10 */
 
@@ -840,19 +847,11 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
   }
 
 #ifdef GALAXYTREE
-/** @bug  possible BUG: start was set to start = NGalTree above,
- *        start seemed to be never updated after that, and below, 
- *        start is used to init loop with p = start and termination p < NGalTree,
- *        so the loop seems to never run.
- *        now I put  start = NGalTree here to reproduce current (buggy?) behaviour
- */
-    int start = NGalTree;
-    for(p = start; p < NGalTree; p++)
-    {
-      if(centralgal < 0)
-      { terminate("centralgal < 0"); }
-      GalTree[p].FOFCentralGal = centralgal;
-    }
+  if(centralgal < 0)
+  { terminate("centralgal < 0, i.e. did not find central galaxy"); }
+
+  for(p = start; p < NGalTree; p++)
+  { GalTree[p].FOFCentralGal = centralgal; }
 #endif /* defined GALAXYTREE */
 
   report_memory_usage(&HighMark, "evolve_galaxies");
@@ -866,9 +865,9 @@ void evolve_galaxies(const int halonr, const int ngal, const int treenr, const i
  *  on disk,
  *  after writing, pops galaxy from heap (temporary memory)
  */
-void output_galaxy(const int treenr, const int heap_index)
+void output_galaxy(const int tree_number_, const int heap_index)
 {
-  (void) treenr; /* avoid unused-parameter warning for certain compiler options */
+  (void) tree_number_; /* avoid unused-parameter warning for certain compiler options */
   int gal_index = HaloGalHeap[heap_index];
 
   if(heap_index >= NHaloGal)
@@ -879,7 +878,7 @@ void output_galaxy(const int treenr, const int heap_index)
 
 #ifdef GUO10
 #ifdef UPDATETYPETWO
-  update_type_two_coordinate_and_velocity(treenr, gal_index, HaloGal[0].CentralGal);
+  update_type_two_coordinate_and_velocity(tree_number_, gal_index, HaloGal[0].CentralGal);
 #endif
 #endif
 
@@ -903,7 +902,7 @@ void output_galaxy(const int treenr, const int heap_index)
     for(n = 0; n < NOUT; n++)
       if(ListOutputSnaps[n] == HaloGal[gal_index].SnapNum)
       {
-        save_galaxy_append(treenr, gal_index, n);
+        save_galaxy_append(tree_number_, gal_index, n);
       }
   }
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */

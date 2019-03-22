@@ -24,7 +24,7 @@
 #ifdef GALAXYTREE
 
 /** @brief create galaxy output files for galaxy trees */
-void create_galaxy_tree_file(int filenr)
+void create_galaxy_tree_file(const int filenr)
 {
   char buf[1000];
 
@@ -140,7 +140,7 @@ void update_galaxy_tree_ids(void)
 
 
 /** @brief updates galaxy ids (GalID, FirstProgGal, etc.) in galaxy output files  */
-void save_galaxy_tree_finalize(int filenr, int tree)
+void save_galaxy_tree_finalize(const int filenr, const int tree)
 {
   int i;
   struct GALAXY_OUTPUT galaxy_output;
@@ -177,7 +177,7 @@ void save_galaxy_tree_finalize(int filenr, int tree)
 
 
 /** @brief updates galaxy ids (GalID, FirstProgGal, etc.) for a galaxy in memory */
-void prepare_galaxy_tree_info_for_output(int filenr, int tree, struct galaxy_tree_data *g, struct GALAXY_OUTPUT *o)
+void prepare_galaxy_tree_info_for_output(const int filenr, const int tree, const struct galaxy_tree_data *g, struct GALAXY_OUTPUT *o)
 {
   long long big = calc_big_db_offset(filenr, tree);
 
@@ -230,7 +230,7 @@ void prepare_galaxy_tree_info_for_output(int filenr, int tree, struct galaxy_tre
 
 
 /** @brief walks galaxy tree to compute foreign gal ID keys */
-int walk_galaxy_tree(int nr)
+int walk_galaxy_tree(const int nr)
 {
   int last;
 

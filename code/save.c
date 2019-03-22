@@ -46,12 +46,6 @@
  *        TotGalaxies[n] (int); and the number of galaxies on each tree
  *        on the current snapshot -> TreeNgals[n] (int*Ntrees).
  *
- *        If USE_MEMORY_TO_MINIMIZE_IO ON, finalize_galaxy_file also copies
- *        the galaxy data stored in pointers into the output files, so that
- *        it is all done in one go for a given file. This is done using either
- *        write_galaxy_data_snap (for SNAP output), write_all_galaxy_data
- *        (for GALAXYTREE option) or write_galaxy_for_momaf (for MOMAF option).
- *
  *        If UPDATETYPE2 is defined, the positions of type 2 galaxies
  *        (satellites without a dark matter halo) will be updated before
  *        output to contain the subsequent positions of the most bound dark
@@ -59,7 +53,7 @@
  *        */
 
  /** @brief create galaxy output files for redshifts */
-void create_galaxy_files(int filenr)
+void create_galaxy_files(const int filenr)
 {
   // create output files - snapshot option
   int n, i;
@@ -114,7 +108,7 @@ void close_galaxy_files(void)
  *        routine copy the galaxy data from the working structures into
  *        pointers until that has been done for all the tree in a given file.
  */
-void save_galaxy_append(int tree, int i, int n)
+void save_galaxy_append(const int tree, const int i, const int n)
 {
   struct GALAXY_OUTPUT galaxy_output;
 
@@ -128,7 +122,7 @@ void save_galaxy_append(int tree, int i, int n)
 
  /** @brief Copies all the relevant properties from the Galaxy structure
         into the Galaxy output structure, some units are corrected.*/
-void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
+void prepare_galaxy_for_output(const int n, const struct GALAXY *g, struct GALAXY_OUTPUT *o)
 {
   int j;
 
@@ -377,7 +371,6 @@ void prepare_galaxy_for_output(int n, struct GALAXY *g, struct GALAXY_OUTPUT *o)
 #endif /* defined ICL */
   }
 
-
 #endif  /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
 #ifdef COMPUTE_OBS_MAGS
@@ -507,7 +500,7 @@ void fix_units_for_ouput(struct GALAXY_OUTPUT *o)
 
 
 /** @brief calculated galaxy ID offset from file and tree no. */
-long long calc_big_db_offset(int filenr, int treenr)
+long long calc_big_db_offset(const int filenr, const int treenr)
 {
   long long big;
 #ifdef MRII
@@ -520,7 +513,7 @@ long long calc_big_db_offset(int filenr, int treenr)
 
 
 /** @brief calculated subhalo ID offset from file and tree no. */
-long long calc_big_db_subid_index(int snapnum, int filenr, int subhaloindex)
+long long calc_big_db_subid_index(const int snapnum, const int filenr, const int subhaloindex)
 {
   long long big;
 #ifdef MRII

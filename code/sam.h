@@ -30,7 +30,7 @@ void construct_galaxies(const int treenr, const int halonr);
 
 /** @brief updates the properties of the galaxy from the dark matter halo
  *  properties and deals with merging clocks. */
-int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cenngal)
+int join_galaxies_of_progenitors(const int halonr, const int ngalstart, int *cenngal);
 
 
 /** @brief evolve_galaxies() deals with most of the SA recipes.

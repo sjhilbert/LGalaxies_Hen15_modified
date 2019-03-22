@@ -96,8 +96,10 @@ size_t AllocatedBytes;
 size_t HighMarkBytes;
 size_t FreeBytes;
 
-int ThisTask, NTask;
 
+#ifdef PARALLEL
+int ThisTask, NTask;
+#endif /* defined PARALLEL */
 
 #ifdef GALAXYTREE
 int GalCount;
@@ -195,6 +197,7 @@ double UnitTime_in_s,
 int ListOutputSnaps[NOUT];
 float ListOutputRedshifts[NOUT];
 
+int ListOutputNumberOfSnapshot[MAXSNAPS];
 
 double ZZ[MAXSNAPS];
 double AA[MAXSNAPS];
@@ -236,6 +239,9 @@ float FilterLambda[NMAG+1];	//wavelength of each filter + 1 for V-band
 int NLambdaFilter[NMAG];
 #endif
 
+//for speeding up lookup in table: 
+int SSP_log_age_jump_table[SSP_NJUMPTAB];
+double SSP_log_age_jump_factor;
 
 // dust
 long mu_seed;
@@ -264,7 +270,8 @@ size_t offset_galsnapdata[NOUT], maxstorage_galsnapdata[NOUT], filled_galsnapdat
 #endif
 
 /* reionization Okamoto et al. 2008*/
-float Reion_z[46],Reion_Mc[46];
+float Reion_z[N_REION_Z];
+float Reion_log10_Mc[N_REION_Z];
 
 FILE *tree_file;
 FILE *treeaux_file;

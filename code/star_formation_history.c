@@ -86,7 +86,7 @@
 #include "allvars.h"
 #include "proto.h"
 
-void sfh_initialise(int p)
+void sfh_initialise(const int p)
 {
   /* Initialises the sfh-variables for a galaxy */
   int i;
@@ -121,7 +121,7 @@ void sfh_initialise(int p)
   Gal[p].sfh_age=0.;
 }
 
-void sfh_merge(int p, int p1)
+void sfh_merge(const int p, const int p1)
 {
   /* Merge galaxy p1 into galaxy p */
   int i;
@@ -168,7 +168,8 @@ void sfh_merge(int p, int p1)
 
 }
 
-void sfh_print(int p) {
+void sfh_print(const int p)
+{
   /* Prints out populated sfh_structure.
    * Does sum of Disk + Bulge only. */
   int i;
@@ -238,7 +239,7 @@ void create_sfh_bins()
       else {
               ibin+=1;
               if(ibin==SFH_NBIN)
-                      terminate("sfh_update_bins: too many bins required\n");
+              { terminate("sfh_update_bins: too many bins required\n"); }
               ibin_max=max(ibin_max,ibin);
               sfh_Nbins[ibin]=1;
               sfh_t[ibin]=time;

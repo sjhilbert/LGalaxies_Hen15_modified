@@ -108,7 +108,7 @@
 
 /** @brief Calculates the central galaxies for type 1's. */
 
-int get_merger_center(int fofhalo)
+int get_merger_center(const int fofhalo)
 {
   /** @brief Get id of central galaxy, since type 1's
    *         can have their merger clock started before they become type 2's
@@ -187,9 +187,9 @@ int get_merger_center(int fofhalo)
   return 0;
 }
 
-/** @brief Calculates the merging time whenever a galaxy becomes a satellite*/
 
-double estimate_merging_time(int halonr, int mother_halonr, int p)
+/** @brief Calculates the merging time whenever a galaxy becomes a satellite*/
+double estimate_merging_time(const int halonr, const int mother_halonr, const int p)
 {
   int central_halonr;
   double coulomb, mergtime, SatelliteMass, SatelliteRadius, MotherHaloRvir;
@@ -244,7 +244,7 @@ double estimate_merging_time(int halonr, int mother_halonr, int p)
 
 
 /** @brief Deals with all the physics triggered by mergers */
-void deal_with_galaxy_merger(int p, int merger_centralgal, int centralgal, double time, double deltaT, int nstep)
+void deal_with_galaxy_merger(const int p, const int merger_centralgal, const int centralgal, const double time, const double deltaT, const int nstep)
 {
 
 /** @brief Deals with the physics triggered by mergers, according to the mass
@@ -389,7 +389,7 @@ void deal_with_galaxy_merger(int p, int merger_centralgal, int centralgal, doubl
 /** @brief Grows black holes, through accretion from cold gas during mergers,
  *          as in Kauffmann & Haehnelt (2000) - Quasar Mode.  */
 
-void grow_black_hole(int merger_centralgal, double mass_ratio, double deltaT)
+void grow_black_hole(const int merger_centralgal, const double mass_ratio, const double deltaT)
 {
   double BHaccrete, fraction;
 
@@ -425,7 +425,7 @@ void grow_black_hole(int merger_centralgal, double mass_ratio, double deltaT)
 
 /** @brief Adds all the components of the satellite galaxy into its
  *         central companion. */
-void add_galaxies_together(int t, int p)
+void add_galaxies_together(const int t, const int p)
 {
   /** @brief All the components of the satellite galaxy are added to the
    *         correspondent component of the central galaxy. Cold gas spin
@@ -572,7 +572,7 @@ void add_galaxies_together(int t, int p)
  *         to the bulge. The galaxies have already been merged, so all we need to do here
  *         is transfer stars from disk to bulge. */
 
-void make_bulge_from_burst(int p)
+void make_bulge_from_burst(const int p)
 {
   /* generate bulge */
   transfer_stars(p,BulgeComponent,p,DiskComponent,1.);
@@ -608,8 +608,8 @@ void make_bulge_from_burst(int p)
 
 /** @brief Merger burst recipe from Somerville 2001 (used after Croton2006) */
 
-double collisional_starburst_recipe(double mass_ratio, int merger_centralgal, int centralgal,
-                                    double time, double deltaT)
+double collisional_starburst_recipe(const double mass_ratio, const int merger_centralgal, const int centralgal,
+                                    const double time, const double deltaT)
 {
   /** @brief If StarBurstModel = 0 (since Croton2006), the Somerville 2001
    *         model of bursts is used. The burst can happen for both major
@@ -675,10 +675,11 @@ double collisional_starburst_recipe(double mass_ratio, int merger_centralgal, in
     return 0.0;
 }
 
+
 /** @brief Calculates the bulge size after a merger. */
-void  bulgesize_from_merger(double mass_ratio,int merger_centralgal,int p,
-                            double Mcstar,double Mcbulge,double Mcgas,
-                            double Mpstar,double Mpbulge,double Mpgas,double frac)
+void  bulgesize_from_merger(const double mass_ratio, const int merger_centralgal, const int p,
+                            const double Mcstar, const double Mcbulge, const double Mcgas,
+                            const double Mpstar, const double Mpbulge, const double Mpgas, double frac)
 {
   /** @brief For any type of merger calculates the new bulge size using
    *         Eq. 33 in Guo2010:
@@ -699,7 +700,8 @@ void  bulgesize_from_merger(double mass_ratio,int merger_centralgal,int p,
 
   /* calculate radius for the object that will form the new bulge - Rc and Rp */
   /* Minor Merger */
-  if(mass_ratio < ThreshMajorMerger) {
+  if(mass_ratio < ThreshMajorMerger)
+  {
     /* In a minor merger only the stars of the satellite galaxy are moved
      * to the bulge of the central galaxy, therefore only stellar
      * components are used to compute radius and masses. */
@@ -715,7 +717,8 @@ void  bulgesize_from_merger(double mass_ratio,int merger_centralgal,int p,
       Rp=0.0;
   }
   /* Major Merger */
-  else {
+  else 
+  {
     /* on a major merger both stellar and gas (after a burst) components
      * from the final bulge and need to be considered */
     /* Mc = bulge mass + burst of central*/

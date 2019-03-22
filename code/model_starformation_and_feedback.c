@@ -145,6 +145,7 @@ void starformation(const int p, const int centralgal, const double time, const d
   { get_stellar_disk_radius(p); }
 }
 
+
  /** @brief update mass of stars formed due to reheating 
   * 
   * @bug Which is the true central galaxy? Gal[p].CentralGal or Gal[centralgal]?

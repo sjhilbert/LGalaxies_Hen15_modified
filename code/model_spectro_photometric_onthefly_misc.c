@@ -42,7 +42,7 @@
  * double integrate(double *flux, int Grid_Length)
  * void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
  */
-double get_AbsAB_magnitude(double FluxInputSSPInt, double FluxFilterInt, double redshift)
+double get_AbsAB_magnitude(const double FluxInputSSPInt, const double FluxFilterInt, const double redshift)
 {
   double zeropoint, distance_cm;
   double AbsAB,area;
@@ -71,17 +71,19 @@ double get_AbsAB_magnitude(double FluxInputSSPInt, double FluxFilterInt, double 
 
 
 //use for apparent magnitudes
-double get_area (double redshift)
+double get_area (const double redshift)
 {
   double dist, area;
 
-  dist=lum_distance(redshift);
-
   //when calculating apparent magnitudes, minimum dist set to 10pc
-  if (redshift<0.00000001) dist=1e-5;
-  if(dist != 0.0)
+  if (redshift<0.00000001)
+  { dist=1e-5; }
+  else
+  { dist=lum_distance(redshift); }
+
+//  if(dist > 0.0)
     area=log10(4.*M_PI)+2.*log10(dist*3.08568025e24);  //in cm (dl in Mpc)
-  else area=0.0;
+//  else area=0.0;
 
   return area;
 }
@@ -89,7 +91,7 @@ double get_area (double redshift)
 
 //LUMINOSITY DISTANCE
 
-double lum_distance(double redshift)
+double lum_distance(const double redshift)
 {
   int i, k, Npoints=1000;
   double x[1000];
@@ -141,7 +143,7 @@ double lum_distance(double redshift)
  * first point for which  LambdaInputSSP>FilterWaveMin. The last point is the largest
  * wavelength for which LambdaInputSSP<FilterWaveMax*/
 
-double* create_grid (double WaveMin, double WaveMax,int AgeLoop, double redshift, double LambdaInputSSP[SSP_NAGES][SSP_NLambda],
+double* create_grid (const double WaveMin, const double WaveMax, const int AgeLoop, const double redshift, double LambdaInputSSP[SSP_NAGES][SSP_NLambda],
 		                      int *Min_Wave_Grid, int *Max_Wave_Grid, int *Grid_Length)
 {
   double x0, x1, h;
@@ -192,7 +194,7 @@ double* create_grid (double WaveMin, double WaveMax,int AgeLoop, double redshift
 //interpolate filters on integral grid
 //*****************************************************
 
-void interpolate(double *lgrid, int Grid_Length, double *lambda, int nlambda, double *flux, double *FluxOnGrid)
+void interpolate(double *lgrid, const int Grid_Length, double *lambda, const int nlambda, double *flux, double *FluxOnGrid)
 {
   int kk=0, nn=0, m=2, i;
 

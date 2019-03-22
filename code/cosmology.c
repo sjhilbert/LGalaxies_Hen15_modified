@@ -45,7 +45,7 @@ void assert_flat_LCDM(void)
   if(fabs(1 - Omega - OmegaLambda) > 0.01)
   {
     printf("code compiled with ASSUME_FLAT_LCDM, but input density paramters Omega = %f and OmegaLambda = %f don't add up to 1.", Omega, OmegaLambda);
-    terminate("code compiled with ASSUME_FLAT_LCDM, but input density paramters Omega and OmegaLambda don't add up to 1.")
+    terminate("code compiled with ASSUME_FLAT_LCDM, but input density paramters Omega and OmegaLambda don't add up to 1.");
   }
 }
 #endif /* defined ASSUME_FLAT_LCDM */
@@ -57,11 +57,7 @@ void assert_flat_LCDM(void)
 void init_redshift_for_comoving_distance(void)
 {
   int i_;
-  for(i_ = 0; i_ < N_REDSHIFTS_FOR_INTERPOLATION; i_++)
-  {
-    redshift_table_for_interpolation[i_] = DELTA_REDSHIFT_FOR_INTERPOLATION * i_;
-    distance_table_for_interpolation[i_] = comoving_los_distance_for_redshift(redshift_table_for_interpolation[i_]);
-  }
+  set_interpolation_tables(i_, 0, N_REDSHIFTS_FOR_INTERPOLATION, 0., DELTA_REDSHIFT_FOR_INTERPOLATION, comoving_los_distance_for_redshift, redshift_table_for_interpolation, distance_table_for_interpolation); 
 }
 
 
@@ -164,17 +160,10 @@ comoving_los_distance_for_redshift(const double redshift_)
  */
 double redshift_for_comoving_los_distance(const double d_)
 {
-  if(d_ <= distance_table_for_interpolation[0])
-    return redshift_table_for_interpolation[0];
-  
-  if(d_ >= distance_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION - 1])
-    return redshift_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION - 1];
-    
-  int i_ = 0;
-  while((i_ < N_REDSHIFTS_FOR_INTERPOLATION - 2) && (d_ > distance_table_for_interpolation[i_ + 1])) ++i_;
-  
-  const double x = (d_ -  distance_table_for_interpolation[i_]) / (distance_table_for_interpolation[i_ + 1] - distance_table_for_interpolation[i_]);
-  return (1. - x) * redshift_table_for_interpolation[i_] + x * redshift_table_for_interpolation[i_ + 1];
+  double res_;
+  int i_;
+  linear_interpolate(i_, 0, N_REDSHIFTS_FOR_INTERPOLATION, d_, distance_table_for_interpolation, redshift_table_for_interpolation, res_, <, linear);    
+  return res_;
 }
 
 

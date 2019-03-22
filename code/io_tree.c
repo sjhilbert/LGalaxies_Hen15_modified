@@ -74,7 +74,7 @@
  *  (TotSnaps * Ntrees); OffsetIDs_snaptree (TotSnaps * Ntrees);
  *  CountIDs_halo - Number of Ids per halo (NtotHalos); OffsetIDs_halo
  *  (int). */
-void load_tree_table(int filenr)
+void load_tree_table(const int filenr)
 {
   int i, n, totNHalos, SnapShotInFileName;
   char buf[1000];
@@ -290,7 +290,7 @@ void free_tree_table(void)
  *  If GALAXYTREE ON, HaloIDs structure is read from tree_dbids =
  *  sizeof(struct halo_ids_data) * TreeNHalos[] */
 
-void load_tree(int nr)
+void load_tree(const int nr)
 {
   int i;
 
@@ -371,7 +371,7 @@ void free_galaxies_and_tree(void)
 }
 
 
-/**@brief Reading routine, either from a file into a structure or
+/** @brief Reading routine, either from a file into a structure or
  *        from a pointer to a structure.
  *   */
 size_t myfread(void *ptr, size_t size, size_t nmemb, FILE * stream)
@@ -396,6 +396,7 @@ size_t myfread(void *ptr, size_t size, size_t nmemb, FILE * stream)
   return nread;
 }
 
+
 size_t myfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream)
 {
   size_t nwritten;
@@ -414,6 +415,21 @@ size_t myfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream)
 
   return nwritten;
 }
+
+
+size_t myffill(void *ptr_, size_t size_, size_t nmemb_, FILE * stream_)
+{
+  size_t nwritten_ = 0;
+  for(nwritten_ = 0; nwritten_ < nmemb_; nwritten_++)
+    if(1 != fwrite(ptr_, size_, 1, stream_))
+    {
+      printf("I/O error (fwrite) has occured: %s\n", strerror(errno));
+      fflush(stdout);
+      terminate("write error");
+    }
+  return nwritten_;
+}
+
 
 int myfseek(FILE * stream, long offset, int whence)
 {

@@ -38,8 +38,11 @@
 
 #define PRECISION_LIMIT 1.e-7
 
-#define  terminate(x) {char termbuf[5000]; sprintf(termbuf, "code termination on task=%d, function %s(), file %s, line %d: %s\n", ThisTask, __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1);}
-
+#ifdef PARALLEL
+#define  terminate(x) do {char termbuf[5000]; sprintf(termbuf, "code termination on task=%d, function %s(), file %s, line %d: %s\n", ThisTask, __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1); } while(0)
+#else /* not defined PARALLEL */
+#define  terminate(x) do {char termbuf[5000]; sprintf(termbuf, "code termination in function %s(), file %s, line %d: %s\n", __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1); } while(0)
+#endif /* not defined PARALLEL */
 
 #define  mymalloc(x, y)            mymalloc_fullinfo(x, y, __FUNCTION__, __FILE__, __LINE__)
 #define  mymalloc_movable(x, y, z) mymalloc_movable_fullinfo(x, y, z, __FUNCTION__, __FILE__, __LINE__)
@@ -61,9 +64,9 @@
 
 #ifdef GALAXYTREE
 #define  CORRECTDBFLOAT(x)  ((fabs(x)<(1.e-30) || isnan(x)) ?(0.0):(x))
-#else
+#else /* not defined GALAXYTREE */ 
 #define  CORRECTDBFLOAT(x) x
-#endif
+#endif /* not defined GALAXYTREE */ 
 
 //WATCH OUT! In the case of MCMC running both MR and MRII the larger value is used to "allocate" all the arrays
 //inside the code its LastDarkMatterSnapShot+1 that defines the extent of the loops
@@ -117,7 +120,7 @@
 #ifdef GALAXYTREE
 #undef  NOUT
 #define NOUT MAXSNAPS
-#endif
+#endif /* defined GALAXYTREE */
 
 
 #ifdef STAR_FORMATION_HISTORY
@@ -155,28 +158,29 @@ struct elements
 #ifndef MAINELEMENTS
   float Cb; //NOTE: Carbon (C) is stored as Cb here
   float N;
-#endif
+#endif /* not defined MAINELEMENTS */
   float O;
 #ifndef MAINELEMENTS
   float Ne;
-#endif
+#endif /* not defined MAINELEMENTS */
   float Mg;
 #ifndef MAINELEMENTS
   float Si;
   float S;
   float Ca;
-#endif
+#endif /* not defined MAINELEMENTS */
   float Fe;
 };
-//Number of chemical elements tracked:
-#ifndef MAINELEMENTS
-#define NUM_ELEMENTS 11 //All: [H][He][C][N][O][Ne][Mg][Si][S][Ca][Fe]
-#else
-#define NUM_ELEMENTS 5 //Only [H][He][O][Mg][Fe]
-#endif
 
-#endif //INDIVIDUAL_ELEMENTS
-#endif //DETAILED_METALS_AND_MASS_RETURN
+//Number of chemical elements tracked:
+#ifdef MAINELEMENTS
+#define NUM_ELEMENTS 5 //Only [H][He][O][Mg][Fe]
+#else  /* not defined MAINELEMENTS */
+#define NUM_ELEMENTS 11 //All: [H][He][C][N][O][Ne][Mg][Si][S][Ca][Fe]
+#endif /* not defined MAINELEMENTS */
+
+#endif /* defined INDIVIDUAL_ELEMENTS */
+#endif /* defined DETAILED_METALS_AND_MASS_RETURN */
 
 /**
  * Galaxy structure for output
@@ -429,14 +433,14 @@ struct SFH_BIN {
   struct metals sfh_MetalsDiskMass; // Metals locked up in stars in disk.
   struct metals sfh_MetalsBulgeMass; // Metals locked up in stars in bulge.
   struct metals sfh_MetalsICM; // Metals locked up in stars in ICM.
-#else
+#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */
   float sfh_MetalsDiskMass; // Metals locked up in stars in disk.
   float sfh_MetalsBulgeMass; //Metals locked up in stars in bulge.
   float sfh_MetalsICM; // Metals locked up in stars in ICM.
-#endif
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 #ifdef TRACK_BURST
   float sfh_BurstMass; // Mass formed in starbursts
-#endif
+#endif /* defined TRACK_BURST */
 
 #ifdef INDIVIDUAL_ELEMENTS
   struct elements sfh_ElementsDiskMass;
@@ -450,7 +454,7 @@ struct SFH_BIN {
   struct elements HotGas_elements;
   struct elements ICM_elements;
   struct elements EjectedMass_elements;
-#endif //INDIVIDUAL_ELEMENTS
+#endif  /* defined INDIVIDUAL_ELEMENTS */
 };
 
 struct SFH_Time
@@ -462,9 +466,9 @@ struct SFH_Time
  	double dt; // width of the current bin in years (???)
  	int nbins; // # of highest resolution bins used to create current bin
 };
-#endif //STAR_FORMATION_HISTORY
+#endif  /* defined STAR_FORMATION_HISTORY */
 #pragma pack()   //structure alignment ends.
-#endif //When LIGHT_OUTPUT is not defined
+#endif /* not defined LIGHT_OUTPUT */
 
 extern struct galaxy_tree_data
 {
@@ -483,7 +487,7 @@ extern struct galaxy_tree_data
 #ifdef LIGHTCONE_OUTPUT
   long long lightcone_galaxy_number_in_file_begin;
   long long lightcone_galaxy_number_in_file_end;
-#endif /* defined  LIGHTCONE_OUTPUT */
+#endif /* defined LIGHTCONE_OUTPUT */
 }
  *GalTree;
 
@@ -495,7 +499,7 @@ extern struct GALAXY			/* Galaxy data */
   int NextGalaxy;
 #ifdef GALAXYTREE
   int FirstProgGal;
-#endif
+#endif /* defined GALAXYTREE */
   int Type;
   int HaloNr;
   long long MostBoundID;
@@ -514,7 +518,7 @@ extern struct GALAXY			/* Galaxy data */
   float HaloVel[3];
   float HaloVelDisp;
   float HaloVmax;
-#endif
+#endif /* defined HALOPROPERTIES */
   float HaloSpin[3];
   float GasSpin[3];
   float StellarSpin[3];
@@ -544,8 +548,8 @@ extern struct GALAXY			/* Galaxy data */
   struct metals MetalsEjectedMass;
 #ifdef METALS_SELF
   struct metals MetalsHotGasSelf;
-#endif
-#else
+#endif /* defined METALS_SELF */ 
+#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */ 
   float MetalsColdGas;
   float MetalsBulgeMass;
   float MetalsDiskMass;
@@ -553,11 +557,11 @@ extern struct GALAXY			/* Galaxy data */
   float MetalsEjectedMass;
 #ifdef METALS_SELF
   float MetalsHotGasSelf;
-#endif
-#endif //DETAILED_METALS_AND_MASS_RETURN
+#endif /* defined METALS_SELF */ 
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */ 
 #ifdef TRACK_BURST
   float BurstMass;
-#endif
+#endif /* defined TRACK_BURST */ 
 
   /* misc */
   float PrimordialAccretionRate;
@@ -577,7 +581,7 @@ extern struct GALAXY			/* Galaxy data */
   float GasDiskRadius;
 #ifdef GALAXYTREE
   int   DisruptOn;
-#endif
+#endif /* defined GALAXYTREE */
   // float halfradius;
   //float periradius;
   float CosInclination; //angle between galaxy spin and the z-axis
@@ -591,9 +595,9 @@ extern struct GALAXY			/* Galaxy data */
   float ICM;
 #ifdef DETAILED_METALS_AND_MASS_RETURN
    struct metals MetalsICM;
- #else
+ #else  /* not defined DETAILED_METALS_AND_MASS_RETURN */
    float MetalsICM;
- #endif
+ #endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 
   /* luminosities in various bands */
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
@@ -606,8 +610,8 @@ extern struct GALAXY			/* Galaxy data */
   float LumDust[NMAG][NOUT];
 #ifdef ICL
   float ICLLum[NMAG][NOUT];
-#endif
-#endif //OUTPUT_REST_MAGS
+#endif /* defined ICL */
+#endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef COMPUTE_OBS_MAGS
   float ObsLum[NMAG][NOUT];
@@ -617,7 +621,7 @@ extern struct GALAXY			/* Galaxy data */
   float ObsLumDust[NMAG][NOUT];
 #ifdef ICL
   float ObsICL[NMAG][NOUT];
-#endif
+#endif /* defined ICL */
 
 #ifdef OUTPUT_MOMAF_INPUTS
   float dObsLum[NMAG][NOUT];
@@ -627,12 +631,23 @@ extern struct GALAXY			/* Galaxy data */
   float dObsLumDust[NMAG][NOUT];
 #ifdef ICL
   float dObsICL[NMAG][NOUT];
-#endif
-#endif
-#endif //COMPUTE_OBS_MAGS
+#endif /* defined ICL */
+// // now define KITZBICHLER luminosities here ?
+// #ifdef KITZBICHLER
+//   float dObsLum_forward[NMAG][NOUT];
+//   float dObsYLum_forward[NMAG][NOUT];
+//   float dObsLumBulge_forward[NMAG][NOUT];
+//   float dObsYLumBulge_forward[NMAG][NOUT];
+//   float dObsLumDust_forward[NMAG][NOUT];
+// #ifdef ICL
+//   float dObsICL_forward[NMAG][NOUT];
+// #endif /* defined ICL */
+// #endif /* defined KITZBICHLER */
+#endif /* defined OUTPUT_MOMAF_INPUTS */
+#endif /* defined COMPUTE_OBS_MAGS */
 
-#endif //ndef POST_PROCESS_MAGS
-#endif //COMPUTE_SPECPHOT_PROPERTIES
+#endif /* not defined POST_PROCESS_MAGS */
+#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   float MassWeightAge[NOUT];
 #ifdef STAR_FORMATION_HISTORY
@@ -649,15 +664,15 @@ extern struct GALAXY			/* Galaxy data */
   struct metals sfh_MetalsDiskMass[SFH_NBIN]; //Metals locked up in stars in disk.
   struct metals sfh_MetalsBulgeMass[SFH_NBIN]; //Metals locked up in stars in bulge.
   struct metals sfh_MetalsICM[SFH_NBIN]; //Metals locked up in stars in ICM.
-#else
+#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */
   float sfh_MetalsDiskMass[SFH_NBIN]; //Metals locked up in stars in disk.
   float sfh_MetalsBulgeMass[SFH_NBIN]; //Metals locked up in stars in bulge.
   float sfh_MetalsICM[SFH_NBIN]; //Metals locked up in stars in ICM.
-#endif
+#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
 #ifdef TRACK_BURST
   float sfh_BurstMass[SFH_NBIN]; //Stellar mass formed in bursts, in standard units.
-#endif
-#endif //STAR_FORMATION_HISTORY
+#endif /* defined TRACK_BURST */
+#endif /* defined STAR_FORMATION_HISTORY */
 
 #ifdef INDIVIDUAL_ELEMENTS
   struct elements sfh_ElementsDiskMass[SFH_NBIN];
@@ -670,7 +685,7 @@ extern struct GALAXY			/* Galaxy data */
   struct elements HotGas_elements;
   struct elements ICM_elements;
   struct elements EjectedMass_elements;
-#endif //INDIVIDUAL_ELEMENTS
+#endif /* defined INDIVIDUAL_ELEMENTS */
 } *Gal, *HaloGal;
 
 
@@ -717,17 +732,17 @@ extern struct  halo_ids_data
  long long NextHaloInFOFgroup;
 #ifdef MRII
  long long MainLeafID; 
-#endif
+#endif /* defined MRII */
  double    Redshift;
  int       PeanoKey;
  int       dummy;      /* need to use this padding for 64bit alignment */
 } *HaloIDs, *HaloIDs_Data;
-#else
+#else  /* defined MCMC */
 extern struct  halo_ids_data
 {
  long long FirstHaloInFOFgroup;
 } *HaloIDs, *HaloIDs_Data;
-#endif
+#endif /* defined MCMC */
 
 
 // Documentation can be found in the database
@@ -767,7 +782,7 @@ extern int LastDarkMatterSnapShot;
 #ifdef MR_PLUS_MRII //OPTION for MCMC
 extern int LastDarkMatterSnapShot_MR;
 extern int LastDarkMatterSnapShot_MRII;
-#endif
+#endif /* defined MR_PLUS_MRII */
 
 
 extern char SpecPhotDir[512];
@@ -794,7 +809,7 @@ extern char FileWithZList_MR[512];
 extern char FileWithZList_OriginalCosm_MR[512];
 extern char FileWithZList_MRII[512];
 extern char FileWithZList_OriginalCosm_MRII[512];
-#endif
+#endif /* defined MR_PLUS_MRII */
 
 extern double ScalePos;
 extern double ScaleMass;
@@ -802,7 +817,7 @@ extern double ScaleMass;
 #ifdef SPECIFYFILENR
 extern char   FileNrDir[512];
 extern int    ListInputFilrNr[111];
-#endif
+#endif /* defined SPECIFYFILENR */
 
 extern int TotHalos;
 extern int TotGalaxies[NOUT];
@@ -822,12 +837,17 @@ extern size_t AllocatedBytes;
 extern size_t HighMarkBytes;
 extern size_t FreeBytes;
 
+#ifdef PARALLEL
 extern int ThisTask, NTask;
+#else /* not defined PARALLEL */
+#define NTask 1
+#define ThisTask 0
+#endif /* not defined PARALLEL */
 
 #ifdef GALAXYTREE
 extern int GalCount;
 extern int TotGalCount;
-#endif
+#endif /* defined GALAXYTREE */
 
 /* Cosmological parameters */
 extern double BaryonFrac;
@@ -852,7 +872,7 @@ extern double PartMass_MRII;
 extern double BoxSize_MRII;
 extern double PartMass_OriginalCosm_MRII;
 extern double BoxSize_OriginalCosm_MRII;
-#endif
+#endif /* defined MR_PLUS_MRII */
 
 
 /* flags */
@@ -908,13 +928,15 @@ extern double
 	UnitTime_in_years,
 #ifdef HALOMODEL
 	RhoCrit,
-#endif
+#endif /* defined HALOMODEL */
 	G,
 	Hubble,
 	a0, ar;
 
 extern int ListOutputSnaps[NOUT];
 extern float ListOutputRedshifts[NOUT];
+
+extern int ListOutputNumberOfSnapshot[MAXSNAPS];
 
 extern double ZZ[MAXSNAPS];
 extern double AA[MAXSNAPS];
@@ -945,8 +967,8 @@ extern int SFH_ibin[MAXSNAPS][STEPS]; //Last active bin
 #ifdef DETAILED_METALS_AND_MASS_RETURN
 extern double tau_t[STEPS*MAXSNAPS]; //Time-to-z=0 of every timestep in the code. (Used for SNe rates in yield_integrals.c)
 extern double tau_dt[STEPS*MAXSNAPS];//Width of every timestep in the code. (Used for SNe rates in yield_integrals.c)
-#endif
-#endif //STAR_FORMATION_HISTORY
+#endif /* defined DETAILED_METALS_AND_MASS_RETURN */
+#endif /* defined STAR_FORMATION_HISTORY */
 
 
 #ifdef DETAILED_METALS_AND_MASS_RETURN
@@ -959,11 +981,11 @@ extern double tau_dt[STEPS*MAXSNAPS];//Width of every timestep in the code. (Use
 #ifdef PORTINARI
 #define SNII_MASS_NUM 85  //ROB: 85, from 6 <= M[Msun] <= 120. Change SNII_MIN_MASS and SNII_MAX_MASS for shorter ranges.
 #define SNII_Z_NUM 5
-#endif
+#endif /* defined PORTINARI */
 #ifdef CHIEFFI
 #define SNII_MASS_NUM 81 //ROB: 56 if 7 <= M[Msun] <= 50. 81 if 7 <= M[Msun] <= 120. (NB: You can set SNII_MASS_NUM 81, and SNII_MAX_MASS 50. But DON"T put SNII_MASS_NUM > 81 ever!)
 #define SNII_Z_NUM 6
-#endif
+#endif /* defined CHIEFFI */
 #define SNIA_MASS_NUM 83 //48 //Number increased after extending range to cover M2 masses (07-02-12)
 
 //Mass ranges for the different modes of ejection:
@@ -974,11 +996,11 @@ extern double tau_dt[STEPS*MAXSNAPS];//Width of every timestep in the code. (Use
 #ifdef PORTINARI
 #define SNII_MIN_MASS 7.0 //6.0
 #define SNII_MAX_MASS 120.0
-#endif
+#endif /* defined PORTINARI */
 #ifdef CHIEFFI
 #define SNII_MIN_MASS 7.0
 #define SNII_MAX_MASS 120.0 //50.0
-#endif
+#endif /* defined CHIEFFI */
 
 int ELETOBIGCOUNTA;
 int FRACCOUNTA;
@@ -1103,6 +1125,12 @@ extern float RedshiftTab[MAXSNAPS];
 extern float LumTables[NMAG][SSP_NMETALLICITES][MAXSNAPS][SSP_NAGES];
 extern float FilterLambda[NMAG+1];//wavelength of each filter + 1 for V-band
 
+//for speeding up lookup in table:
+#define SSP_NJUMPTAB 1000
+extern int SSP_log_age_jump_table[SSP_NJUMPTAB];
+extern double SSP_log_age_jump_factor;
+
+
 #ifdef SPEC_PHOTABLES_ON_THE_FLY
 #define MAX_NLambdaFilter 1000
 extern int NLambdaFilter[NMAG];
@@ -1143,7 +1171,9 @@ extern size_t offset_galaxydata, maxstorage_galaxydata, filled_galaxydata;
 extern size_t offset_galsnapdata[NOUT], maxstorage_galsnapdata[NOUT], filled_galsnapdata[NOUT];
 #endif
 
-extern float Reion_z[46],Reion_Mc[46];
+#define N_REION_Z 45
+extern float Reion_z[N_REION_Z];
+extern float Reion_log10_Mc[N_REION_Z];
 
 extern FILE *tree_file;
 extern FILE *treeaux_file;
