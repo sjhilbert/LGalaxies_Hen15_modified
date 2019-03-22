@@ -21,7 +21,7 @@
  * @date   2008, 2018
  */
  
-// Routines used in the MCMC sampling
+/* mcmc.c */
 void Senna (void);
 
 void print_parameters (const bool current_MCMC_step_is_accepted_, FILE *fmcmc);
@@ -34,7 +34,6 @@ void close_files_with_comparison_to_observations(void);
 double propose_new_parameters(void);
 void mark_halos_in_MCMC_sample(const int tree_number_);
 void free_MCMC_FOF(void);
-void save_galaxy_for_mcmc(const int gal_index_);
 int MCMC_FOF_compare_FoFID(const void *MCMC_FOF_a_, const void *MCMC_FOF_b_);
 #ifdef MR_PLUS_MRII
 void change_dark_matter_sim(const char SimName[]);
@@ -44,25 +43,34 @@ void change_dark_matter_sim(const char SimName[]);
 void assign_FOF_masses(const int snapshot_number_, const int tree_number_);
 #endif
 
-double get_likelihood (void);
-void bin_function(int ObsNr, double *binsamdata, double *samdata, int snap);
-void bin_red_fraction(int ObsNr, double *binredfraction, int snap);
-void bin_passive_fraction(int ObsNr, double *binpassivefraction, int snap);
-void bin_bulge_fraction(int ObsNr, double *binbulgefraction, int snap);
-void bin_ColdGasFractionvsStellarMass(int ObsNr, double *bingasfraction, int snap);
-void bin_color_hist(int ObsNr, double *bincolorhist, int snap);
-void bin_bhbm(double *binblackholeup, double *binblackholedown, int snap);
-void correct_for_correlation(int snap);
-void compute_correlation_func(int ObsNr, double *binsamdata, int snap, float mingalmass, float maxgalmass);
-double chi_square_probability(int ObsNr, double *samdata, int snap);
-double maximum_likelihood_probability(int ObsNr, double *samfract, int snap);
-double binomial_probability(int ObsNr, double *samup, double *samdown, int snap);
+/* mcmc_save.c */
+// void save_galaxy_for_mcmc(const int gal_index_, const int output_is_expected_);
+void save_galaxy_for_mcmc(const int gal_index_);
 
-double gammp (double a, double x);
-double gammq (double a, double x);
-double gser (double a, double x);
-double gcf(double a, double x);
-double gammpapprox(double a, double x, int psig);
-double gammln(double xx);
-double betai(double a, double b, double x);
-double betacf(double a,double  b, double x);
+/* mcmc_likelihood.c */
+double get_likelihood (void);
+
+void bin_function(const int output_number_, const int observation_number_, const double *sam_data_, double *binned_sam_data_);
+void bin_red_fraction(const int output_number_, const int observation_number_, double *binned_red_fraction_);
+void bin_passive_fraction(const int output_number_, const int observation_number_, double *binned_passive_fraction_);
+void bin_bulge_fraction(const int output_number_, const int observation_number_, double *binned_bulge_fraction_);
+void bin_ColdGasFractionvsStellarMass(const int output_number_, const int observation_number_, double *binned_gas_fraction_);
+void bin_color_hist(const int output_number_, const int observation_number_, double *binned_color_hist_);
+void bin_bhbm(const int output_number_, double *binned_blackhole_up_, double *binned_blackhole_down_);
+
+void correct_for_correlation(const int output_number_);
+
+void compute_correlation_func(const int output_number_, const int observation_number_, const float mingalmass, const float maxgalmass, double *binsamdata);
+
+double chi_square_probability(const int output_number_, const int observation_number_, const double *sam_data_);
+double maximum_likelihood_probability(const int output_number, const int observation_number_, const double *sam_fract_);
+double binomial_probability(const int output_number_, const int observation_number_, const double *sam_up_, const double *sam_down_);
+
+double gammp (const double a, const double x);
+double gammq (const double a, const double x);
+double gser (const double a, const double x);
+double gcf(const double a, const double x);
+double gammpapprox(const double a, const double x, const int psig);
+double gammln(const double xx);
+double betai(const double a, const double b, const double x);
+double betacf(const double a, const double  b, const double x);

@@ -209,7 +209,7 @@ void set_gas_disk_radius(const int galaxy_number_)
   if(spin_squared_ > 0.)
   {
     Gal[galaxy_number_].GasDiskRadius = (Gal[galaxy_number_].Type == 0) ? 1.5 * sqrt(spin_squared_) / Gal[galaxy_number_].Vmax  :
-                                                  1.5 * sqrt(spin_squared_) / Gal[galaxy_number_].InfallVmax;
+                                                                          1.5 * sqrt(spin_squared_) / Gal[galaxy_number_].InfallVmax;
   }
   else
   { Gal[galaxy_number_].GasDiskRadius = 0.1 * Gal[galaxy_number_].Rvir;  }
@@ -242,7 +242,7 @@ void set_stellar_disk_radius(const int galaxy_number_)
   if(spin_squared_ > 0.)
   {
     Gal[galaxy_number_].StellarDiskRadius = (Gal[galaxy_number_].Type == 0) ? 1.5 * sqrt(spin_squared_) / Gal[galaxy_number_].Vmax : 
-                                                      1.5 * sqrt(spin_squared_) / Gal[galaxy_number_].InfallVmax;
+                                                                              1.5 * sqrt(spin_squared_) / Gal[galaxy_number_].InfallVmax;
   }
   else
   { Gal[galaxy_number_].StellarDiskRadius = 0.1 * Gal[galaxy_number_].Rvir;  }

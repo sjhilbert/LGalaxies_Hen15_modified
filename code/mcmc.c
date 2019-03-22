@@ -978,7 +978,7 @@ void mark_halos_in_MCMC_sample(const int tree_number_)
 {
   int halo_number_, output_number_, fof_number_ /*, fof_number_lower_bound_, fof_number_upper_bound_*/;
   
-  printf("marking halos for tree %d.\n", tree_number_);
+  // printf("marking halos for tree %d.\n", tree_number_);
   
   for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
   {
@@ -988,18 +988,9 @@ void mark_halos_in_MCMC_sample(const int tree_number_)
 
     for(output_number_ = 0; output_number_ < NOUT; output_number_++)
     {
-      HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = false;
+      HaloAux[halo_number_].fof_number_in_MCMC_sample_for_output[output_number_] = -1;
+      HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output   [output_number_] = false;
 
-      /*
-      // linear search:
-      for(fof_number_ = 0; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
-        if(fof_id_of_halo_ == MCMC_FOF[output_number_][fof_number_].FoFID)
-        {
-          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = true;
-          break;
-        }
-        */
-      
       //binary search:
       if((NFofsInSample[output_number_] > 0) && (MCMC_FOF[output_number_][0].FoFID <= fof_id_of_halo_) && (fof_id_of_halo_ <= MCMC_FOF[output_number_][NFofsInSample[output_number_] - 1].FoFID))
       {
@@ -1014,13 +1005,14 @@ void mark_halos_in_MCMC_sample(const int tree_number_)
         }
         if(fof_id_of_halo_ == MCMC_FOF[output_number_][fof_number_].FoFID)
         {
-          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = true;
-          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_any_output             = true;
+          HaloAux[halo_number_].fof_number_in_MCMC_sample_for_output[output_number_] = fof_number_;
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output   [output_number_] = true;
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_any_output                = true;
         }
       }
     }
   }
-  printf("done marking halos for tree %d.\n", tree_number_);
+  // printf("done marking halos for tree %d.\n", tree_number_);
 }
 
 

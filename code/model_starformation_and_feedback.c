@@ -102,8 +102,10 @@ void starformation(const int galaxy_number_, const int central_galaxy_number_, c
     { stars_ = Gal[galaxy_number_].ColdGas; }
 #endif
 
+#ifdef MASS_CHECKS
     mass_checks("recipe_starform #1",galaxy_number_);
     mass_checks("recipe_starform #1.1",central_galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   /* update for star formation
    * updates Mcold, StellarMass, MetalsMcold and MetalsStellarMass
@@ -118,8 +120,10 @@ void starformation(const int galaxy_number_, const int central_galaxy_number_, c
 
     update_stars_due_to_reheat(galaxy_number_, &stars_);
 
+#ifdef MASS_CHECKS
     mass_checks("recipe_starform #2",galaxy_number_);
     mass_checks("recipe_starform #2.1",central_galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
     /*  update the star formation rate */
     /*Sfr=stars_/(dt_*steps)=strdot*dt_/(dt_*steps)=strdot/steps -> average over the STEPS*/
@@ -229,7 +233,9 @@ void update_from_star_formation(const int galaxy_number_, const double stars_, c
     { Gal[galaxy_number_].StellarSpin[i]= (Gal[galaxy_number_].StellarSpin[i] * Gal[galaxy_number_].DiskMass + stars_to_add_ * Gal[galaxy_number_].GasSpin[i]) * inv_new_disk_mass_; }
   }
     /*  Update Gas and Metals from star formation */
+#ifdef MASS_CHECKS
   mass_checks("update_from_star_formation #0",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   const double fraction_ = stars_to_add_ / Gal[galaxy_number_].ColdGas;
 
@@ -263,7 +269,9 @@ void update_from_star_formation(const int galaxy_number_, const double stars_, c
   if (flag_burst_) Gal[galaxy_number_].BurstMass += stars_to_add_;
 #endif
 
+#ifdef MASS_CHECKS
   mass_checks("update_from_star_formation #1",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   /* Formation of new metals - instantaneous recycling approximation - only SNII
    * Also recompute the metallicity of the cold phase.*/
@@ -279,8 +287,8 @@ void update_from_star_formation(const int galaxy_number_, const double stars_, c
 
 
 /* there are two modes for supernova feedback corresponding to when the mass returning
- * by dying stars_ is returned to the cold gas - reheat and ejection; and when the mass
- * is returned to the hot gas - onle ejection.*/
+ * by dying stars is returned to the cold gas - reheat and ejection; and when the mass
+ * is returned to the hot gas - only ejection.*/
 void SN_feedback(const int galaxy_number_, const int fof_central_galaxy_number_, const double stars_, const GasComponentType feedback_location_)
 {
   double reheated_mass_ = 0., ejected_mass_ = 0.;
@@ -306,8 +314,10 @@ void SN_feedback(const int galaxy_number_, const int fof_central_galaxy_number_,
   { reheated_mass_ = 0.; }
   else if(feedback_location_ == ColdGasComponent)
   {
+#ifdef MASS_CHECKS
     mass_checks("recipe_starform #0",galaxy_number_);
     mass_checks("recipe_starform #0.1",fof_central_galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
     // Feedback depends on the circular velocity of the host halo
     // Guo2010 - eq 18 & 19
@@ -373,7 +383,9 @@ void update_from_feedback(const int galaxy_number_, const int central_galaxy_num
   double fraction_;
 //  int merger_centre;
 
+#ifdef MASS_CHECKS
   //mass_checks("update_from_feedback #1",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   if(Gal[galaxy_number_].ColdGas > 0.)
   {
@@ -422,8 +434,10 @@ void update_from_feedback(const int galaxy_number_, const int central_galaxy_num
           transfer_gas(central_galaxy_number_, HotGasComponent,galaxy_number_, ColdGasComponent, (reheated_mass_-mass_remaining_)/Gal[galaxy_number_].ColdGas);
     }//types
   }//if(Gal[galaxy_number_].ColdGas > 0.)
-
+    
+#ifdef MASS_CHECKS
   mass_checks("update_from_feedback #2",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   //DO EJECTION OF GAS
   if (Gal[Gal[galaxy_number_].CentralGal].HotGas > 0.)

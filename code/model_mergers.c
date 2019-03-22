@@ -251,9 +251,12 @@ void deal_with_galaxy_merger(const int galaxy_number_, const int merger_centralg
 
 
 #ifdef GALAXYTREE
+
+#ifdef MASS_CHECKS
   mass_checks("deal_with_galaxy_merger #0",galaxy_number_);
   mass_checks("deal_with_galaxy_merger #0",merger_centralgal_);
   mass_checks("deal_with_galaxy_merger #0",centralgal_);
+#endif /* defined MASS_CHECKS */
 
   int progenitor_galaxy_number_ = Gal[merger_centralgal_].FirstProgGal;
   if(progenitor_galaxy_number_ >= 0)
@@ -302,9 +305,11 @@ void deal_with_galaxy_merger(const int galaxy_number_, const int merger_centralg
   const double M_p_bulge_=Gal[galaxy_number_].BulgeMass;
   const double M_p_gas_=Gal[galaxy_number_].ColdGas;
 
+#ifdef MASS_CHECKS
   mass_checks("deal_with_galaxy_merger #1",galaxy_number_);
   mass_checks("deal_with_galaxy_merger #1",merger_centralgal_);
   mass_checks("deal_with_galaxy_merger #1",centralgal_);
+#endif /* defined MASS_CHECKS */
 
   /* Add the cold and stellar phase of the merged galaxy to the central one.
      Also form a bulge if BulgeFormationInMinorMergersOn is set on (transfer stars
@@ -313,18 +318,22 @@ void deal_with_galaxy_merger(const int galaxy_number_, const int merger_centralg
      satellite will be moved to the bulge). Any new stars formed will go to the bulge */
   add_galaxies_together(merger_centralgal_, galaxy_number_);
 
+#ifdef MASS_CHECKS
   mass_checks("deal_with_galaxy_merger #2",galaxy_number_);
   mass_checks("deal_with_galaxy_merger #2",merger_centralgal_);
   mass_checks("deal_with_galaxy_merger #2",centralgal_);
+#endif /* defined MASS_CHECKS */
 
   /* grow black hole through accretion from cold disk during mergers, as in
    * Kauffmann & Haehnelt (2000) + minor mergers - Quasar Mode */
   if(AGNRadioModeModel != 5)
     grow_black_hole(merger_centralgal_, mass_ratio_, deltaT_);
 
+#ifdef MASS_CHECKS
   mass_checks("deal_with_galaxy_merger #3",galaxy_number_);
   mass_checks("deal_with_galaxy_merger #3",merger_centralgal_);
   mass_checks("deal_with_galaxy_merger #3",centralgal_);
+#endif /* defined MASS_CHECKS */
 
   if (StarBurstModel == 0)
   {
@@ -334,17 +343,21 @@ void deal_with_galaxy_merger(const int galaxy_number_, const int merger_centralg
     const double fraction_ = collisional_starburst_recipe(mass_ratio_, merger_centralgal_, centralgal_, time_, deltaT_);
     bulgesize_from_merger(mass_ratio_,merger_centralgal_,galaxy_number_, M_c_star_, M_c_bulge_, M_c_gas_, M_p_star_, M_p_bulge_, M_p_gas_, fraction_);
 
+#ifdef MASS_CHECKS
     mass_checks("deal_with_galaxy_merger #3.5",galaxy_number_);
     mass_checks("deal_with_galaxy_merger #3.5",merger_centralgal_);
     mass_checks("deal_with_galaxy_merger #3.5",centralgal_);
+#endif /* defined MASS_CHECKS */
 
     if(mass_ratio_ > ThreshMajorMerger)
       make_bulge_from_burst(merger_centralgal_);
   }
 
+#ifdef MASS_CHECKS
   mass_checks("deal_with_galaxy_merger #4",galaxy_number_);
   mass_checks("deal_with_galaxy_merger #4",merger_centralgal_);
   mass_checks("deal_with_galaxy_merger #4",centralgal_);
+#endif /* defined MASS_CHECKS */
 
   /* If we are in the presence of a minor merger, check disk stability (the disk
    * is completely destroyed in major mergers) */
@@ -368,9 +381,11 @@ void deal_with_galaxy_merger(const int galaxy_number_, const int merger_centralg
     set_stellar_disk_radius(merger_centralgal_);
   }
 
+#ifdef MASS_CHECKS
   mass_checks("deal_with_galaxy_merger #5",galaxy_number_);
   mass_checks("deal_with_galaxy_merger #5",merger_centralgal_);
   mass_checks("deal_with_galaxy_merger #5",centralgal_);
+#endif /* defined MASS_CHECKS */
 }
 
 
@@ -409,20 +424,23 @@ void grow_black_hole(const int merger_centralgal_, const double mass_ratio_, con
 
 
 /** @brief Adds all the components of the satellite galaxy into its
- *         central companion. */
+ *         central companion. 
+ *         All the components of the satellite galaxy are added to the
+ *         correspondent component of the central galaxy. Cold gas spin
+ *         is updated and a bulge is formed at the central galaxy, with
+ *         the stars of the satellite if  BulgeFormationInMinorMergersOn=1.
+ *         In case of a major merger, everything that was put in the disk of
+ *         the central galaxy will be moved into the bulge
+ *
+ */
 void add_galaxies_together(const int central_galaxy_number_, const int satellite_galaxy_number_)
 {
-  /** @brief All the components of the satellite galaxy are added to the
-   *         correspondent component of the central galaxy. Cold gas spin
-   *         is updated and a bulge is formed at the central galaxy, with
-   *         the stars of the satellite if  BulgeFormationInMinorMergersOn=1.
-   *         In case of a major merger, everything that was put in the disk of
-   *         the central galaxy will be moved into the bulge
-   */
   int output_number_, i_;
 
+#ifdef MASS_CHECKS
   mass_checks("add_galaxies_together #0",satellite_galaxy_number_);
   mass_checks("add_galaxies_together #0.1",central_galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   /* angular momentum transfer between gas*/
   const double initial_central_galaxy_cold_gas_   = Gal[central_galaxy_number_  ].ColdGas;
@@ -451,8 +469,10 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
   Gal[central_galaxy_number_].StarMerge += Gal[satellite_galaxy_number_].StarMerge;
   Gal[satellite_galaxy_number_].StarMerge=0.;
 
+#ifdef MASS_CHECKS
   mass_checks("add_galaxies_together #1",satellite_galaxy_number_);
   mass_checks("add_galaxies_together #1.1",central_galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   /*update the gas spin*/
   if(Gal[central_galaxy_number_].ColdGas != 0)
@@ -701,7 +721,9 @@ double collisional_starburst_recipe(const double mass_ratio_, const int merger_c
     // (star formation and feedback share the same fraction_ of cold gas)
     update_from_star_formation(merger_centralgal_, m_stars_, true); // true indicates starburst
 
+#ifdef MASS_CHECKS
     mass_checks("collisional_starburst_recipe #2",merger_centralgal_);
+#endif /* defined MASS_CHECKS */
         
     update_massweightage(merger_centralgal_, m_stars_, time_);
 

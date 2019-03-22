@@ -182,8 +182,10 @@ void disrupt(const int galaxy_number_)
 
   central_galaxy_number_=Gal[galaxy_number_].CentralGal;
  
+#ifdef MASS_CHECKS
   mass_checks("Top of disrupt",central_galaxy_number_);
   mass_checks("Top of disrupt",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   /* Radius calculated at the peri-point */
   radius = get_peri_radius_for_galaxy(galaxy_number_, central_galaxy_number_);
@@ -283,6 +285,8 @@ void disrupt(const int galaxy_number_)
 #endif /* not defined POST_PROCESS_MAGS */
 
   } //if (rho_cen > rho_sat)
+#ifdef MASS_CHECKS
   mass_checks("Bottom of disrupt",central_galaxy_number_);
   mass_checks("Bottom of disrupt",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 }

@@ -215,7 +215,9 @@ void test_metaldependent_cooling_rate(void)
 /** @brief main cooling recipe, where the cooling rates are calculated */
 void compute_cooling(const int galaxy_number_, const double dt_)
 {
+#ifdef MASS_CHECKS
   mass_checks("cooling_recipe #1",galaxy_number_);
+#endif /* defined MASS_CHECKS */
 
   Gal[galaxy_number_].CoolingGas = 0.;
   
@@ -305,7 +307,9 @@ void compute_cooling(const int galaxy_number_, const double dt_)
 
   Gal[galaxy_number_].CoolingGas = coolingGas;
 
+#ifdef MASS_CHECKS
   mass_checks("cooling_recipe #1.5", galaxy_number_);
+#endif /* defined MASS_CHECKS */
 }   
 
 
@@ -492,7 +496,9 @@ void do_AGN_heating(double dt_, const int n_galaxies_in_fof_group_)
         Gal[FoFCentralGal].CoolingRate -= LeftOverEnergy / (dt_*STEPS);
       }
     }
+#ifdef MASS_CHECKS
     mass_checks("cooling_recipe #2.",galaxy_number_);
+#endif /* defined MASS_CHECKS */
   }
 }
 

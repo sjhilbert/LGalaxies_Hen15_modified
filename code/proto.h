@@ -123,6 +123,7 @@ void construct_galaxies(const int tree_number_, const int halo_number_);
 void construct_galaxies_in_fof(const int tree_number_, const int first_in_fof_halo_number_);
 void join_galaxies_of_progenitors(const int halo_number_, int *n_galaxies_in_fof_group_, int *merger_center_);
 void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_, const int tree_number_, const int merger_center_);
+// void output_galaxy(const int tree_number_, const int heap_index_, const int output_is_expected_);
 void output_galaxy(const int tree_number_, const int heap_index_);
 void pop_galaxy_from_heap(const int heap_index_);
 
