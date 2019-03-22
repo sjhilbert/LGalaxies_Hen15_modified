@@ -33,7 +33,9 @@ void open_files_with_comparison_to_observations(void);
 void close_files_with_comparison_to_observations(void);
 double propose_new_parameters(void);
 void mark_halos_in_MCMC_sample(const int tree_number_);
+void free_MCMC_FOF(void);
 void save_galaxy_for_mcmc(const int gal_index_);
+int MCMC_FOF_compare_FoFID(const void *MCMC_FOF_a_, const void *MCMC_FOF_b_);
 #ifdef MR_PLUS_MRII
 void change_dark_matter_sim(const char SimName[]);
 #endif

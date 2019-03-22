@@ -81,6 +81,7 @@ void initialize_halomodel(void);
 
 
 #ifdef MCMC
+/** @brief main routine for controlling MCMC algorithm */
 void Senna(void)
 {
   int parameter_number_, output_number_, N_MCMC_steps_accepted_ = 0;
@@ -460,7 +461,6 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
 
 /** @brief Function to propose new parameters given by
  *       a random normal distribution gassdev*/
-
 double propose_new_parameters(void)
 {
   double q_ratio_;
@@ -499,6 +499,7 @@ double propose_new_parameters(void)
 }
 
 
+/** @brief read in mcmc parameters */
 void read_mcmc_par (const int snapshot_number_)
 {
   int output_number_, parameter_number_;
@@ -587,13 +588,11 @@ void read_mcmc_par (const int snapshot_number_)
  *       looped over that number of trees the necessary variables are changed to MRII.*/
 void read_sample_info (void)
 {
-  int DumbTreeNrColector_, DumbFileNrColector_, max_n_fof_in_sample_;
+  int DumbTreeNrColector_, DumbFileNrColector_;
   int fof_number_, output_number_;
   FILE *file_;
   char file_name_[1000];
   char error_message_[1000];
-
-  max_n_fof_in_sample_ = 0;
 
 #ifdef MR_PLUS_MRII
   if(Switch_MR_MRII==1)
@@ -611,28 +610,6 @@ void read_sample_info (void)
 
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
-    sprintf(file_name_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
-            MCMCSampleFile, ListOutputSnaps[output_number_]);
-    if(!(file_ = fopen(file_name_, "r")))
-    {
-      sprintf(error_message_, "can't open file `%s'\n", file_name_);
-      terminate(error_message_);
-    }
-
-    fscanf(file_, "%d \n", &NFofsInSample[output_number_]);
-
-    if(max_n_fof_in_sample_<NFofsInSample[output_number_])
-      max_n_fof_in_sample_=NFofsInSample[output_number_];
-    //printf("reading sample %s\n",file_name_);
-    fclose(file_);
-  }
-
-  //structure as the size of highest number of halos in a given snapshot
-  //for all the other snapshot it will not be full
-  MCMC_FOF = malloc(sizeof(struct MCMC_FOF_struct) * max_n_fof_in_sample_);
-
-  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
-  {
     sprintf(file_name_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix, MCMCSampleFile, ListOutputSnaps[output_number_]);
     if(!(file_ = fopen(file_name_, "r")))
     {
@@ -641,28 +618,32 @@ void read_sample_info (void)
     }
 
     fscanf(file_, "%d \n", &NFofsInSample[output_number_]);
+
+    MCMC_FOF[output_number_] = malloc(sizeof(struct MCMC_FOF_struct) * NFofsInSample[output_number_]);
     
     for(fof_number_ = 0; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
     {
-      fscanf(file_, "%lld %d %d %lg\n", &MCMC_FOF[fof_number_].FoFID[output_number_], &DumbTreeNrColector_, &DumbFileNrColector_, &MCMC_FOF[fof_number_].Weight[output_number_]);
-      MCMC_FOF[fof_number_].Weight[output_number_]/=BoxSize*BoxSize*BoxSize;
+      fscanf(file_, "%lld %d %d %lg\n", &MCMC_FOF[output_number_][fof_number_].FoFID, &DumbTreeNrColector_, &DumbFileNrColector_, &MCMC_FOF[output_number_][fof_number_].Weight);
+      MCMC_FOF[output_number_][fof_number_].Weight /= BoxSize*BoxSize*BoxSize;
 #ifdef HALOMODEL
-      MCMC_FOF[fof_number_].NGalsInFoF[output_number_]=0;
-      MCMC_FOF[fof_number_].IndexOfCentralGal[output_number_]=-1;
+      MCMC_FOF[output_number_][fof_number_].NGalsInFoF=0;
+      MCMC_FOF[output_number_][fof_number_].IndexOfCentralGal=-1;
 #endif
     }
 
     fclose(file_);
-    
+
+    qsort(MCMC_FOF[output_number_], NFofsInSample[output_number_], sizeof(struct MCMC_FOF_struct), MCMC_FOF_compare_FoFID);
+
     // // debugging: checks ordering by fof id (order would ease work later):
     // for(fof_number_ = 1; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
     // {
-    //   if(!(MCMC_FOF[fof_number_ - 1].FoFID[output_number_] < MCMC_FOF[fof_number_].FoFID[output_number_]))
+    //   if(!(MCMC_FOF[output_number_][fof_number_ - 1].FoFID < MCMC_FOF[output_number_][fof_number_].FoFID))
     //   {
     //     printf("fof ids not ordered in file `%s': output_number_ = %d, fof_number_ = %d, !(%lld < %lld)\n",
-    //       file_name_, output_number_, fof_number_, MCMC_FOF[fof_number_ - 1].FoFID[output_number_], MCMC_FOF[fof_number_].FoFID[output_number_]);        
+    //       file_name_, output_number_, fof_number_, MCMC_FOF[output_number_][fof_number_ - 1].FoFID, MCMC_FOF[output_number_][fof_number_].FoFID);        
     //     // sprintf(error_message_, "fof ids not ordered in file `%s': output_number_ = %d, fof_number_ = %d, !(%lld < %lld)\n",
-    //     //   file_name_, output_number_, fof_number_, MCMC_FOF[fof_number_ - 1].FoFID[output_number_], MCMC_FOF[fof_number_].FoFID[output_number_]);
+    //     //   file_name_, output_number_, fof_number_, MCMC_FOF[output_number_][fof_number_ - 1].FoFID, MCMC_FOF[output_number_][fof_number_].FoFID);
     //     // terminate(error_message_);
     //     break;
     //   }
@@ -671,7 +652,7 @@ void read_sample_info (void)
 }
 
 
-/*@brief Read in the arrays of observational data. They will be compared
+/** @brief Read in the arrays of observational data. They will be compared
  *       with the outputs from the SAM On the get_likelihood routine*/
 void read_observations (void)
 {
@@ -818,7 +799,9 @@ void read_observations (void)
 }
 
 
-/* A different file is written for each observational constraint and for each redshift
+/** @brief prepares files to contain comparison to observations 
+ * 
+ * A different file is written for each observational constraint and for each redshift
  * Each file as the following structure: *
  * int ChainLength+1
  * int Nbins[snapshot_number_][constraint]
@@ -856,6 +839,7 @@ void open_files_with_comparison_to_observations()
 }
 
 
+/** @brief close files with comparison to observations */
 void close_files_with_comparison_to_observations()
 {
   int constraint_number_, snapshot_number_;
@@ -870,6 +854,7 @@ void close_files_with_comparison_to_observations()
 
 
 #ifdef MR_PLUS_MRII
+/** @brief change dark matter simulation */
 void change_dark_matter_sim(const char SimName[])
 {
   if (strcmp(SimName,"MR")==0)
@@ -939,7 +924,7 @@ void change_dark_matter_sim(const char SimName[])
   }
 
   if (strcmp(SimName,"MRII")==0)
-  { free(MCMC_FOF); }
+  { free_MCMC_FOF(); }
 
   read_sample_info();
 }
@@ -947,6 +932,7 @@ void change_dark_matter_sim(const char SimName[])
 
 
 #ifdef HALOMODEL
+/** @brief asign FOF halo masses */
 void assign_FOF_masses(const int snapshot_number_, const int tree_number_)
 {
   int fof_group_number_, output_number_, halo_number_;
@@ -959,28 +945,104 @@ void assign_FOF_masses(const int snapshot_number_, const int tree_number_)
         if(snapshot_number_==ListOutputSnaps[output_number_])
         {
           for(fof_group_number_=0;fof_group_number_<NFofsInSample[output_number_]; fof_group_number_++)
-            if(HaloIDs[halo_number_].FirstHaloInFOFgroup == MCMC_FOF[fof_group_number_].FoFID[output_number_])
+            if(HaloIDs[halo_number_].FirstHaloInFOFgroup == MCMC_FOF[output_number_][fof_group_number_].FoFID)
             {
-              MCMC_FOF[fof_group_number_].M_Crit200[output_number_] = log10(Halo[halo_number_].M_Crit200*1.e10);
-              MCMC_FOF[fof_group_number_].M_Mean200[output_number_] = log10(Halo[halo_number_].M_Mean200*1.e10);
+              MCMC_FOF[output_number_][fof_group_number_].M_Crit200 = log10(Halo[halo_number_].M_Crit200*1.e10);
+              MCMC_FOF[output_number_][fof_group_number_].M_Mean200 = log10(Halo[halo_number_].M_Mean200*1.e10);
 #ifdef MCRIT
-              MCMC_FOF[fof_group_number_].M_Mean200[output_number_] = log10(Halo[halo_number_].M_Crit200*1.e10);
+              MCMC_FOF[output_number_][fof_group_number_].M_Mean200 = log10(Halo[halo_number_].M_Crit200*1.e10);
 #endif
             }
         }
       }
     }
-
 }
 #endif
+
+
+/**@brief marks halos that will be used in MCMC sampling
+ *
+ * - requires MCMC_FOF[].FoFID[], NFofsInSample[] to be up to date, 
+ *   which is currently read from file in read_sample_info().
+ * - requires MCMC_FOF[].FoFID[] ordered for binary search.
+ * - requires HaloIDs, HaloAux, TreeNHalos to be upto date,
+ *   which are currently allocated/read in load_tree(tree_number_).
+ */
+void mark_halos_in_MCMC_sample(const int tree_number_)
+{
+  int halo_number_, output_number_, fof_number_ /*, fof_number_lower_bound_, fof_number_upper_bound_*/;
+  
+  printf("marking halos for tree %d.\n", tree_number_);
+  
+  for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+  {
+    const long long fof_id_of_halo_ = HaloIDs[halo_number_].FirstHaloInFOFgroup;
+    
+    HaloAux[halo_number_].halo_is_in_MCMC_sample_for_any_output = false;
+
+    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    {
+      HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = false;
+
+      /*
+      // linear search:
+      for(fof_number_ = 0; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
+        if(fof_id_of_halo_ == MCMC_FOF[output_number_][fof_number_].FoFID)
+        {
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = true;
+          break;
+        }
+        */
+      
+      //binary search:
+      if((NFofsInSample[output_number_] > 0) && (MCMC_FOF[output_number_][0].FoFID <= fof_id_of_halo_) && (fof_id_of_halo_ <= MCMC_FOF[output_number_][NFofsInSample[output_number_] - 1].FoFID))
+      {
+        unsigned int fof_number_lower_bound_ = 0;
+        unsigned int fof_number_upper_bound_ = NFofsInSample[output_number_] - 1;
+        while(fof_number_ = (fof_number_lower_bound_ + fof_number_upper_bound_) / 2, fof_number_lower_bound_ < fof_number_upper_bound_)
+        {
+          if(MCMC_FOF[output_number_][fof_number_].FoFID < fof_id_of_halo_)
+            fof_number_lower_bound_ = fof_number_ + 1;
+          else
+            fof_number_upper_bound_ = fof_number_;
+        }
+        if(fof_id_of_halo_ == MCMC_FOF[output_number_][fof_number_].FoFID)
+        {
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = true;
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_any_output             = true;
+        }
+      }
+    }
+  }
+  printf("done marking halos for tree %d.\n", tree_number_);
+}
+
+
+/** @brief free memory for MCMC_FOF **/
+void free_MCMC_FOF (void)
+{
+  unsigned int output_number_;
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+  { free(MCMC_FOF[output_number_]); }
+}
+
+
+/** @brief compares  for sorting MCMC_FOF_*/
+int MCMC_FOF_compare_FoFID(const void *MCMC_FOF_a_, const void *MCMC_FOF_b_)
+{
+  if     (((struct MCMC_FOF_struct*)MCMC_FOF_a_)->FoFID < ((struct MCMC_FOF_struct*)MCMC_FOF_b_)->FoFID)
+    return -1;   
+  else if(((struct MCMC_FOF_struct*)MCMC_FOF_a_)->FoFID > ((struct MCMC_FOF_struct*)MCMC_FOF_b_)->FoFID)
+    return +1;
+  else
+    return 0;
+}
 
 
 //////////
 //GASDEV//
 //////////
-
-//Gives a random normal deviate using ran3 (ran1 NR)
-
+/** @brief Gives a random normal deviate using ran3 (ran1 NR) */
 double gassdev(long *idum)
 {
   static int iset = 0;
@@ -1024,6 +1086,7 @@ double gassdev(long *idum)
 #define RNMX (1.0-EPS)
 #define EPS 1.2e-7  
 
+/** @brief Gives a random numbers */
 double ran3(long *idum)
 {
   int j;

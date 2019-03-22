@@ -54,7 +54,7 @@
 double SAM(const int tree_file_number_)
 {
 #ifdef MCMC
-  MCMC_GAL = mymalloc("MCMC_Gal", sizeof(struct MCMC_GALAXY) * MCMCAllocFactor);
+  MCMC_GAL = mymalloc("MCMC_Gal", sizeof(struct MCMC_GALAXY[MCMC_MAX_NGALS_PER_OUTPUT]) * NOUT);
   {
     int output_number_;
     for(output_number_ = 0; output_number_<NOUT; output_number_++)
@@ -177,7 +177,10 @@ double SAM(const int tree_file_number_)
 
     /* output remaining galaxies as needed */
     while(NHaloGal)
+    {
       output_galaxy(tree_number_, 0);
+      pop_galaxy_from_heap(0);
+    }
 
 #ifndef MCMC
 
@@ -247,10 +250,10 @@ double SAM(const int tree_file_number_)
   const double likelihood_ = get_likelihood();
 
 #ifdef MR_PLUS_MRII
-  free(MCMC_FOF);
+  free_MCMC_FOF();
 #else /* not defined MR_PLUS_MRII */
   if(CurrentMCMCStep==ChainLength)
-  { free(MCMC_FOF); }
+  { free_MCMC_FOF(); }
 #endif /* not defined MR_PLUS_MRII */
 
   myfree(MCMC_GAL);
@@ -882,30 +885,56 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
   
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifndef  POST_PROCESS_MAGS
-  int output_number_;
   /* If this is an output snapshot apply the dust model to each galaxy */
+  int output_number_;
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+  {
+    if(Halo[halo_number_].SnapNum == ListOutputSnaps[output_number_])
     {
-      if(Halo[halo_number_].SnapNum == ListOutputSnaps[output_number_])
-      {
-        for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
-        { dust_model(galaxy_number_, output_number_); }
-        break;
-      }
+      for(galaxy_number_ = 0; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
+      { dust_model(galaxy_number_, output_number_); }
+      break;
     }
+  }
 #endif /* not defined POST_PROCESS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 
   /* now save the galaxies of all the progenitors (and free the associated storage) */
   for(progenitor_halo_number_ = Halo[halo_number_].FirstProgenitor; progenitor_halo_number_ >= 0;  progenitor_halo_number_ = Halo[progenitor_halo_number_].NextProgenitor)
   {
+#ifdef MCMC
+    if(HaloAux[progenitor_halo_number_].halo_is_in_MCMC_sample_for_any_output)
+    {
+      for(i_ = 0, galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; i_++)
+      {
+        int next_galaxy_number_ = HaloGal[galaxy_number_].NextGalaxy;
+        /* this will write this galaxy to an output file and free the storage associate with it */
+        output_galaxy(tree_number_, HaloGal[galaxy_number_].HeapIndex);
+        pop_galaxy_from_heap(HaloGal[galaxy_number_].HeapIndex);
+        galaxy_number_ = next_galaxy_number_;
+      }
+    }
+    else
+    {
+      for(i_ = 0, galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; i_++)
+      {
+        int next_galaxy_number_ = HaloGal[galaxy_number_].NextGalaxy;
+        /* this will write this galaxy to an output file and free the storage associate with it */
+        pop_galaxy_from_heap(HaloGal[galaxy_number_].HeapIndex);
+        galaxy_number_ = next_galaxy_number_;
+      }
+    }
+      
+#else /* not defined MCMC */
     for(i_ = 0, galaxy_number_ = HaloAux[progenitor_halo_number_].FirstGalaxy; i_ < HaloAux[progenitor_halo_number_].NGalaxies; i_++)
     {
       int next_galaxy_number_ = HaloGal[galaxy_number_].NextGalaxy;
       /* this will write this galaxy to an output file and free the storage associate with it */
       output_galaxy(tree_number_, HaloGal[galaxy_number_].HeapIndex);
+      pop_galaxy_from_heap(HaloGal[galaxy_number_].HeapIndex);
       galaxy_number_ = next_galaxy_number_;
     }
+#endif /* not defined MCMC */    
   }
   
 #ifdef GALAXYTREE
@@ -1014,7 +1043,7 @@ void output_galaxy(const int tree_number_, const int heap_index_)
 #endif /* not defined GALAXYTREE */
 #endif /* not defined MCMC */
   
-  int galaxy_index_ = HaloGalHeap[heap_index_];
+  const int galaxy_index_ = HaloGalHeap[heap_index_];
 
   if(heap_index_ >= NHaloGal)
   { terminate("heap_index_ >= NHaloGal"); }
@@ -1062,7 +1091,24 @@ void output_galaxy(const int tree_number_, const int heap_index_)
 
 #endif /* not defined MCMC */
 
+//   /* fill the gap in the heap with the galaxy in the last occupied slot */
+//   const int last_ = NHaloGal - 1;
+//   const int last_gal_index_ = HaloGalHeap[last_];
+//   HaloGalHeap[last_] = galaxy_index_;
+//   HaloGalHeap[heap_index_] = last_gal_index_;
+// 
+//   /* make sure that the back-pointer of the last galaxy is updated */
+//   HaloGal[last_gal_index_].HeapIndex = heap_index_;
+// 
+//   NHaloGal--;
+}
+
+
+/** @brief pops galaxy from heap (temporary memory) */
+void pop_galaxy_from_heap(const int heap_index_)
+{
   /* fill the gap in the heap with the galaxy in the last occupied slot */
+  const int galaxy_index_ = HaloGalHeap[heap_index_];
   const int last_ = NHaloGal - 1;
   const int last_gal_index_ = HaloGalHeap[last_];
   HaloGalHeap[last_] = galaxy_index_;

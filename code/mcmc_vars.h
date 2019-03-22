@@ -43,8 +43,8 @@ double MCMCConstraintsZZ[NOUT];
 //Nr of SAM galaxies used to compare with data
 int TotMCMCGals[NOUT];
 //To allocate structure with SAM Galaxies
-#define MCMCAllocFactor 200000
-//#define MCMCAllocFactor 1000000
+#define MCMC_MAX_NGALS_PER_OUTPUT 200000
+//#define MCMC_MAX_NGALS_PER_OUTPUT 1000000
 long MCMCseed;
 int Nbins[NOUT][MCMCNConstraints]; //bins on each obs test
 double MCMC_Likelihood;
@@ -113,33 +113,33 @@ struct MCMC_OBSCONSTRAINTS
 
 struct MCMC_GALAXY
 {
-  float StellarMass  [NOUT];
-  float ColdGas      [NOUT];
-  float BulgeMass    [NOUT];
-  float BlackHoleMass[NOUT];
-  float Sfr          [NOUT];
-  float MagU         [NOUT];
-  float MagB         [NOUT];
-  float MagV         [NOUT];
-  float MagJ         [NOUT];
-  float MagK         [NOUT];
-  float Magu         [NOUT];
-  float Magg         [NOUT];
-  float Magr         [NOUT];
-  float Magi         [NOUT];
-  float Magz         [NOUT];
-  float Weight       [NOUT];
+  float StellarMass  ;
+  float ColdGas      ;
+  float BulgeMass    ;
+  float BlackHoleMass;
+  float Sfr          ;
+  float MagU         ;
+  float MagB         ;
+  float MagV         ;
+  float MagJ         ;
+  float MagK         ;
+  float Magu         ;
+  float Magg         ;
+  float Magr         ;
+  float Magi         ;
+  float Magz         ;
+  float Weight       ;
 #ifdef HALOMODEL
-  int fofid          [NOUT];
-  float M_Crit200    [NOUT];
-  float M_Mean200    [NOUT];
-  float x            [NOUT];
-  float y            [NOUT];
-  float z            [NOUT];
-  int Type           [NOUT];
-  int ngal           [NOUT];
+  int fofid          ;
+  float M_Crit200    ;
+  float M_Mean200    ;
+  float x            ;
+  float y            ;
+  float z            ;
+  int Type           ;
+  int ngal           ;
 #endif
-} *MCMC_GAL;
+} (*MCMC_GAL)[MCMC_MAX_NGALS_PER_OUTPUT]; /* that should be a pointer to an array of MCMC_MAX_NGALS_PER_OUTPUT struct's MCMC_GAL */
 
 
 struct MCMC_PAR
@@ -155,16 +155,15 @@ struct MCMC_PAR
 struct MCMC_FOF_struct
 {
 	//values for the sample of FoF groups
-	double Weight[NOUT];
-	long long FoFID[NOUT];
+	double    Weight            ;
+	long long FoFID             ;
 #ifdef HALOMODEL
-	float M_Crit200[NOUT];
-	float M_Mean200[NOUT];
-	int NGalsInFoF[NOUT];
-	int IndexOfCentralGal[NOUT];
+	float     M_Crit200         ;
+	float     M_Mean200         ;
+	int       NGalsInFoF        ;
+	int       IndexOfCentralGal ;
 #endif
-} *MCMC_FOF, *MCMC_FOF2;
-
+} *MCMC_FOF[NOUT] /* that should be an array of NOUT pointers to struct MCMC_FOF */, *MCMC_FOF2;
 
 
 //Variables to construct the halo model and compute

@@ -742,6 +742,7 @@ extern struct halo_aux_data  /* auxiliary halo data */
 
 #ifdef  MCMC
   bool halo_is_in_MCMC_sample_for_output[NOUT];
+  bool halo_is_in_MCMC_sample_for_any_output;
 #endif /* defined MCMC */
 }
  *HaloAux;
