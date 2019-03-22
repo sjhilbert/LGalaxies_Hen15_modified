@@ -360,7 +360,7 @@ double get_likelihood()
 /**@brief Bin Luminosity or Stellar Mass Function*/
 void bin_function(int ObsNr, double *bin_sam_data_, double *sam_data_, int output_number_)
 {
-  int ii, jj, kk, Nsamples, AddErrors;
+  int ii, jj, kk;
   double aux_bin_sam_data_, aux_samdata;
   // FILE *file_;
 
@@ -374,34 +374,39 @@ void bin_function(int ObsNr, double *bin_sam_data_, double *sam_data_, int outpu
      strcmp(MCMC_Obs[ObsNr].Name,"StellarMassFunctionRed")==0 ||
      strcmp(MCMC_Obs[ObsNr].Name,"StellarMassFunctionBlue")==0)
   {
-    AddErrors=1;
-    Nsamples=1000;
+    for(ii = 0; ii < Nbins[output_number_][ObsNr]; ii++)
+    {
+      //for a given stellar mass bin, calculate Nsamples number densities, then average
+      //just keep adding everything on aux_bin_sam_data_ and then divide by Nsamples
+      bin_sam_data_[ii] = 0.;
+      for(jj = 0; jj < 1000; jj++)
+      {
+        aux_bin_sam_data_ = 0.;
+        for(kk=0;kk<TotMCMCGals[output_number_];kk++)
+        {
+          aux_samdata = sam_data_[kk] + gsl_ran_ugaussian(MCMC_rng)*AddedErrOnMass*(1+MCMCConstraintsZZ[output_number_]);
+          if(MCMC_Obs[ObsNr].Bin_low[output_number_][ii] <= aux_samdata && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[output_number_][ii])
+            aux_bin_sam_data_ += MCMC_GAL[output_number_][kk].Weight;
+        }
+        bin_sam_data_[ii] += aux_bin_sam_data_;
+      }
+      bin_sam_data_[ii]/=((MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii]) * 1000.);
+    }    
   }
   else
   {
-    AddErrors=0;
-    Nsamples=1;
-  }
-
-  for(ii = 0; ii < Nbins[output_number_][ObsNr]; ii++)
-  {
-    //for a given stellar mass bin, calculate Nsamples number densities, then average
-    //just keep adding everything on aux_bin_sam_data_ and then divide by Nsamples
-    bin_sam_data_[ii] = 0.;
-    for(jj = 0; jj < Nsamples; jj++)
+    for(ii = 0; ii < Nbins[output_number_][ObsNr]; ii++)
     {
-      aux_bin_sam_data_ = 0.;
+      //for a given stellar mass bin, calculate Nsamples number densities, then average
+      //just keep adding everything on aux_bin_sam_data_ and then divide by Nsamples
+      bin_sam_data_[ii] = 0.;
       for(kk=0;kk<TotMCMCGals[output_number_];kk++)
       {
-        aux_samdata=sam_data_[kk];
-        if(AddErrors==1)
-          aux_samdata+=gsl_ran_ugaussian(MCMC_rng)*AddedErrOnMass*(1+MCMCConstraintsZZ[output_number_]);
-        if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[output_number_][ii] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[output_number_][ii])
-          aux_bin_sam_data_+=MCMC_GAL[output_number_][kk].Weight;
+        if(MCMC_Obs[ObsNr].Bin_low[output_number_][ii] <= sam_data_[kk] && sam_data_[kk] <= MCMC_Obs[ObsNr].Bin_high[output_number_][ii])
+          bin_sam_data_[ii] += MCMC_GAL[output_number_][kk].Weight;
       }
-      bin_sam_data_[ii]+=aux_bin_sam_data_/((float)(Nsamples));
-    }
-    bin_sam_data_[ii]/=(MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii]);
+      bin_sam_data_[ii] /= (MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii]);
+    }    
   }
 
   for(ii = 0; ii < Nbins[output_number_][ObsNr]; ii++)
@@ -423,7 +428,7 @@ void bin_red_fraction(int ObsNr, double *binredfraction, int output_number_)
   int i_, jj, k_, Nsamples=1000;
   bool is_red_galaxy_;
   double red, blue;
-  double color, color_U_minus_V_, color_V_minus_J_, aux_samdata;
+  double color_, color_U_minus_V_, color_V_minus_J_, aux_samdata;
   //OBSERVATIONAL CUT
   //double offset_color_cut[output_number_]={0.00, 0.69, 0.59, 0.59, 0.59}; //not used at z=0
   //double slope_color_cut[output_number_]={0.00, 0.88, 0.88, 0.88, 0.88};
@@ -449,23 +454,26 @@ void bin_red_fraction(int ObsNr, double *binredfraction, int output_number_)
   }
 #endif
 
+  const bool is_low_z_ = (double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.) < 0.2;
+
   for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
   {
     binredfraction[i_] = 0.;
 
     for(jj = 0; jj < Nsamples; jj++)
     {
-      red = 0.;
+      red  = 0.;
       blue = 0.;
 
       for(k_=0;k_<TotMCMCGals[output_number_];k_++)
       {
         //color g-r cut for z=0  - baldry 2004
         //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[output_number_][j_].Magr+20.07)/1.09))
-        if((double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.)<0.2)
+ //       if((double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.)<0.2)
+        if(is_low_z_)
         {
-          color=MCMC_GAL[output_number_][k_].Magu-MCMC_GAL[output_number_][k_].Magr;
-          is_red_galaxy_ = (color > (1.9-0.244*tanh((MCMC_GAL[output_number_][k_].Magr+20.07)/1.09)));
+          color_         = MCMC_GAL[output_number_][k_].Magu-MCMC_GAL[output_number_][k_].Magr;
+          is_red_galaxy_ = (color_ > (1.9-0.244* tanh((MCMC_GAL[output_number_][k_].Magr+20.07)*(1./1.09))));
         }
         //U-V vs V-J at higher redshift
         else
@@ -663,7 +671,7 @@ void bin_ColdGasFractionvsStellarMass(int ObsNr, double *bingasfraction, int out
 void bin_color_hist(int ObsNr, double *bincolorhist, int output_number_)
 {
   int i_, k_;
-  double color;
+  double color_;
 
   for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
   {
@@ -671,9 +679,9 @@ void bin_color_hist(int ObsNr, double *bincolorhist, int output_number_)
 
     for(k_=0;k_<TotMCMCGals[output_number_];k_++)
     {
-      color=MCMC_GAL[output_number_][k_].Magg-MCMC_GAL[output_number_][k_].Magr;
-      if(color >= MCMC_Obs[ObsNr].Bin_low [output_number_][i_] && 
-         color <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_] && 
+      color_=MCMC_GAL[output_number_][k_].Magg-MCMC_GAL[output_number_][k_].Magr;
+      if(color_ >= MCMC_Obs[ObsNr].Bin_low [output_number_][i_] && 
+         color_ <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_] && 
          MCMC_GAL[output_number_][k_].StellarMass > 9.0 && MCMC_GAL[output_number_][k_].StellarMass < 9.5)
       { bincolorhist[i_]=bincolorhist[i_]+MCMC_GAL[output_number_][k_].Weight; }
     }

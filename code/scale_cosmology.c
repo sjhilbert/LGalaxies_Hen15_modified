@@ -186,12 +186,12 @@ static inline double
 func_c_p(const double c_)
 { return (log(1 + c_) - c_ / (1 + c_)) / (c_ * c_ * c_); }
 
-/** @brief finds c_
+/** @brief finds new concentration parameter
  * 
  * finds c_ using bisection
  * 
  * since the original version of this function showed up
- * surprisingly high on profile, a_ more optimized bisection
+ * surprisingly high on profile, a more optimized bisection
  * version was implemented
  * 
  * @warning assumes that initial values bracket the result 
