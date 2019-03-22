@@ -85,21 +85,22 @@ double SAM(const int tree_file_number_)
   create_galaxy_files(tree_file_number_);
 #endif /* not defined GALAXYTREE */
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */
-  
 #ifdef LIGHTCONE_OUTPUT
   create_lightcone_galaxy_files(tree_file_number_);
 #endif /* defined LIGHTCONE_OUTPUT */ 
-  
-#endif /* not defined MCMC */
-  
+
 #ifndef LIGHTCONE_OUTPUT_ONLY
-#ifdef GALAXYTREE /* defined GALAXYTREE */
+#ifdef GALAXYTREE
   FILE *tree_n_gal_file_ = fopen("treengal.dat", "w");
 #endif /* defined GALAXYTREE */
-#endif /* defined LIGHTCONE_OUTPUT */ 
+#endif /* not defined LIGHTCONE_OUTPUT_ONLY */
+ 
+#endif /* not defined MCMC */
+
 
 //***************************************************************************************
 //***************************************************************************************
+  TotGalCount = 0;
 
   //for(tree_number_ = 0; tree_number_ < NTrees_Switch_MR_MRII; tree_number_++)
   int tree_number_;  
@@ -133,6 +134,7 @@ double SAM(const int tree_file_number_)
     int snapshot_number_;
     for(snapshot_number_ = 0; snapshot_number_ <= LastSnapShotNr; snapshot_number_++)
     {
+      
 #ifdef MCMC
       /* read the appropriate parameter list for current snapshot_number_
        * into the parameter variables to be used in construct_galaxies */
@@ -143,36 +145,34 @@ double SAM(const int tree_file_number_)
       assign_FOF_masses(snapshot_number_, tree_number_);
 #endif /* defined HALOMODEL */
 #endif /* defined MCMC */
+
       int halo_number_;
+      for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+      {
 #ifdef FIRST_HALO_FIRST
 /* construct halos starting with "official" first halo in fof group,
  * which then also takes care of all other halos in that fof group,
  * assuming, all progenitors have been constructed already
  * (i.e. acknowledge loop over snapshots) */
-     for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
-       if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup &&  HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
-         construct_galaxies_in_fof(tree_number_, halo_number_);
+        if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup && Halo[halo_number_].SnapNum == snapshot_number_)
+          construct_galaxies_in_fof(tree_number_, halo_number_);
 #else  /* not defined FIRST_HALO_FIRST */
 /* construct halos starting with whatever halos come first in input file,
  * which then also takes care of all other halos in that fof group,
  * not assuming, all progenitors have been constructed already
  * (though they should have because of loop over snapshots) */
-       for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
          if(HaloAux[halo_number_].DoneFlag == 0 && Halo[halo_number_].SnapNum == snapshot_number_)
            construct_galaxies(tree_number_, halo_number_);
 #endif /* not defined FIRST_HALO_FIRST */
+      }
     }
 
     /* output remaining galaxies as needed */
     while(NHaloGal)
-    {
-#ifdef LIGHTCONE_OUTPUT
-      lightcone_N_galaxies_remaining_for_output_past_construct_galaxies++;
-#endif /* defined LIGHTCONE_OUTPUT */              
       output_galaxy(tree_number_, 0);
-    }
 
 #ifndef MCMC
+
 #ifdef GALAXYTREE
     update_galaxy_tree_ids();
 #ifndef LIGHTCONE_OUTPUT_ONLY
@@ -180,22 +180,58 @@ double SAM(const int tree_file_number_)
 #endif /*not defined LIGHTCONE_OUTPUT_ONLY */
 #ifdef LIGHTCONE_OUTPUT
     save_lightcone_galaxy_finalize(tree_file_number_, tree_number_);
-#endif /* defined LIGHTCONE_OUTPUT */
-   
+#endif /* defined LIGHTCONE_OUTPUT */  
+#endif /* defined GALAXYTREE */
+
+#if defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 1
+#ifndef LIGHTCONE_OUTPUT_ONLY
+#ifdef GALAXYTREE
+    save_galaxy_tree_flush_output_buffer();
+#else  /* not defined GALAXYTREE */
+    save_galaxy_flush_output_buffer();
+#endif /* not defined GALAXYTREE */
+#endif /*not defined LIGHTCONE_OUTPUT_ONLY */
+#ifdef LIGHTCONE_OUTPUT
+    save_lightcone_galaxy_flush_output_buffer();
+#endif /* defined LIGHTCONE_OUTPUT */  
+#endif /* defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 1 */
+
+#ifndef LIGHTCONE_OUTPUT_ONLY
+#ifdef GALAXYTREE /* defined GALAXYTREE */
+    fprintf(tree_n_gal_file_, "%d\n", NGalTree);
+#endif /* defined GALAXYTREE */
+#endif /* defined LIGHTCONE_OUTPUT */ 
+
+#endif /* not defined MCMC */
+
+#ifdef GALAXYTREE /* defined GALAXYTREE */
+    TotGalCount += NGalTree;
+#else  /* not defined GALAXYTREE */
+    {
+      int output_number_;
+      TotGalCount = 0;
+      for(output_number_ = 0;  output_number_ < NOUT; ++output_number_)
+      { TotGalCount += TotGalaxies[output_number_]; }
+#ifdef LIGHTCONE_OUTPUT 
+      TotLightconeGalCount = 0;
+      for(output_number_ = 0;  output_number_ < NOUT; ++output_number_)
+      { TotLightconeGalCount += TotLightconeGalaxies[output_number_]; }
+#endif /* defined LIGHTCONE_OUTPUT */  
+    }
+#endif /* not defined GALAXYTREE */
+
+#ifndef MCMC
 #ifndef PARALLEL
 #ifdef LIGHTCONE_OUTPUT
     if(0 == tree_number_ % 100) printf("tree_number_=%d  TotGalCount=%d   TotLightconeGalCount=%lld\n", tree_number_, TotGalCount, TotLightconeGalCount);
 #else /* not defined LIGHTCONE_OUTPUT */
     if(0 == tree_number_ % 100) printf("tree_number_=%d  TotGalCount=%d\n", tree_number_, TotGalCount);
 #endif /* not defined LIGHTCONE_OUTPUT */
-#endif /* note defined PARALLEL*/
+#endif /* not defined PARALLEL */
+#endif /* not defined MCMC */
+
     fflush(stdout);
-#ifndef LIGHTCONE_OUTPUT_ONLY
-    fprintf(tree_n_gal_file_, "%d\n", NGalTree);
-#endif /* not defined LIGHTCONE_OUTPUT_ONLY */
-#endif /* defined GALAXYTREE */
-#else /* defined MCMC */
-#endif /* defined MCMC */
+
     free_galaxies_and_tree();
   }//loop on trees
 
@@ -221,9 +257,24 @@ double SAM(const int tree_file_number_)
   close_galaxy_files();
 #endif /* not defined GALAXYTREE */
 #endif /* not defined LIGHTCONE_OUTPUT_ONLY */
-
 #ifdef LIGHTCONE_OUTPUT  
   close_lightcone_galaxy_files();
+#endif /* defined LIGHTCONE_OUTPUT */
+
+#if defined OUTPUT_BUFFERING
+#ifndef LIGHTCONE_OUTPUT_ONLY
+#ifdef GALAXYTREE
+    save_galaxy_tree_show_output_buffer_statistics();
+#else  /* not defined GALAXYTREE */
+    save_galaxy_show_output_buffer_statistics();
+#endif /* not defined GALAXYTREE */
+#endif /*not defined LIGHTCONE_OUTPUT_ONLY */
+#ifdef LIGHTCONE_OUTPUT
+    save_lightcone_galaxy_show_output_buffer_statistics();
+#endif /* defined LIGHTCONE_OUTPUT */  
+#endif /* defined OUTPUT_BUFFERING */
+
+#ifdef LIGHTCONE_OUTPUT  
   show_lightcone_statistics();
 #endif /* defined LIGHTCONE_OUTPUT */
 
@@ -847,8 +898,10 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
       galaxy_number_ = next_galaxy_number_;
     }
   }
-    
+  
+#ifdef GALAXYTREE
   const int evolved_galaxies_begin_ = NGalTree;
+#endif /* defined GALAXYTREE */
   for(galaxy_number_ = 0, previous_galaxy_number_ = -1, current_halo_number_ = -1, fof_central_galaxy_number_ = -1; galaxy_number_ < n_galaxies_in_fof_group_; galaxy_number_++)
   {
     if(Gal[galaxy_number_].HaloNr != current_halo_number_)
@@ -945,6 +998,13 @@ void evolve_galaxies(const int halo_number_, const int n_galaxies_in_fof_group_,
 void output_galaxy(const int tree_number_, const int heap_index_)
 {
   (void) tree_number_; /* avoid unused-parameter warning for certain compiler options */
+  
+#ifndef MCMC
+#ifndef GALAXYTREE
+  int output_number_;
+#endif /* not defined GALAXYTREE */
+#endif /* not defined MCMC */
+  
   int galaxy_index_ = HaloGalHeap[heap_index_];
 
   if(heap_index_ >= NHaloGal)
@@ -956,15 +1016,9 @@ void output_galaxy(const int tree_number_, const int heap_index_)
 #ifdef GUO10
 #ifdef UPDATETYPETWO
   update_type_two_coordinate_and_velocity(tree_number_, galaxy_index_, HaloGal[0].CentralGal);
-#endif
-#endif
+#endif /* defined GUO10 */
+#endif /* defined UPDATETYPETWO */
 
-#ifdef GALAXYTREE
-  GalTree[HaloGal[galaxy_index_].GalTreeIndex].IndexStored = IndexStored++;
-#ifndef LIGHTCONE_OUTPUT_ONLY  
-  save_galaxy_tree_append(galaxy_index_);
-#endif /* not defined LIGHTCONE_OUTPUT_ONLY */
-#else /* not defined GALAXYTREE */
 #ifdef MCMC
   /* if MCMC galaxies are saved into a structure to then be compared
    * with observations. The output will come in form of a file with
@@ -973,38 +1027,31 @@ void output_galaxy(const int tree_number_, const int heap_index_)
   save_galaxy_for_mcmc(galaxy_index_);
 
 #else  /* not defined MCMC */
-#ifndef LIGHTCONE_OUTPUT_ONLY  
-  {
-    int output_number_;
-    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
-      if(ListOutputSnaps[output_number_] == HaloGal[galaxy_index_].SnapNum)
-      {
-        save_galaxy_append(tree_number_, galaxy_index_, output_number_);
-      }
-  }
-#endif /* not defined LIGHTCONE_OUTPUT_ONLY */
-#endif /* not defined MCMC */
-#endif /* not defined GALAXYTREE */
 
-#ifndef MCMC
+#ifndef LIGHTCONE_OUTPUT_ONLY  
+#ifdef GALAXYTREE
+  GalTree[HaloGal[galaxy_index_].GalTreeIndex].IndexStored = IndexStored++;
+  save_galaxy_tree_append(galaxy_index_);
+#else /* not defined GALAXYTREE */
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    if(ListOutputSnaps[output_number_] == HaloGal[galaxy_index_].SnapNum)
+    { save_galaxy_append(tree_number_, galaxy_index_, output_number_); }
+#endif /* not defined GALAXYTREE */
+#endif /* not defined LIGHTCONE_OUTPUT_ONLY */
+
 #ifdef LIGHTCONE_OUTPUT
 #ifdef GALAXYTREE
   GalTree[HaloGal[galaxy_index_].GalTreeIndex].lightcone_galaxy_number_in_file_begin = TotLightconeGalCount;       
   save_lightcone_galaxy_append(galaxy_index_, HaloGal[galaxy_index_].SnapNum);
   GalTree[HaloGal[galaxy_index_].GalTreeIndex].lightcone_galaxy_number_in_file_end = TotLightconeGalCount;
 #else  /* not defined GALAXYTREE */
-  {
-    int output_number_;
-    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
-      if(ListOutputSnaps[output_number_] == HaloGal[galaxy_index_].SnapNum)
-      {
-        save_lightcone_galaxy_append(galaxy_index_, output_number_);
-      }
-  }
+  for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    if(ListOutputSnaps[output_number_] == HaloGal[galaxy_index_].SnapNum)
+    { save_lightcone_galaxy_append(galaxy_index_, output_number_); }
 #endif /* not defined GALAXYTREE */
-
 #endif /* defined LIGHTCONE_OUTPUT */
-#endif /* not defined MCMC */ 
+
+#endif /* not defined MCMC */
 
   /* fill the gap in the heap with the galaxy in the last occupied slot */
   const int last_ = NHaloGal - 1;

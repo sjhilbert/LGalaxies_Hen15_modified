@@ -46,21 +46,14 @@ double time_to_present(const double redshift_);
 /** @brief snapshot number to cosmic time */
 #define NumToTime(snapshot_number_) Age[snapshot_number_]
 
-/** @brief Converts luminosities into magnitudes
+
+/** @brief Converts luminosities into magnitudes 
+ *         (unless #defined FULL_SPECTRA).
  *
  * Converts luminosities into magnitudes:
  * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
 static inline double 
 lum_to_mag(const double lum_)
-{ return (lum_ > 2.511886431509581e-40) ? -2.5 * log10(lum_) : 99.0; }
-
-
-/** @brief Converts luminosities into magnitudes
- *
- * Converts luminosities into magnitudes:
- * \f$ M=-2.5\mathrm{log}_{10}(L) \f$ */
-static inline double 
-lum_to_lum_or_mag(const double lum_)
 {
 #ifdef FULL_SPECTRA  
   return lum_;
@@ -92,10 +85,11 @@ void free_tree_table(void);
 void load_tree(const int tree_number_);
 void free_galaxies_and_tree(void);
 
-size_t myfread(void *ptr, size_t size_, size_t n_memb_, FILE * stream_);
-size_t myfwrite(void *ptr, size_t size_, size_t n_memb_, FILE * stream_);
-size_t myffill(void *ptr_, size_t size_, size_t n_memb_, FILE * stream_);
-int myfseek(FILE * stream_, long offset_, int whence_);
+size_t myfread(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_);
+size_t myfwrite(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_);
+size_t myfwrite_large_data(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_);
+size_t myffill(void *ptr_, const size_t size_, const size_t n_memb_, FILE * stream_);
+int myfseek(FILE * stream_, const long offset_, const int whence_);
 
 /* model.c */
 double SAM(const int tree_file_number_);
@@ -185,8 +179,11 @@ void setup_LumTables_precomputed(const char sim_name_[]);
 
 void init_SSP_log_age_jump_index(void);
 
-static inline int get_SSP_log_age_jump_index(const double log10_age_)
-{ return SSP_log_age_jump_table[(int) ((log10_age_ - SSP_logAgeTab[1]) * SSP_log_age_jump_factor)]; }
+// static inline int get_SSP_log_age_jump_index(const double log10_age_)
+// { return SSP_log_age_jump_table[(int) ((log10_age_ - SSP_logAgeTab[1]) * SSP_log_age_jump_factor)]; }
+
+#define get_SSP_log_age_jump_index(log10_age_) \
+SSP_log_age_jump_table[(int) ((log10_age_ - SSP_logAgeTab[1]) * SSP_log_age_jump_factor)]
 
 #define find_age_luminosity_interpolation_parameters(log10_age_, age_index_, f_age_1_, f_age_2_) \
 locate_interpolation_index_and_fraction_bf(age_index_, 0, SSP_NAGES, log10_age_, SSP_logAgeTab, f_age_1_, f_age_2_, <, linear, get_SSP_log_age_jump_index)
@@ -271,6 +268,12 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 long long calc_big_db_offset(const int file_number_, const int tree_number_);
 long long calc_big_db_subid_index(const int snapnum, const int file_number_, const int subhalo_index_);
 
+#ifdef OUTPUT_BUFFERING
+void save_galaxy_init_output_buffer(void);
+void save_galaxy_flush_output_buffer(void);
+void save_galaxy_show_output_buffer_statistics(void);
+#endif /* defined OUTPUT_BUFFERING */
+
 #ifdef FIX_OUTPUT_UNITS
 void fix_units_for_ouput(struct GALAXY_OUTPUT *output_galaxy_);
 #endif /* defined FIX_OUTPUT_UNITS */
@@ -296,6 +299,12 @@ int output_galaxy_compare(const void *output_galaxy_a_, const void *output_galax
 int save_galaxy_tree_compare(const void *a_, const void *b_);
 int save_galaxy_tree_mp_comp(const void *mp_tree_data_a_, const void *mp_tree_data_b_);
 
+#ifdef OUTPUT_BUFFERING
+void save_galaxy_tree_init_output_buffer(void);
+void save_galaxy_tree_flush_output_buffer(void);
+void save_galaxy_tree_show_output_buffer_statistics(void);
+#endif /* defined OUTPUT_BUFFERING */
+
 #endif /* defined GALAXYTREE */
 
 #ifdef LIGHTCONE_OUTPUT
@@ -313,6 +322,13 @@ void adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shif
 
 int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightcone_galaxy_b_);
 int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const void *galaxy_tree_data_b_);
+
+#ifdef OUTPUT_BUFFERING
+void save_lightcone_galaxy_init_output_buffer(void);
+void save_lightcone_galaxy_flush_output_buffer(void);
+void save_lightcone_galaxy_show_output_buffer_statistics(void);
+#endif /* defined OUTPUT_BUFFERING */
+
 #endif /* defined LIGHTCONE_OUTPUT */
 
 /* scale_cosmology.c */

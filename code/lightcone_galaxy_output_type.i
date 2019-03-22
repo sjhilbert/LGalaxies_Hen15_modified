@@ -7,7 +7,7 @@
 # 1 "./code/lightcone_galaxy_output_type.h"
 # 27 "./code/lightcone_galaxy_output_type.h"
 # 1 "./code/allvars.h" 1
-# 21 "./code/allvars.h"
+# 29 "./code/allvars.h"
 # 1 "/usr/include/stdio.h" 1 3 4
 # 28 "/usr/include/stdio.h" 3 4
 # 1 "/usr/include/bits/libc-header-start.h" 1 3 4
@@ -953,7 +953,7 @@ __attribute__ ((__nothrow__ , __leaf__)) ferror_unlocked (FILE *__stream)
 # 937 "/usr/include/stdio.h" 2 3 4
 # 945 "/usr/include/stdio.h" 3 4
 
-# 22 "./code/allvars.h" 2
+# 30 "./code/allvars.h" 2
 # 1 "/usr/local/include/gsl/gsl_rng.h" 1 3
 # 22 "/usr/local/include/gsl/gsl_rng.h" 3
 # 1 "/usr/include/stdlib.h" 1 3 4
@@ -2340,7 +2340,7 @@ double gsl_rng_uniform_pos (const gsl_rng * r);
 unsigned long int gsl_rng_uniform_int (const gsl_rng * r, unsigned long int n);
 # 216 "/usr/local/include/gsl/gsl_rng.h" 3
 
-# 23 "./code/allvars.h" 2
+# 31 "./code/allvars.h" 2
 # 1 "/usr/include/time.h" 1 3 4
 # 29 "/usr/include/time.h" 3 4
 # 1 "/afs/mpa/@sys/system/MPA-8.03k4.4/usr/lib/gcc/x86_64-pc-linux-gnu/6.3.0/include/stddef.h" 1 3 4
@@ -2595,23 +2595,24 @@ extern int timespec_get (struct timespec *__ts, int __base)
      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
 # 313 "/usr/include/time.h" 3 4
 
-# 24 "./code/allvars.h" 2
+# 32 "./code/allvars.h" 2
 # 1 "/afs/mpa/@sys/system/MPA-8.03k4.4/usr/lib/gcc/x86_64-pc-linux-gnu/6.3.0/include/stdbool.h" 1 3 4
-# 25 "./code/allvars.h" 2
+# 33 "./code/allvars.h" 2
 
 # 1 "./code/mathematical_constants.h" 1
-# 27 "./code/allvars.h" 2
+# 35 "./code/allvars.h" 2
 # 1 "./code/physical_constants_and_units.h" 1
-# 28 "./code/allvars.h" 2
-# 80 "./code/allvars.h"
+# 36 "./code/allvars.h" 2
+# 95 "./code/allvars.h"
 
-# 80 "./code/allvars.h"
+# 95 "./code/allvars.h"
 typedef enum GasComponentType_ { HotGasComponent, ColdGasComponent, EjectedGasComponent } GasComponentType;
 extern const char* GasComponentStr[];
 
+
 typedef enum StellarComponentType_ { DiskComponent, BulgeComponent, ICMComponent, BurstComponent } StellarComponentType;
 extern const char* StellarComponentStr[];
-# 166 "./code/allvars.h"
+# 184 "./code/allvars.h"
 struct GALAXY_OUTPUT
 {
 
@@ -2634,9 +2635,9 @@ struct GALAXY_OUTPUT
   long long MMSubID;
   int PeanoKey;
   float Redshift;
-# 196 "./code/allvars.h"
+# 214 "./code/allvars.h"
   int Type;
-# 210 "./code/allvars.h"
+# 228 "./code/allvars.h"
   int SnapNum;
   float LookBackTimeToSnap;
   float CentralMvir;
@@ -2670,7 +2671,7 @@ struct GALAXY_OUTPUT
   float BlackHoleMass;
 
   float ICM;
-# 254 "./code/allvars.h"
+# 272 "./code/allvars.h"
   float MetalsColdGas;
   float MetalsStellarMass;
   float MetalsBulgeMass;
@@ -2678,7 +2679,7 @@ struct GALAXY_OUTPUT
   float MetalsHotGas;
   float MetalsEjectedMass;
   float MetalsICM;
-# 269 "./code/allvars.h"
+# 287 "./code/allvars.h"
   float PrimordialAccretionRate;
   float CoolingRadius;
   float CoolingRate;
@@ -2694,11 +2695,11 @@ struct GALAXY_OUTPUT
   float CosInclination;
   int DisruptOn;
   int MergeOn;
-# 296 "./code/allvars.h"
+# 314 "./code/allvars.h"
   float ObsMagDust[20];
   float ObsMag[20];
   float ObsMagBulge[20];
-# 324 "./code/allvars.h"
+# 340 "./code/allvars.h"
   float MassWeightAge;
   float rbandWeightAge;
 
@@ -2716,12 +2717,13 @@ struct GALAXY_OUTPUT
   float sfh_MetalsDiskMass[20];
   float sfh_MetalsBulgeMass[20];
   float sfh_MetalsICM[20];
-# 360 "./code/allvars.h"
+# 376 "./code/allvars.h"
 };
 
 
 
-struct SFH_BIN {
+struct SFH_BIN
+{
  long long GalID;
  short snapnum;
     short sfh_ibin;
@@ -2738,7 +2740,7 @@ struct SFH_BIN {
   float sfh_MetalsDiskMass;
   float sfh_MetalsBulgeMass;
   float sfh_MetalsICM;
-# 399 "./code/allvars.h"
+# 416 "./code/allvars.h"
 };
 
 
@@ -2827,13 +2829,13 @@ extern struct GALAXY
   float HotGas;
   float EjectedMass;
   float BlackHoleMass;
-# 497 "./code/allvars.h"
+# 514 "./code/allvars.h"
   float MetalsColdGas;
   float MetalsBulgeMass;
   float MetalsDiskMass;
   float MetalsHotGas;
   float MetalsEjectedMass;
-# 511 "./code/allvars.h"
+# 528 "./code/allvars.h"
   float PrimordialAccretionRate;
   float CoolingRate;
   float CoolingRate_beforeAGN;
@@ -2867,13 +2869,7 @@ extern struct GALAXY
 
 
    float MetalsICM;
-# 561 "./code/allvars.h"
-  float ObsLum[20][64];
-  float ObsYLum[20][64];
-  float ObsLumBulge[20][64];
-  float ObsYLumBulge[20][64];
-  float ObsLumDust[20][64];
-# 595 "./code/allvars.h"
+# 611 "./code/allvars.h"
   float MassWeightAge[64];
   float rbandWeightAge[64];
 
@@ -2895,7 +2891,7 @@ extern struct GALAXY
   float sfh_MetalsDiskMass[20];
   float sfh_MetalsBulgeMass[20];
   float sfh_MetalsICM[20];
-# 634 "./code/allvars.h"
+# 650 "./code/allvars.h"
 } *Gal, *HaloGal;
 
 
@@ -2947,14 +2943,14 @@ extern struct halo_ids_data
  int PeanoKey;
  int dummy;
 } *HaloIDs, *HaloIDs_Data;
-# 694 "./code/allvars.h"
+# 710 "./code/allvars.h"
 extern struct halo_aux_data
 {
  int DoneFlag;
  int HaloFlag;
  int NGalaxies;
  int FirstGalaxy;
-# 708 "./code/allvars.h"
+# 724 "./code/allvars.h"
 }
  *HaloAux;
 
@@ -3033,10 +3029,8 @@ extern double MaxMemSize;
 extern size_t AllocatedBytes;
 extern size_t HighMarkBytes;
 extern size_t FreeBytes;
-# 795 "./code/allvars.h"
-extern int GalCount;
+# 810 "./code/allvars.h"
 extern int TotGalCount;
-
 
 
 extern double BaryonFrac;
@@ -3053,7 +3047,7 @@ extern double PartMass;
 extern double BoxSize;
 extern double PartMass_OriginalCosm;
 extern double BoxSize_OriginalCosm;
-# 827 "./code/allvars.h"
+# 840 "./code/allvars.h"
 extern int ReionizationModel;
 extern int DiskRadiusModel;
 extern int StarFormationModel;
@@ -3095,7 +3089,7 @@ extern double EjectSlope;
 extern double ReIncorporationFactor;
 extern double EnergySNcode, EnergySN;
 extern double EtaSNcode, EtaSN;
-# 883 "./code/allvars.h"
+# 896 "./code/allvars.h"
 extern double a0, ar;
 
 extern int ListOutputSnaps[64];
@@ -3116,12 +3110,12 @@ extern gsl_rng *random_generator;
 
 
 extern int NumMergers;
-# 912 "./code/allvars.h"
+# 925 "./code/allvars.h"
 extern double SFH_t[64][20][20];
 extern double SFH_dt[64][20][20];
 extern int SFH_Nbins[64][20][20];
 extern int SFH_ibin[64][20];
-# 1069 "./code/allvars.h"
+# 1082 "./code/allvars.h"
 extern float SSP_logMetalTab[4];
 
 extern float SSP_logAgeTab[220];
@@ -3134,7 +3128,7 @@ extern float FilterLambda[20 +1];
 
 extern int SSP_log_age_jump_table[1000];
 extern double SSP_log_age_jump_factor;
-# 1094 "./code/allvars.h"
+# 1107 "./code/allvars.h"
 extern long mu_seed;
 
 
@@ -3155,7 +3149,7 @@ extern float *PosList, *VelList;
 extern int Hashbits;
 extern int NumWrittenInParallel;
 extern double ScaleFactor;
-# 1124 "./code/allvars.h"
+# 1137 "./code/allvars.h"
 extern float Reion_z[45];
 extern float Reion_log10_Mc[45];
 
@@ -3165,12 +3159,12 @@ extern FILE *treedbids_file;
 extern FILE *FdGalTree;
 extern FILE *FdGalTreeSFH;
 extern FILE *FdGalDumps[64];
-# 1141 "./code/allvars.h"
+# 1154 "./code/allvars.h"
 extern double distance_table_for_interpolation[150];
 extern double redshift_table_for_interpolation[150];
 # 28 "./code/lightcone_galaxy_output_type.h" 2
 # 36 "./code/lightcone_galaxy_output_type.h"
-typedef struct custom_lightcone_galaxy_output_type_
+typedef struct lightcone_galaxy_custom_output_type_
 {
 # 68 "./code/lightcone_galaxy_output_type.h"
   long long GalID;
@@ -3232,7 +3226,7 @@ typedef struct custom_lightcone_galaxy_output_type_
   float MassWeightAge;
   float rbandWeightAge;
 
-} custom_lightcone_galaxy_output_type;
+} lightcone_galaxy_custom_output_type;
 
 
 
@@ -3255,7 +3249,7 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
 static inline void
 prepare_galaxy_tree_info_for_lightcone_output(const int file_number_, const int tree_number_, const struct galaxy_tree_data *tree_gal_, lightcone_galaxy_output_type *galaxy_)
 {
-  long long big_offset_ = calc_big_db_offset(file_number_, tree_number_);
+  const long long big_db_offset_ = calc_big_db_offset(file_number_, tree_number_);
 
   galaxy_->GalID = tree_gal_->GalID;
   galaxy_->FOFCentralGal = tree_gal_->FOFCentralGal;
@@ -3267,8 +3261,17 @@ prepare_galaxy_tree_info_for_lightcone_output(const int file_number_, const int 
   galaxy_->MainLeafId = tree_gal_->MainLeaf;
   galaxy_->TreeRootId = tree_gal_->TreeRoot;
   galaxy_->DescendantGal = tree_gal_->DescendantGal;
-  galaxy_->FileTreeNr = big_offset_;
-# 336 "./code/lightcone_galaxy_output_type.h"
+  galaxy_->FileTreeNr = big_db_offset_;
+
+
+
+
+
+
+
+  const long long big_offset_ = big_db_offset_;
+
+
   galaxy_->GalID += big_offset_;
   galaxy_->FOFCentralGal += big_offset_;
 
@@ -3320,7 +3323,7 @@ myfwrite_lightcone_galaxy(lightcone_galaxy_output_type *galaxy_, const size_t n_
 static inline size_t
 myfwrite_lightcone_galaxy_from_galaxy_output(struct GALAXY_OUTPUT *galaxy_, const size_t n_to_write_, FILE * stream_)
 {
-# 397 "./code/lightcone_galaxy_output_type.h"
-  return myfwrite(&galaxy_, sizeof(struct GALAXY_OUTPUT), 1, stream_);
+# 399 "./code/lightcone_galaxy_output_type.h"
+  return myfwrite(&galaxy_, sizeof(struct GALAXY_OUTPUT), n_to_write_, stream_);
 
 }

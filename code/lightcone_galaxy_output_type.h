@@ -167,7 +167,7 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
 #ifdef LIGHTCONE_CUSTOM_OUTPUT
   
   int i_;
-  
+
 #ifdef LIGHT_OUTPUT                           
   lightcone_galaxy_->Type                        = galaxy_->Type                       ;
   lightcone_galaxy_->SnapNum                     = galaxy_->SnapNum                    ;
@@ -272,27 +272,27 @@ galaxy_output_to_lightcone_galaxy_output_type(const struct GALAXY_OUTPUT *galaxy
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifdef OUTPUT_REST_MAGS           
   for(i_ = 0; i_ < NMAG; i_++)    
-  lightcone_galaxy_->MagDust[i_]                 = galaxy_->MagDust[i_]                ;
+  lightcone_galaxy_->MagDust    [i_]             = galaxy_->MagDust   [i_]             ;
   for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->Mag[i_]                     = galaxy_->Mag[i_]                    ;
+  lightcone_galaxy_->Mag        [i_]             = galaxy_->Mag       [i_]             ;
   for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->MagBulge[i_]                = galaxy_->MagBulge[i_]               ;
+  lightcone_galaxy_->MagBulge   [i_]             = galaxy_->MagBulge  [i_]             ;
 #ifdef ICL
   for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->MagICL[i_]                  = galaxy_->MagICL[i_]                 ;
+  lightcone_galaxy_->MagICL     [i_]             = galaxy_->MagICL    [i_]             ;
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 
 #ifdef OUTPUT_OBS_MAGS
   for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->ObsMagDust[i_]              = galaxy_->ObsMagDust[i_]             ;
+  lightcone_galaxy_->ObsMagDust [i_]             = galaxy_->ObsMagDust [i_]            ;
   for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->ObsMag[i_]                  = galaxy_->ObsMag[i_]                 ;
+  lightcone_galaxy_->ObsMag     [i_]             = galaxy_->ObsMag     [i_]            ;
   for(i_ = 0; i_ < NMAG; i_++)
   lightcone_galaxy_->ObsMagBulge[i_]             = galaxy_->ObsMagBulge[i_]            ;
 #ifdef ICL
   for(i_ = 0; i_ < NMAG; i_++)
-  lightcone_galaxy_->ObsMagICL[i_]               = galaxy_->ObsMagICL[i_]              ;
+  lightcone_galaxy_->ObsMagICL  [i_]             = galaxy_->ObsMagICL  [i_]            ;
 #endif /* defined ICL */
 #endif /* defined OUTPUT_OBS_MAGS */
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
@@ -396,7 +396,7 @@ myfwrite_lightcone_galaxy_from_galaxy_output(struct GALAXY_OUTPUT *galaxy_, cons
   }
   return n_to_write_;
 #else  /* not defined LIGHTCONE_CUSTOM_OUTPUT */
-  return myfwrite(&galaxy_, sizeof(struct GALAXY_OUTPUT), 1, stream_);
+  return myfwrite(&galaxy_, sizeof(struct GALAXY_OUTPUT), n_to_write_, stream_);
 #endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 }
 

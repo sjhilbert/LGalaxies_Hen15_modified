@@ -484,7 +484,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       Gal[central_galaxy_number_]. Lum[output_number_][filter_number_] += Gal[satellite_galaxy_number_]. Lum[output_number_][filter_number_];
       Gal[central_galaxy_number_].YLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].YLum[output_number_][filter_number_];
 #ifdef ICL
-      Gal[central_galaxy_number_].ICLLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].ICLLum[output_number_][filter_number_];
+      Gal[central_galaxy_number_].LumICL[output_number_][filter_number_] += Gal[satellite_galaxy_number_].LumICL[output_number_][filter_number_];
 #endif /* defined ICL */
     }
     
@@ -515,7 +515,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       Gal[central_galaxy_number_].ObsLum[output_number_][filter_number_]   += Gal[satellite_galaxy_number_].ObsLum[output_number_][filter_number_];
       Gal[central_galaxy_number_].ObsYLum[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsYLum[output_number_][filter_number_];
 #ifdef ICL
-      Gal[central_galaxy_number_].ObsICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsICL[output_number_][filter_number_];
+      Gal[central_galaxy_number_].ObsLumICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].ObsLumICL[output_number_][filter_number_];
 #endif /* defined ICL */
     }
     
@@ -545,7 +545,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       Gal[central_galaxy_number_].backward_ObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsLum[output_number_][filter_number_];
       Gal[central_galaxy_number_].backward_ObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].backward_ObsYLum[output_number_][filter_number_];
 #ifdef ICL
-      Gal[central_galaxy_number_].backward_ObsICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsICL[output_number_][filter_number_];
+      Gal[central_galaxy_number_].backward_ObsLumICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].backward_ObsLumICL[output_number_][filter_number_];
 #endif /* defined ICL */
     }
     
@@ -573,7 +573,7 @@ void add_galaxies_together(const int central_galaxy_number_, const int satellite
       Gal[central_galaxy_number_].forward_ObsLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsLum[output_number_][filter_number_];
       Gal[central_galaxy_number_].forward_ObsYLum[output_number_][filter_number_] += Gal[satellite_galaxy_number_].forward_ObsYLum[output_number_][filter_number_];
 #ifdef ICL
-      Gal[central_galaxy_number_].forward_ObsICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsICL[output_number_][filter_number_];
+      Gal[central_galaxy_number_].forward_ObsLumICL[output_number_][filter_number_]  += Gal[satellite_galaxy_number_].forward_ObsLumICL[output_number_][filter_number_];
 #endif /* defined ICL */
     }
     

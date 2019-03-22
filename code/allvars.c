@@ -101,9 +101,9 @@ size_t FreeBytes;
 int ThisTask, NTask;
 #endif /* defined PARALLEL */
 
-#ifdef GALAXYTREE
-int GalCount;
 int TotGalCount;
+
+#ifdef GALAXYTREE
 struct galaxy_tree_data *GalTree;
 #endif
 
@@ -325,7 +325,6 @@ long long lightcone_N_fof_groups_skipped_construction;
 long long lightcone_N_galaxies_skipped_construction;
 long long lightcone_N_galaxies_skipped_output_early;
 long long lightcone_N_galaxies_for_output;
-long long lightcone_N_galaxies_remaining_for_output_past_construct_galaxies;
 
 
 #endif /* defined LIGHTCONE_OUTPUT */

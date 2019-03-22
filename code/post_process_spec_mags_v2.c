@@ -489,6 +489,7 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
                                             false);
 #endif /* defined ICL */
 
+#ifndef LIGHT_OUTPUT
 #ifdef OUTPUT_REST_MAGS
         if((galaxy_->DiskMass+galaxy_->BulgeMass) > 0. && filter_number_ == r_band_filter_number_)
         {
@@ -496,11 +497,15 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
           previous_r_band_luminosity_= LumDisk_ + LumBulge_;
         }
 #endif /* defined OUTPUT_REST_MAGS */
+#endif /* not defined LIGHT_OUTPUT */
+
+
 #if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
       } // end of loop on fine bins
 #endif /* defined N_FINE_AGE_BINS > 1 */
     }//end of loop on sfh bins
 
+#ifndef LIGHT_OUTPUT
 #ifdef OUTPUT_REST_MAGS
     if((galaxy_->DiskMass+galaxy_->BulgeMass) > 0. && filter_number_ == r_band_filter_number_)
     {
@@ -509,33 +514,35 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
     }
 #endif /* defined OUTPUT_REST_MAGS */
 
+#ifndef LIGHT_OUTPUT
 #ifdef OUTPUT_REST_MAGS
-    galaxy_->Mag                 [filter_number_] = lum_to_lum_or_mag(LumDisk_ + LumBulge_);
-    galaxy_->MagBulge            [filter_number_] = lum_to_lum_or_mag(LumBulge_);
+    galaxy_->Mag                 [filter_number_] = lum_to_mag(LumDisk_ + LumBulge_);
+    galaxy_->MagBulge            [filter_number_] = lum_to_mag(LumBulge_);
 #ifdef ICL
-    galaxy_->MagICL              [filter_number_] = lum_to_lum_or_mag(LumICL_);
+    galaxy_->MagICL              [filter_number_] = lum_to_mag(LumICL_);
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
-    galaxy_->ObsMag              [filter_number_] = lum_to_lum_or_mag(ObsLumDisk_ + ObsLumBulge_);
-    galaxy_->ObsMagBulge         [filter_number_] = lum_to_lum_or_mag(ObsLumBulge_);
+    galaxy_->ObsMag              [filter_number_] = lum_to_mag(ObsLumDisk_ + ObsLumBulge_);
+    galaxy_->ObsMagBulge         [filter_number_] = lum_to_mag(ObsLumBulge_);
 #ifdef ICL
-    galaxy_->ObsMagICL           [filter_number_] = lum_to_lum_or_mag(ObsLumICL_);
+    galaxy_->ObsMagICL           [filter_number_] = lum_to_mag(ObsLumICL_);
 #endif /* defined ICL */
 
 #ifdef OUTPUT_FB_OBS_MAGS
-    galaxy_->backward_ObsMag             [filter_number_] = lum_to_lum_or_mag(backward_ObsLumDisk_ + backward_ObsLumBulge_);
-    galaxy_->backward_ObsMagBulge        [filter_number_] = lum_to_lum_or_mag(backward_ObsLumBulge_);
+    galaxy_->backward_ObsMag     [filter_number_] = lum_to_mag(backward_ObsLumDisk_ + backward_ObsLumBulge_);
+    galaxy_->backward_ObsMagBulge[filter_number_] = lum_to_mag(backward_ObsLumBulge_);
 #ifdef ICL
-    galaxy_->backward_ObsMagICL          [filter_number_] = lum_to_lum_or_mag(backward_ObsLumICL_);
+    galaxy_->backward_ObsMagICL  [filter_number_] = lum_to_mag(backward_ObsLumICL_);
 #endif /* defined ICL */
-    galaxy_->forward_ObsMag     [filter_number_] = lum_to_lum_or_mag(forward_ObsLumDisk_ + forward_ObsLumBulge_);
-    galaxy_->forward_ObsMagBulge[filter_number_] = lum_to_lum_or_mag(forward_ObsLumBulge_);
-#ifdef ICL
-    galaxy_->forward_ObsMagICL  [filter_number_] = lum_to_lum_or_mag(forward_ObsLumICL_);
+    galaxy_->forward_ObsMag      [filter_number_] = lum_to_mag(forward_ObsLumDisk_ + forward_ObsLumBulge_);
+    galaxy_->forward_ObsMagBulge [filter_number_] = lum_to_mag(forward_ObsLumBulge_);
+#ifdef ICL                       
+    galaxy_->forward_ObsMagICL   [filter_number_] = lum_to_mag(forward_ObsLumICL_);
 #endif /* defined ICL */
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
+#endif /* not defined LIGHT_OUTPUT */
 
     /* inclination is needed for disk dust correction,
      * but not sure, inclination shouldn't already be computed elsewhere */
@@ -543,7 +550,7 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
         sqrt(galaxy_->StellarSpin[0] * galaxy_->StellarSpin[0] +
              galaxy_->StellarSpin[1] * galaxy_->StellarSpin[1] +
              galaxy_->StellarSpin[2] * galaxy_->StellarSpin[2]);
-                                          
+
     /* dust correction for disk (remove light from dust and young stars absorbed by birth clouds) */
     if(galaxy_->ColdGas > 0.0)
       make_dust_correction_for_disk_luminosities(filter_number_, galaxy_->SnapNum, Z_g_, galaxy_->ColdGas, galaxy_->GasDiskRadius, galaxy_->CosInclination
@@ -572,13 +579,13 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 #endif /* defined OUTPUT_OBS_MAGS */
 
 #ifdef OUTPUT_REST_MAGS
-    galaxy_->MagDust            [filter_number_] = lum_to_lum_or_mag(LumDisk_+LumBulge_);
+    galaxy_->MagDust            [filter_number_] = lum_to_mag(LumDisk_+LumBulge_);
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
-    galaxy_->ObsMagDust         [filter_number_] = lum_to_lum_or_mag(ObsLumDisk_+ObsLumBulge_);
+    galaxy_->ObsMagDust         [filter_number_] = lum_to_mag(ObsLumDisk_+ObsLumBulge_);
 #ifdef OUTPUT_FB_OBS_MAGS
-    galaxy_->backward_ObsMagDust        [filter_number_] = lum_to_lum_or_mag(backward_ObsLumDisk_+backward_ObsLumBulge_);
-    galaxy_->forward_ObsMagDust[filter_number_] = lum_to_lum_or_mag(forward_ObsLumDisk_+forward_ObsLumBulge_);
+    galaxy_->backward_ObsMagDust        [filter_number_] = lum_to_mag(backward_ObsLumDisk_+backward_ObsLumBulge_);
+    galaxy_->forward_ObsMagDust[filter_number_] = lum_to_mag(forward_ObsLumDisk_+forward_ObsLumBulge_);
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
   }//end of loop on bands

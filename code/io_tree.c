@@ -271,7 +271,7 @@ void free_tree_table(void)
  *  (sizeof(struct halo_aux_data) * TreeNHalos[])
  *
  *  Considering the number of halos allocated for the current tree
- *  the size_ of the structures containing the galaxies
+ *  the size of the structures containing the galaxies
  *  with a halo and the galaxies with and without a halo to be
  *  allocated is estimated:
  *
@@ -366,7 +366,7 @@ void free_galaxies_and_tree(void)
 /** @brief Reading routine, either from a file into a structure or
  *        from a pointer to a structure.
  **/
-size_t myfread(void *ptr, size_t size_, size_t n_memb_, FILE * stream_)
+size_t myfread(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_)
 {
   size_t n_read_ = 0;
   if(size_ * n_memb_ > 0)
@@ -388,7 +388,7 @@ size_t myfread(void *ptr, size_t size_, size_t n_memb_, FILE * stream_)
 /** @brief Writing routine, either to a file from a structure or
  *        to a pointer from a structure.
  **/
-size_t myfwrite(void *ptr, size_t size_, size_t n_memb_, FILE * stream_)
+size_t myfwrite(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_)
 {
   size_t n_written_ = 0;
 
@@ -405,11 +405,66 @@ size_t myfwrite(void *ptr, size_t size_, size_t n_memb_, FILE * stream_)
 }
 
 
+#ifdef WRITE_LARGE_DATA_IN_CHUNKS
+#ifndef MAXIMUM_WRITE_SIZE_IN_BYTES  
+#define MAXIMUM_WRITE_SIZE_IN_BYTES 2147483647ull
+/* = 2^31 - 1, i.e. the largest possible 32-bit signed int value */
+#endif /* not defined MAXIMUM_WRITE_SIZE_IN_BYTES */
+#endif /* defined WRITE_LARGE_DATA_IN_CHUNKS */
+
+
+/** @brief Writing routine, either to a file from a structure or
+ *        to a pointer from a structure.
+ *
+ * @todo  integer multiply overflow check
+ **/
+size_t myfwrite_large_data(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_)
+{
+  if(size_ == 0 || n_memb_ == 0)
+  { return 0; }
+#ifdef WRITE_LARGE_DATA_IN_CHUNKS
+  else if(size_ * n_memb_ <= MAXIMUM_WRITE_SIZE_IN_BYTES)
+#endif /* defined WRITE_LARGE_DATA_IN_CHUNKS */
+  {
+    size_t n_written_ = 0;
+    if((n_written_ = fwrite(ptr, size_, n_memb_, stream_)) != n_memb_)
+    {
+      printf("I/O error (fwrite) has occured: %s\n", strerror(errno));
+      fflush(stdout);
+      terminate("write error");
+    }
+    return n_written_;
+  }
+#ifdef WRITE_LARGE_DATA_IN_CHUNKS    
+  else /* now we write in chunks */
+  {
+    const size_t tot_n_bytes_to_write_ = size_* n_memb_;
+    size_t curr_, n_bytes_to_write_, tot_n_bytes_written_ = 0;
+    for(curr_ = 0; curr_ < tot_n_bytes_to_write_; curr_ += MAXIMUM_WRITE_SIZE_IN_BYTES)
+    {
+      n_bytes_to_write_ = min(MAXIMUM_WRITE_SIZE_IN_BYTES, tot_n_bytes_to_write_ - curr_);
+      tot_n_bytes_written_ += fwrite(ptr , 1, n_bytes_to_write_, stream_);
+      ptr += n_bytes_to_write_;
+      /* fflush(stream_); */
+    }
+    
+    if(tot_n_bytes_written_ != tot_n_bytes_to_write_)
+    {
+      printf("I/O error (fwrite) has occured: %s\n", strerror(errno));
+      fflush(stdout);
+      terminate("write error");
+    }
+    return n_memb_;
+  }
+#endif /* defined WRITE_LARGE_DATA_IN_CHUNKS */ 
+}
+
+
 /** @brief Writing routine (repeating one value), 
  *         either to a file from a structure or
  *         to a pointer from a structure.
  **/
-size_t myffill(void *ptr_, size_t size_, size_t n_memb_, FILE * stream_)
+size_t myffill(void *ptr_, const size_t size_, const size_t n_memb_, FILE * stream_)
 {
   size_t n_written_ = 0;
   for(n_written_ = 0; n_written_ < n_memb_; n_written_++)
@@ -425,7 +480,7 @@ size_t myffill(void *ptr_, size_t size_, size_t n_memb_, FILE * stream_)
 
 /** @brief moving stream i/o position
  **/
-int myfseek(FILE * stream_, long offset_, int whence_)
+int myfseek(FILE * stream_, const long offset_, const int whence_)
 {
   if(fseek(stream_, offset_, whence_))
   {

@@ -306,14 +306,14 @@ void add_to_luminosities(const int galaxy_number_, double stellar_mass_, double 
 #endif /* defined N_FINE_AGE_BINS > 1 */
 
 #ifdef GALAXYTREE
-    const int output_bin_beg_ = Gal[galaxy_number_].SnapNum;
-    const int output_bin_end_ = NOUT;
+    const int output_number_beg_ = Gal[galaxy_number_].SnapNum;
+    const int output_number_end_ = NOUT;
 #else  /* not defined GALAXYTREE */
-    const int output_bin_beg_ = 0;
-    const int output_bin_end_ = ListOutputNumberOfSnapshot[Gal[galaxy_number_].SnapNum] + 1;
+    const int output_number_beg_ = 0;
+    const int output_number_end_ = ListOutputNumberOfSnapshot[Gal[galaxy_number_].SnapNum] + 1;
 #endif /* not defined GALAXYTREE */
 
-    for(output_number_ = output_bin_beg_; output_number_ < output_bin_end_; output_number_++)
+    for(output_number_ = output_number_beg_; output_number_ < output_number_end_; output_number_++)
     {
       const double age_                        = time_ - NumToTime(ListOutputSnaps[output_number_]);
       

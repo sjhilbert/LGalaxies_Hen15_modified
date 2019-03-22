@@ -392,7 +392,7 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
       Gal[galaxy_number_].YLumBulge[output_number_][filter_number_]   = 0.0;
       Gal[galaxy_number_].LumDust[output_number_][filter_number_]     = 0.0;
 #ifdef ICL
-      Gal[galaxy_number_].ICLLum[output_number_][filter_number_]      = 0.0;
+      Gal[galaxy_number_].LumICL[output_number_][filter_number_]      = 0.0;
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 
@@ -403,7 +403,7 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
       Gal[galaxy_number_].ObsYLumBulge[output_number_][filter_number_]  = 0.0;
       Gal[galaxy_number_].ObsLumDust[output_number_][filter_number_]    = 0.0;
 #ifdef ICL
-      Gal[galaxy_number_].ObsICL[output_number_][filter_number_]        = 0.0;
+      Gal[galaxy_number_].ObsLumICL[output_number_][filter_number_]     = 0.0;
 #endif /* defined ICL */
           
 #ifdef OUTPUT_FB_OBS_MAGS
@@ -413,7 +413,7 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
       Gal[galaxy_number_].backward_ObsYLumBulge[output_number_][filter_number_] = 0.0;
       Gal[galaxy_number_].backward_ObsLumDust[output_number_][filter_number_]   = 0.0;
 #ifdef ICL
-      Gal[galaxy_number_].backward_ObsICL[output_number_][filter_number_]       = 0.0;
+      Gal[galaxy_number_].backward_ObsLumICL[output_number_][filter_number_]    = 0.0;
 #endif /* defined ICL */
 
       Gal[galaxy_number_].forward_ObsLum[output_number_][filter_number_]       = 0.0;
@@ -422,7 +422,7 @@ void init_galaxy(const int galaxy_number_, const int halo_number_)
       Gal[galaxy_number_].forward_ObsYLumBulge[output_number_][filter_number_] = 0.0;
       Gal[galaxy_number_].forward_ObsLumDust[output_number_][filter_number_]   = 0.0;
 #ifdef ICL
-      Gal[galaxy_number_].forward_ObsICL[output_number_][filter_number_]       = 0.0;
+      Gal[galaxy_number_].forward_ObsLumICL[output_number_][filter_number_]    = 0.0;
 #endif /* defined ICL */
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */

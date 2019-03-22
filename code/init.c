@@ -176,6 +176,19 @@ void init(void)
 #ifdef LIGHTCONE_OUTPUT
   init_lightcone();
 #endif /* defined LIGHTCONE_OUTPUT */
+
+#ifdef OUTPUT_BUFFERING
+#ifndef LIGHTCONE_OUTPUT_ONLY
+#ifdef GALAXYTREE
+  save_galaxy_tree_init_output_buffer();
+#else  /* not defined GALAXYTREE */
+  save_galaxy_init_output_buffer();
+#endif /* not defined GALAXYTREE */
+#endif /* not defined LIGHTCONE_OUTPUT_ONLY */
+#ifdef LIGHTCONE_OUTPUT
+  save_lightcone_galaxy_init_output_buffer();
+#endif /* defined LIGHTCONE_OUTPUT */
+#endif /* defined OUTPUT_BUFFERING */
 }
 
 

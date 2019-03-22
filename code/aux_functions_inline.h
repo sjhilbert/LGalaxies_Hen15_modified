@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016+>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,24 +16,13 @@
 /** @file aux_functions_inline.h
  * 
  * @author Stefan Hilbert (hilbert)
- *
- *  so far mostly macro magic for some basic compile time polymorphism 
- *  and simple generic algorithms 
+ * @author ? (for stuff moved from allvars.h and proto.h)
  * 
  */
 #ifndef AUX_FUNCTIONS_INLINE_H
 #define AUX_FUNCTIONS_INLINE_H
 
 #include <stddef.h>
-
-
-/* simple min, max, etc.: */
-#define  min(x,y)  ((x)<(y) ?(x):(y))
-#define  max(x,y)  ((x)>(y) ?(x):(y))
-#define  wrap(x,y) ( (x)>((y)/2.) ? ((x)-(y)) : ((x)<(-(y)/2.)?((x)+(y)):(x)) )
-#define  pow2(x)   ((x)*(x))
-#define  pow3(x)   ((x)*(x)*(x))
-
 
 /* verbose program termination: */
 #ifdef PARALLEL
@@ -54,6 +43,37 @@
 #define  myfree_movable(x)         myfree_movable_fullinfo(x, __FUNCTION__, __FILE__, __LINE__)
 
 #define  report_memory_usage(x, y) report_detailed_memory_usage_of_largest_task(x, y, __FUNCTION__, __FILE__, __LINE__)
+
+
+/* switch on/off mass checks: */
+#ifdef MASS_CHECKS
+#define mass_checks(t_, p_) perform_mass_checks(t_, p_)
+#else  /* not defined MASS_CHECKS */
+#define mass_checks(t_, p_)
+#endif /* not defined MASS_CHECKS */ 
+
+
+/* double-to-float correction (?): */
+#ifdef GALAXYTREE
+#define  CORRECTDBFLOAT(x_)  ((fabs(x_)<(1.e-30) || isnan(x_)) ?(0.0):(x_))
+#else /* not defined GALAXYTREE */ 
+#define  CORRECTDBFLOAT(x_) x_
+#endif /* not defined GALAXYTREE */ 
+
+
+/* now more generic aux. function definitions: */
+
+/* simple min, max, etc.: */
+#define  min(x,y)  ((x)<(y) ?(x):(y))
+#define  max(x,y)  ((x)>(y) ?(x):(y))
+#define  wrap(x,y) ( (x)>((y)/2.) ? ((x)-(y)) : ((x)<(-(y)/2.)?((x)+(y)):(x)) )
+#define  pow2(x)   ((x)*(x))
+#define  pow3(x)   ((x)*(x)*(x))
+
+#define modulo(i_, p_) (((i_) % (p_) < 0) ?  (i_) % (p_) + (p_) : (i_) % (p_))
+
+#define convert_3d_index_to_1d_index(i_0_, i_1_, i_2_, base_) \
+((base_) * (base_) * modulo((i_0_), (base_)) + (base_) * modulo((i_1_), (base_)) + modulo((i_2_), (base_)))
 
 
 /* MPI for large data: */
@@ -77,22 +97,6 @@ do{                                                                             
 } while(0)
 
 #endif /* defined PARALLEL */
-
-
-/* switch on/off mass checks: */
-#ifdef MASS_CHECKS
-#define mass_checks(t_, p_) perform_mass_checks(t_, p_)
-#else  /* not defined MASS_CHECKS */
-#define mass_checks(t_, p_)
-#endif /* not defined MASS_CHECKS */ 
-
-
-/* double-to-float correction (?): */
-#ifdef GALAXYTREE
-#define  CORRECTDBFLOAT(x_)  ((fabs(x_)<(1.e-30) || isnan(x_)) ?(0.0):(x_))
-#else /* not defined GALAXYTREE */ 
-#define  CORRECTDBFLOAT(x_) x_
-#endif /* not defined GALAXYTREE */ 
 
 
 /** @brief sets all entries in mem range to given value

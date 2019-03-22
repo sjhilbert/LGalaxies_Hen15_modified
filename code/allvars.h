@@ -34,32 +34,24 @@
 #include "mathematical_constants.h"
 #include "physical_constants_and_units.h"
 
+
 #define MIN_ALLOC_NUMBER       1000
 #define ALLOC_INCREASE_FACTOR  1.1
 #define ALLOC_DECREASE_FACTOR  0.7
 
-#define PRECISION_LIMIT 1.e-7
-
 //WATCH OUT! In the case of MCMC running both MR and MRII the larger value is used to "allocate" all the arrays
 //inside the code its LastDarkMatterSnapShot+1 that defines the extent of the loops
 //(in MCMC MR_plus_MRII mode this are not always identical)
-#ifdef MRII
+#if defined MRII
 #define  MAXSNAPS  68     /* Number of snapshots in the dark matter simulation */
-#else
-
-#ifdef PHOENIX
+#elif defined PHOENIX
 #define  MAXSNAPS  72
-#else
-
-#ifdef CATERPILLAR
+#elif defined CATERPILLAR
 #define  MAXSNAPS  256
-#else
-
+#else  /* not defined any of MRII, PHOENIX, CATERPILLAR */
 #define  MAXSNAPS  64  //NORMAL MILLENNIUM
+#endif /* not defined any of MRII, PHOENIX, CATERPILLAR */
 
-#endif //CATERPILLAR
-#endif //PHOENIX
-#endif //MRII
 
 #define  MAXGALFAC 2.3 /*1.5/2.3 - maximum fraction of satellite without a halo (for memory allocation)*/
 
@@ -75,6 +67,7 @@
 
 
 #ifdef STAR_FORMATION_HISTORY
+
 #define SFH_NMERGE 3  //  SFH_NMERGE=Nmax+1 (Nmax used in Shamshiri2014)
 
 #ifdef CATERPILLAR
@@ -85,8 +78,23 @@
 
 #endif /* defined STAR_FORMATION_HISTORY */
 
+
+/* currently three levels of output buffering are recognized (0 = no, 1 = per tree, and 2 = per tree file): */
+#ifdef OUTPUT_BUFFERING
+#if OUTPUT_BUFFERING == 0
+/* interpret as no buffering, so make equivalent to not defined OUTPUT_BUFFERING: */
+#undef OUTPUT_BUFFERING
+#elif OUTPUT_BUFFERING > 2
+/* interpret as highest available level of buffering (currently two): */
+#undef OUTPUT_BUFFERING
+#define OUTPUT_BUFFERING 2
+#endif /* OUTPUT_BUFFERING > 2 */
+#endif /* defined OUTPUT_BUFFERING */
+
+
 typedef enum GasComponentType_ { HotGasComponent, ColdGasComponent, EjectedGasComponent } GasComponentType;
 extern const char* GasComponentStr[];
+
 
 typedef enum StellarComponentType_ { DiskComponent, BulgeComponent, ICMComponent, BurstComponent } StellarComponentType;
 extern const char* StellarComponentStr[];
@@ -137,6 +145,7 @@ struct elements
 
 /** @brief Galaxy structure for output */
 #ifdef LIGHT_OUTPUT
+
 struct GALAXY_OUTPUT
 {
   int   Type; // Galaxy type: 0 for central galaxies of a main halo, 1 for central galaxies in sub-halos, 2 for satellites without halo.
@@ -155,6 +164,9 @@ struct GALAXY_OUTPUT
   float DiskMass;
   float HotGas; // 10^10/h Msun - Mass in hot gas
   float BlackHoleMass; // 10^10/h Msun - Mass in black hole
+  
+  float GasDiskRadius;
+  float CosInclination;
 
   /* magnitudes in various bands */
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
@@ -166,6 +178,7 @@ struct GALAXY_OUTPUT
 #endif /* defined OUTPUT_REST_MAGS */ 
 #endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
 };
+
 #else /* not defined LIGHT_OUTPUT */
 
 #ifdef PACK_OUTPUT
@@ -192,12 +205,9 @@ struct GALAXY_OUTPUT
   long long SubID;
   long long MMSubID; // fofId, the subhaloid of the subhalo at the center of the fof group
   int   PeanoKey; // Peano-Hilbert key, (bits=8), for position in 500/h Mpc box
-  float Redshift; // redshift of the snapshot where this galaxy resides
 #endif /* defined GALAXYTREE */
+  float Redshift; // redshift of the snapshot where this galaxy resides
 #ifdef LIGHTCONE_OUTPUT
-#ifndef GALAXYTREE
-  float Redshift; // cosmological redshift of the galaxy (if GALAXYTREE then reuse Redshift defined there)
-#endif /* not defined GALAXYTREE */
   float ObsRedshift; // observed (l.o.s. cosmological + peculial velocity) redshift of the galaxy
   int   CubeShiftIndex; // index identifying periodic copy of simulation box the galaxy is in
 #endif /* defined LIGHTCONE_OUTPUT */
@@ -367,7 +377,8 @@ struct GALAXY_OUTPUT
 
 // next only of interest to DB output, which generally requires complete tree
 #ifdef STAR_FORMATION_HISTORY
-struct SFH_BIN {
+struct SFH_BIN 
+{
 	long long GalID; // ID of the galaxy
 	short snapnum; // snapnum of the galaxy, repeated here for faster lookups of times etc
     short sfh_ibin; //Index of highest bin currently in use
@@ -559,7 +570,7 @@ extern struct GALAXY
   float YLumBulge[NOUT][NMAG];
   float LumDust  [NOUT][NMAG];
 #ifdef ICL             
-  float ICLLum   [NOUT][NMAG];
+  float LumICL   [NOUT][NMAG];
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 
@@ -570,7 +581,7 @@ extern struct GALAXY
   float ObsYLumBulge[NOUT][NMAG];
   float ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                
-  float ObsICL      [NOUT][NMAG];
+  float ObsLumICL   [NOUT][NMAG];
 #endif /* defined ICL */
 
 #ifdef OUTPUT_FB_OBS_MAGS
@@ -580,7 +591,7 @@ extern struct GALAXY
   float backward_ObsYLumBulge[NOUT][NMAG];
   float backward_ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                 
-  float backward_ObsICL      [NOUT][NMAG];
+  float backward_ObsLumICL  [NOUT][NMAG];
 #endif /* defined ICL */
 
   float forward_ObsLum      [NOUT][NMAG];
@@ -589,7 +600,7 @@ extern struct GALAXY
   float forward_ObsYLumBulge[NOUT][NMAG];
   float forward_ObsLumDust  [NOUT][NMAG];
 #ifdef ICL                         
-  float forward_ObsICL      [NOUT][NMAG];
+  float forward_ObsLumICL   [NOUT][NMAG];
 #endif /* defined ICL */
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
@@ -670,7 +681,7 @@ extern struct halo_data
 
 // Documentation can be found in the database
 #ifndef MCMC
-extern struct  halo_ids_data
+extern struct halo_ids_data
 {
  long long HaloID;
  long long FileTreeNr;
@@ -796,10 +807,7 @@ extern int ThisTask, NTask;
 #define ThisTask 0
 #endif /* not defined PARALLEL */
 
-#ifdef GALAXYTREE
-extern int GalCount;
 extern int TotGalCount;
-#endif /* defined GALAXYTREE */
 
 /* Cosmological parameters */
 extern double BaryonFrac;
@@ -1183,7 +1191,6 @@ extern long long lightcone_N_fof_groups_skipped_construction;
 extern long long lightcone_N_galaxies_skipped_construction;
 extern long long lightcone_N_galaxies_skipped_output_early;
 extern long long lightcone_N_galaxies_for_output;
-extern long long lightcone_N_galaxies_remaining_for_output_past_construct_galaxies;
 
 #endif /* defined LIGHTCONE_OUTPUT */
 

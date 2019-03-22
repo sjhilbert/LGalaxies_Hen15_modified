@@ -436,17 +436,22 @@ post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 #endif /* defined OUTPUT_OBS_MAGS */
       }
 #endif /* defined ICL */ 
-   
+
+#ifndef LIGHT_OUTPUT
 #ifdef OUTPUT_REST_MAGS
       galaxy_->rbandWeightAge += (age_ * (LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_] - previous_r_band_luminosity_));
       previous_r_band_luminosity_ = LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_];
 #endif /* defined OUTPUT_REST_MAGS */
+#endif /* not defined LIGHT_OUTPUT */
 
 #if ((defined N_FINE_AGE_BINS) && (N_FINE_AGE_BINS > 1))
     }
 #endif /* defined N_FINE_AGE_BINS > 1 */
   }
   
+  int filter_number_;
+
+#ifndef LIGHT_OUTPUT
 #ifdef OUTPUT_REST_MAGS
   if(LumDisk_[r_band_filter_number_] + LumBulge_[r_band_filter_number_] > 0.)
   { 
@@ -454,34 +459,36 @@ post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
     galaxy_->rbandWeightAge *= UnitTime_in_Megayears * inv_Hubble_h * 1.e-3; //conversion in age_ from code units -> Myr/h -> Gyr
   }
 #endif /* defined OUTPUT_REST_MAGS */    
+#endif /* not defined LIGHT_OUTPUT */
   
-  int i_;
+#ifndef LIGHT_OUTPUT
 #ifdef OUTPUT_REST_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->Mag     [i_] = lum_to_lum_or_mag(LumBulge_[i_] + LumDisk_[i_]); }
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagBulge[i_] = lum_to_lum_or_mag(LumBulge_[i_]               ); }
-#ifdef ICL
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagICL  [i_] = lum_to_lum_or_mag(LumICL_  [i_]               ); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->Mag                 [filter_number_] = lum_to_mag(LumBulge_            [filter_number_] + LumDisk_            [filter_number_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->MagBulge            [filter_number_] = lum_to_mag(LumBulge_            [filter_number_]                                       ); }
+#ifdef ICL                                                                                                                     
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->MagICL              [filter_number_] = lum_to_mag(LumICL_              [filter_number_]                                       ); }
 #endif /* defined ICL */
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMag     [i_] = lum_to_lum_or_mag(ObsLumBulge_[i_] + ObsLumDisk_[i_]); }
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagBulge[i_] = lum_to_lum_or_mag(ObsLumBulge_[i_]                  ); }
-#ifdef ICL
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagICL  [i_] = lum_to_lum_or_mag(ObsLumICL_  [i_]                  ); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->ObsMag              [filter_number_] = lum_to_mag(ObsLumBulge_         [filter_number_] + ObsLumDisk_         [filter_number_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->ObsMagBulge         [filter_number_] = lum_to_mag(ObsLumBulge_         [filter_number_]                                       ); }
+#ifdef ICL                                                                                                                     
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->ObsMagICL           [filter_number_] = lum_to_mag(ObsLumICL_           [filter_number_]                                       ); }
 #endif /* defined ICL */
 #ifdef OUTPUT_FB_OBS_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->backward_ObsMag     [i_] = lum_to_lum_or_mag(backward_ObsLumBulge_[i_] + backward_ObsLumDisk_[i_]); }
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->backward_ObsMagBulge[i_] = lum_to_lum_or_mag(backward_ObsLumBulge_[i_]                   ); }
-#ifdef ICL
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->backward_ObsMagICL  [i_] = lum_to_lum_or_mag(backward_ObsLumICL_  [i_]                   ); }
-#endif /* defined ICL */
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->forward_ObsMag     [i_] = lum_to_lum_or_mag(forward_ObsLumBulge_[i_] + forward_ObsLumDisk_[i_]); }
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->forward_ObsMagBulge[i_] = lum_to_lum_or_mag(forward_ObsLumBulge_[i_]                           ); }
-#ifdef ICL
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->forward_ObsMagICL  [i_] = lum_to_lum_or_mag(forward_ObsLumICL_  [i_]                           ); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->backward_ObsMag     [filter_number_] = lum_to_mag(backward_ObsLumBulge_[filter_number_] + backward_ObsLumDisk_[filter_number_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->backward_ObsMagBulge[filter_number_] = lum_to_mag(backward_ObsLumBulge_[filter_number_]                                       ); }
+#ifdef ICL                                                                                                                         
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->backward_ObsMagICL  [filter_number_] = lum_to_mag(backward_ObsLumICL_  [filter_number_]                                       ); }
+#endif /* defined ICL */                                     
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->forward_ObsMag      [filter_number_] = lum_to_mag(forward_ObsLumBulge_ [filter_number_] + forward_ObsLumDisk_ [filter_number_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->forward_ObsMagBulge [filter_number_] = lum_to_mag(forward_ObsLumBulge_ [filter_number_]                                       ); }
+#ifdef ICL                                                                                          
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->forward_ObsMagICL   [filter_number_] = lum_to_mag(forward_ObsLumICL_   [filter_number_]                                       ); }
 #endif /* defined ICL */
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
+#endif /* not defined LIGHT_OUTPUT */
 
   /* inclination is needed for disk dust correction,
    * but not sure, inclination shouldn't already be computed elsewhere */
@@ -508,25 +515,25 @@ post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
 
    /* dust correction for bulges (only remove light from young stars absorbed by birth clouds) */
 #ifdef OUTPUT_REST_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { LumBulge_            [i_] -= YLumBulge_            [i_] * (1. - ExpTauBCBulge); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { LumBulge_            [filter_number_] -= YLumBulge_            [filter_number_] * (1. - ExpTauBCBulge); }
 #endif /* defined OUTPUT_REST_MAGS */
 #ifdef OUTPUT_OBS_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { ObsLumBulge_         [i_] -= ObsYLumBulge_         [i_] * (1. - ExpTauBCBulge); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { ObsLumBulge_         [filter_number_] -= ObsYLumBulge_         [filter_number_] * (1. - ExpTauBCBulge); }
 #ifdef OUTPUT_FB_OBS_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { backward_ObsLumBulge_[i_] -= backward_ObsYLumBulge_[i_] * (1. - ExpTauBCBulge); }
-  for(i_= 0; i_ < NMAG; i_++) { forward_ObsLumBulge_ [i_] -= forward_ObsYLumBulge_ [i_] * (1. - ExpTauBCBulge); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { backward_ObsLumBulge_[filter_number_] -= backward_ObsYLumBulge_[filter_number_] * (1. - ExpTauBCBulge); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { forward_ObsLumBulge_ [filter_number_] -= forward_ObsYLumBulge_ [filter_number_] * (1. - ExpTauBCBulge); }
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
                                          
 #ifdef OUTPUT_REST_MAGS
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->MagDust             [i_] = lum_to_lum_or_mag(LumBulge_            [i_] + LumDisk_            [i_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->MagDust             [filter_number_] = lum_to_mag(LumBulge_            [filter_number_] + LumDisk_            [filter_number_]); }
 #endif /* defined OUTPUT_REST_MAGS */                        
 #ifdef OUTPUT_OBS_MAGS                                      
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->ObsMagDust          [i_] = lum_to_lum_or_mag(ObsLumBulge_         [i_] + ObsLumDisk_         [i_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->ObsMagDust          [filter_number_] = lum_to_mag(ObsLumBulge_         [filter_number_] + ObsLumDisk_         [filter_number_]); }
 #ifdef OUTPUT_FB_OBS_MAGS                                   
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->backward_ObsMagDust [i_] = lum_to_lum_or_mag(backward_ObsLumBulge_[i_] + backward_ObsLumDisk_[i_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->backward_ObsMagDust [filter_number_] = lum_to_mag(backward_ObsLumBulge_[filter_number_] + backward_ObsLumDisk_[filter_number_]); }
                                         
-  for(i_= 0; i_ < NMAG; i_++) { galaxy_->forward_ObsMagDust  [i_] = lum_to_lum_or_mag(forward_ObsLumBulge_ [i_] + forward_ObsLumDisk_ [i_]); }
+  for(filter_number_= 0; filter_number_ < NMAG; filter_number_++) { galaxy_->forward_ObsMagDust  [filter_number_] = lum_to_mag(forward_ObsLumBulge_ [filter_number_] + forward_ObsLumDisk_ [filter_number_]); }
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 #endif /* defined OUTPUT_OBS_MAGS */
 }

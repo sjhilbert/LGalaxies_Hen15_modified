@@ -40,160 +40,99 @@
 #include "allvars.h"
 #include "proto.h"
 
-/*** nothing here unless defined LIGHTCONE_OUTPUT ***/
-#ifdef LIGHTCONE_OUTPUT
-/****************************************************/
-
 #include "lightcone_galaxy_output_type.h"
+#include "aux_geometry_inline.h"
+#ifdef OUTPUT_BUFFERING
+#include "dynamic_array_inline.h"
+#endif /* defined OUTPUT_BUFFERING */
 
 
-/** @brief proper integer modulo */
-static inline int
-modulo(const int i_, const int base_)
-{ return (i_ % base_ < 0) ?  i_ % base_ + base_ : i_ % base_; }
+/** nothing here unless defined LIGHTCONE_OUTPUT */
+#ifdef LIGHTCONE_OUTPUT
 
 
-/** @brief scalar product for 3d vectors cartesian vectors */
-static inline float 
-scalar_product(const float v_a_[3], const float v_b_[3])
-{ return v_a_[0] * v_b_[0] + v_a_[1] * v_b_[1] + v_a_[2] * v_b_[2]; }
+#ifdef OUTPUT_BUFFERING
+
+/** initial buffer capacity */
+#ifndef OUTPUT_BUFFERING_INIT_CAPACITY
+#if OUTPUT_BUFFERING == 1
+#define OUTPUT_BUFFERING_INIT_CAPACITY 10 * BYTES_PER_MB
+#else /* OUTPUT_BUFFERING == 2 */
+#ifdef GALAXYTREE
+#define OUTPUT_BUFFERING_INIT_CAPACITY 1000 * BYTES_PER_MB
+#else  /* not defined GALAXYTREE */
+#define OUTPUT_BUFFERING_INIT_CAPACITY 10 * BYTES_PER_MB
+#endif  /* not defined GALAXYTREE */
+#endif /* OUTPUT_BUFFERING == 2 */
+#endif /* not defined OUTPUT_BUFFERING_INIT_CAPACITY_IN_MB */
 
 
-/** @brief returns square of euclidian norm of cartesian vector */
-static inline float
-euclidian_norm_squared(const float v_[3])
-{ return v_[0] * v_[0] + v_[1] * v_[1] + v_[2] * v_[2]; }
+/** @brief the buffer used to buffer galaxy output to disk */
+#ifdef GALAXYTREE
+static dynamic_array_type galaxy_output_buffer;
+#else  /* not defined GALAXYTREE */
+static dynamic_array_type galaxy_output_buffer[NOUT];
+#endif  /* not defined GALAXYTREE */
 
 
-/** @brief returns euclidian norm of cartesian vector */
-static inline float
-euclidian_norm(const float v_[3])
-{ return sqrt(v_[0] * v_[0] + v_[1] * v_[1] + v_[2] * v_[2]); }
-
-
-/** @brief returns euclidian distance between two cartesian positions  */
-static inline float
-euclidian_distance_between(const float pos_a_[3], const float pos_b_[3])
-{ return sqrt((pos_b_[0] - pos_a_[0]) * (pos_b_[0] - pos_a_[0]) + (pos_b_[1] - pos_a_[1]) * (pos_b_[1] - pos_a_[1]) + (pos_b_[2] - pos_a_[2]) * (pos_b_[2] - pos_a_[2])); }
-
-
-/** @brief returns component parallel to a given direction */
-static inline float
-parallel_component(const float v_[3], const float dir_[3])
-{ return scalar_product(v_, dir_) / euclidian_norm(dir_); }
-
-
-/** @brief shifts cartesian vector by shift_ vecor
- *
- * @param[in]      shift_ 3d shift_ vector
- * @param[in,out]  pos_   3d vector to be shifted
- */
-static inline void
-apply_shift(const float shift_[3], float (*pos_)[3])
+/** @brief init the buffer used to buffer galaxy output to disk */
+void save_lightcone_galaxy_init_output_buffer(void)
 {
-  (*pos_)[0] += shift_[0];
-  (*pos_)[1] += shift_[1];
-  (*pos_)[2] += shift_[2];
+#ifdef GALAXYTREE
+  dynamic_array_init(&galaxy_output_buffer, 0, OUTPUT_BUFFERING_INIT_CAPACITY);
+#else  /* not defined GALAXYTREE */
+  int output_number_;
+  for(output_number_ = 0; output_number_ < NOUT; ++output_number_)
+  { dynamic_array_init(&galaxy_output_buffer[output_number_], 0, OUTPUT_BUFFERING_INIT_CAPACITY); }
+#endif  /* not defined GALAXYTREE */
 }
 
 
-/** @brief rotates cartesian vector by rotation matrix
- *
- * @param[in]      rot_m_ 3x3 rotation matrix
- * @param[in,out]  v     3d vector to be rotated
- */
-static inline void
-apply_rotation(/* const */ float rot_m_[3][3], float (*v_)[3])
+/** @brief writes output buffer content to file and clears buffer  */
+void save_lightcone_galaxy_flush_output_buffer(void)
 {
-  const float tmp_0_ = (*v_)[0];
-  const float tmp_1_ = (*v_)[1];
-  const float tmp_2_ = (*v_)[2];
-   
-  (*v_)[0] = rot_m_[0][0] * tmp_0_ + rot_m_[0][1] * tmp_1_ + rot_m_[0][2] * tmp_2_;
-  (*v_)[1] = rot_m_[1][0] * tmp_0_ + rot_m_[1][1] * tmp_1_ + rot_m_[1][2] * tmp_2_;
-  (*v_)[2] = rot_m_[2][0] * tmp_0_ + rot_m_[2][1] * tmp_1_ + rot_m_[2][2] * tmp_2_;
+#ifdef GALAXYTREE
+  myfwrite_large_data(galaxy_output_buffer.data, 1, galaxy_output_buffer.size, FdLightconeGalTree);
+  dynamic_array_clear(&galaxy_output_buffer);
+#else  /* not defined GALAXYTREE */
+  int output_number_;
+  for(output_number_ = 0; output_number_ < NOUT; ++output_number_)
+    if(galaxy_output_buffer[output_number_].size > 0)
+    {
+      myfwrite_large_data(galaxy_output_buffer[output_number_].data, 1, galaxy_output_buffer[output_number_].size, FdLightconeGalDumps[output_number_]);
+      dynamic_array_clear(&galaxy_output_buffer[output_number_]);
+    }
+#endif  /* not defined GALAXYTREE */  
 }
 
 
-/** @brief transforms position from cartesian to spherical (ra,dec,r) coords.
- *
- * @param[in,out]  v     3d vector to be transformed
- */
-static inline void
-apply_cartesian_to_ra_dec_r(float (*pos_)[3])
+/** @brief shows output buffer stats */
+void save_lightcone_galaxy_show_output_buffer_statistics(void)
 {
-  const float r   = euclidian_norm(*pos_);
-  const float ra  = atan2((*pos_)[1], (*pos_)[0]);
-  const float dec = asin((*pos_)[2] / r);
-
-  (*pos_)[0] = ra;
-  (*pos_)[1] = dec;
-  (*pos_)[2] = r;
+#ifdef GALAXYTREE
+  printf("lightcone galaxy output buffer: capacity = %lu (%f MB)\n", galaxy_output_buffer.capacity, galaxy_output_buffer.capacity / (1024. * 1024.));
+#else  /* not defined GALAXYTREE */
+  int output_number_;
+  for(output_number_ = 0; output_number_ < NOUT; ++output_number_)
+  { printf("lightcone galaxy output buffer[%d]: capacity = %lu (%f MB)\n", output_number_, galaxy_output_buffer[output_number_].capacity, galaxy_output_buffer[output_number_].capacity / (1024. * 1024.)); }
+#endif  /* not defined GALAXYTREE */  
 }
 
 
-/** @brief computes rotation matrix for rotating cartesian vectors to local orthonormal frame 
- *         defined by unit tangent vectors of spherical (ra, dec, r) coord. system 
- *         using cartesian pos
- * 
- * @param[in]  pos_0_, pos_1_, pos_2_  3d cartesian position around which to set up local orthonormal system
- * @param[out] rot_m_                  rotation matrix to be computed
- *
- * @todo check for correctness
- */
+/** @brief puts output galaxy into output buffer, if needed, after turning it into custom lightcone galaxy */
 static inline void
-get_cartesian_to_ra_dec_r_local_orthogonal_rotation_matrix_from_cartesian_position(const float pos_0_, const float pos_1_, const float pos_2_, float (*rot_m_)[3][3])
+push_back_lightcone_galaxy_from_galaxy_output(dynamic_array_type *galaxy_output_buffer_, struct GALAXY_OUTPUT *galaxy_)
 {
-  const float q_       = sqrt(pos_0_ * pos_0_ + pos_1_ * pos_1_);
-  const float r_       = sqrt(pos_0_ * pos_0_ + pos_1_ * pos_1_ + pos_2_ * pos_2_);
-
-  (*rot_m_)[0][0] = - pos_1_ / q_;
-  (*rot_m_)[0][1] =   pos_0_ / q_;
-  (*rot_m_)[0][2] =   0;
-  (*rot_m_)[1][0] = - pos_0_ / r_ * pos_2_ / q_;
-  (*rot_m_)[1][1] = - pos_1_ / r_ * pos_2_ / q_;
-  (*rot_m_)[1][2] =       q_ / r_;
-  (*rot_m_)[2][0] =   pos_0_ / r_;
-  (*rot_m_)[2][1] =   pos_1_ / r_;
-  (*rot_m_)[2][2] =   pos_2_ / r_;   
+#ifdef LIGHTCONE_CUSTOM_OUTPUT
+  lightcone_galaxy_output_type lightcone_galaxy_; 
+  galaxy_output_to_lightcone_galaxy_output_type(galaxy_, &lightcone_galaxy_);
+  dynamic_array_push_back(galaxy_output_buffer_, &lightcone_galaxy_, sizeof(lightcone_galaxy_output_type));
+#else  /* not defined LIGHTCONE_CUSTOM_OUTPUT */
+  dynamic_array_push_back(galaxy_output_buffer_, galaxy_, sizeof(struct GALAXY_OUTPUT));
+#endif /* not defined LIGHTCONE_CUSTOM_OUTPUT */
 }
 
-
-/** @brief computes rotation matrix for rotating cartesian vectors to local orthonormal frame 
- *         defined by unit tangent vectors of spherical (ra, dec, r) coord. system 
- *         using ra and dec
- * 
- * @param[in]  ra_     right ascension [rad] of position
- * @param[in]  dec_    declination [rad] of position
- * @param[out] rot_m_  rotation matrix to be computed
- */
-static inline void
-get_cartesian_to_ra_dec_r_local_orthogonal_rotation_matrix_from_ra_dec(const float ra_, const float dec_, float (*rot_m_)[3][3])
-{
-  const float sin_ra_  = sin(ra_);  /* in old cartesian coords, this should be: Pos[1] / sqrt(Pos[0] * Pos[0] + Pos[1] * Pos[1]) */
-  const float cos_ra_  = cos(ra_);  /* in old cartesian coords, this should be: Pos[0] / sqrt(Pos[0] * Pos[0] + Pos[1] * Pos[1]) */
-  const float sin_dec_ = sin(dec_); /* in old cartesian coords, this should be: Pos[2] / sqrt(Pos[0] * Pos[0] + Pos[1] * Pos[1] + Pos[2] * Pos[2]) */ 
-  const float cos_dec_ = cos(dec_); /* in old cartesian coords, this should be: sqrt(Pos[0] * Pos[0] + Pos[1] * Pos[1]) / sqrt(Pos[0] * Pos[0] + Pos[1] * Pos[1] + Pos[2] * Pos[2]) */ 
-
-  (*rot_m_)[0][0] = - sin_ra_;
-  (*rot_m_)[0][1] =   cos_ra_;
-  (*rot_m_)[0][2] = 0;
-  (*rot_m_)[1][0] = - sin_dec_ * cos_ra_;
-  (*rot_m_)[1][1] = - sin_dec_ * sin_ra_;
-  (*rot_m_)[1][2] = cos_dec_;
-  (*rot_m_)[2][0] = cos_dec_ * cos_ra_;
-  (*rot_m_)[2][1] = cos_dec_ * sin_ra_;
-  (*rot_m_)[2][2] = sin_dec_;   
-}
-
-
-/** @brief combined 3d shift index into single integer */
-static inline int
-composed_cube_shift_index(const int shift_index_[3])
-{ 
-  const int base_ = 1000;
-  return base_ * base_ * modulo(shift_index_[0], base_) + base_ * modulo(shift_index_[1], base_) + modulo(shift_index_[2], base_);  
-}
+#endif /* defined OUTPUT_BUFFERING */
 
 
 /** @brief sets up global variables needed for lightcone geometry
@@ -201,7 +140,7 @@ composed_cube_shift_index(const int shift_index_[3])
 void 
 init_lightcone(void)
 {
-  lightcone_observer_distance_from_origin = euclidian_norm(lightcone_observer_position);
+  lightcone_observer_distance_from_origin = euclidian_norm_3d(lightcone_observer_position);
   
   /* compute slice boundaries for lightcone */
   /* note: the output order is reversed between w/ and w/o GALAXYTREE */
@@ -274,7 +213,6 @@ init_lightcone(void)
   lightcone_N_galaxies_skipped_construction                         = 0;
   lightcone_N_galaxies_skipped_output_early                         = 0;
   lightcone_N_galaxies_for_output                                   = 0;
-  lightcone_N_galaxies_remaining_for_output_past_construct_galaxies = 0;
 }
 
 
@@ -296,7 +234,6 @@ void show_lightcone_statistics(void)
   printf("\n--- statistics for lightcone files from last tree file: ---");
   printf("\n  lightcone_N_fof_groups_skipped_construction = %lld", lightcone_N_fof_groups_skipped_construction                                            );
   printf("\n  lightcone_N_galaxies_skipped_construction = %lld", lightcone_N_galaxies_skipped_construction                                                );
-  printf("\n  lightcone_N_galaxies_remaining_for_output_past_construct_galaxies = %lld", lightcone_N_galaxies_remaining_for_output_past_construct_galaxies);
   printf("\n  lightcone_N_galaxies_skipped_output_early = %lld", lightcone_N_galaxies_skipped_output_early                                                );
   printf("\n  lightcone_N_galaxies_for_output = %lld", lightcone_N_galaxies_for_output                                                                    );
   printf("\n  lightcone_N_galaxies_for_output_not_skipped_early = %lld", lightcone_N_galaxies_for_output - lightcone_N_galaxies_skipped_output_early      );
@@ -327,10 +264,14 @@ create_lightcone_galaxy_files(int file_number_)
       terminate(error_message_);
     }
   /* fill one block to make room for header */
-  char zero = 0;
-  myffill(&zero, 1, sizeof(lightcone_galaxy_output_type), FdLightconeGalTree);
+  char zero_ = 0;
+  myffill(&zero_, 1, sizeof(lightcone_galaxy_output_type), FdLightconeGalTree);
   TotLightconeGalCount = 0;
   
+#ifdef OUTPUT_BUFFERING
+  dynamic_array_clear(&galaxy_output_buffer);
+#endif /* defined OUTPUT_BUFFERING */
+
 #else /* not defined GALAXYTREE */
   char file_name_[1000];
   int output_number_;
@@ -344,10 +285,15 @@ create_lightcone_galaxy_files(int file_number_)
       terminate(error_message_);
     }
     
-    char zero = 0;
-    myffill(&zero, 1, sizeof(long long int), FdLightconeGalDumps[output_number_]);  /* space for the header */
+    char zero_ = 0;
+    myffill(&zero_, 1, sizeof(long long int), FdLightconeGalDumps[output_number_]);  /* space for the header */
     TotLightconeGalaxies[output_number_] = 0;
+    
+#ifdef OUTPUT_BUFFERING
+    dynamic_array_clear(&galaxy_output_buffer[output_number_]);
+#endif /* defined OUTPUT_BUFFERING */      
   }
+
 #endif /* not defined GALAXYTREE */
 }
 
@@ -366,9 +312,13 @@ close_lightcone_galaxy_files(void)
   myfwrite(&one_, sizeof(long long), 1, FdLightconeGalTree);                   // write 1 (to determine endianess?)
   myfwrite(&size_of_struct_, sizeof(long long), 1, FdLightconeGalTree);        // size of an output structure (Galaxy_Output)
   myfwrite(&TotLightconeGalCount, sizeof(long long), 1, FdLightconeGalTree);   // the total number of galaxies
-#ifdef SORT_GALAXY_OUTPUT
-  //  sort_lightcone_galaxy_in_file(FdLightconeGalTree); /* sorting is already done during save_lightcone_galaxy_finalize */
-#endif /* defined SORT_GALAXY_OUTPUT */
+  
+#if defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 2
+  /* skip one block to make room for header */
+  myfseek(FdLightconeGalTree, sizeof(lightcone_galaxy_output_type), SEEK_SET);
+  save_lightcone_galaxy_flush_output_buffer();
+#endif /* defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 2 */
+
   fclose(FdLightconeGalTree);
 
 #else /* not defined GALAXYTREE */
@@ -378,9 +328,25 @@ close_lightcone_galaxy_files(void)
   {
     fseek(FdLightconeGalDumps[output_number_], 0, SEEK_SET);
     myfwrite(&TotLightconeGalaxies[output_number_], sizeof(long long), 1, FdLightconeGalDumps[output_number_]);  // total number of galaxies
+  
+#if defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 2
+    if(galaxy_output_buffer[output_number_].size > 0)
+    {
+#ifdef SORT_GALAXY_OUTPUT
+      qsort(galaxy_output_buffer[output_number_].data, galaxy_output_buffer[output_number_].size / sizeof(lightcone_galaxy_output_type), sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
+#endif /* defined SORT_GALAXY_OUTPUT */
+
+  /* skip header */
+      myfseek(FdLightconeGalDumps[output_number_], sizeof(long long int), SEEK_SET);
+      myfwrite_large_data(galaxy_output_buffer[output_number_].data, 1, galaxy_output_buffer[output_number_].size, FdLightconeGalDumps[output_number_]);
+      dynamic_array_clear(&galaxy_output_buffer[output_number_]);
+    }
+#else  /* not defined OUTPUT_BUFFERING || OUTPUT_BUFFERING != 2*/   
 #ifdef SORT_GALAXY_OUTPUT
     sort_lightcone_galaxy_in_file(FdLightconeGalDumps[output_number_]);
 #endif /* defined SORT_GALAXY_OUTPUT */
+#endif /* not defined OUTPUT_BUFFERING || OUTPUT_BUFFERING != 2*/      
+
     fclose(FdLightconeGalDumps[output_number_]);
   }
 #endif /* not defined GALAXYTREE */
@@ -470,27 +436,27 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
   (void)output_number_;  /* suppress unused-parameter warning */
 #endif /* not defined OUTPUT_FB_OBS_MAGS */
  
-  apply_shift(shift_, &(galaxy_->Pos));
+  apply_shift_3d(shift_, &(galaxy_->Pos));
   apply_cartesian_to_ra_dec_r(&(galaxy_->Pos));
   
   /** @todo express sin(ra) etc. in terms of cartesian Pos?  */
   float rot_m_[3][3];
   get_cartesian_to_ra_dec_r_local_orthogonal_rotation_matrix_from_ra_dec(galaxy_->Pos[0], galaxy_->Pos[1], &rot_m_);
-  apply_rotation(rot_m_, &(galaxy_->DistanceToCentralGal));
-  apply_rotation(rot_m_, &(galaxy_->Vel));
-  apply_rotation(rot_m_, &(galaxy_->GasSpin));
-  apply_rotation(rot_m_, &(galaxy_->StellarSpin));
+  apply_rotation_3d(rot_m_, &(galaxy_->DistanceToCentralGal));
+  apply_rotation_3d(rot_m_, &(galaxy_->Vel));
+  apply_rotation_3d(rot_m_, &(galaxy_->GasSpin));
+  apply_rotation_3d(rot_m_, &(galaxy_->StellarSpin));
    
   galaxy_->Redshift    = redshift_for_comoving_los_distance(galaxy_->Pos[2]);
   galaxy_->ObsRedshift = combine_redshifts(galaxy_->Redshift, redshift_for_radial_velocity(galaxy_->Vel[2]));
   
-  galaxy_->CubeShiftIndex = composed_cube_shift_index(shift_index_);
+  galaxy_->CubeShiftIndex = convert_3d_index_to_1d_index(shift_index_[0], shift_index_[1], shift_index_[2], 1000);
 
-  galaxy_->CosInclination = galaxy_->StellarSpin[2] / euclidian_norm(galaxy_->StellarSpin);
+  galaxy_->CosInclination = galaxy_->StellarSpin[2] / euclidian_norm_3d(galaxy_->StellarSpin);
 
 #ifndef LIGHT_OUTPUT
 #ifdef HALOPROPERTIES
-  apply_shift(shift_, &(galaxy_->HaloPos));
+  apply_shift_3d(shift_, &(galaxy_->HaloPos));
   apply_cartesian_to_ra_dec_r(&(galaxy_->HaloPos));
 #endif  /* defined HALOPROPERTIES  */ 
 #endif /* not defined LIGHT_OUTPUT  */ 
@@ -613,14 +579,14 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
     lightcone_galaxy_position_[1] = HaloGal[galaxy_number_].Pos[1] + shift_[1];
     lightcone_galaxy_position_[2] = HaloGal[galaxy_number_].Pos[2] + shift_[2];
   
-    const float los_distance_to_lightcone_observer_ = euclidian_norm(lightcone_galaxy_position_);
+    const float los_distance_to_lightcone_observer_ = euclidian_norm_3d(lightcone_galaxy_position_);
     
     if(los_distance_to_lightcone_observer_ < lightcone_slice_lower_los_distance[output_number_] ||
        los_distance_to_lightcone_observer_ > lightcone_slice_upper_los_distance[output_number_])
       continue;
 
     const float cosmological_redshift_ = redshift_for_comoving_los_distance(los_distance_to_lightcone_observer_);
-    const float peculiar_redshift_     = redshift_for_radial_velocity(parallel_component(HaloGal[galaxy_number_].Vel, lightcone_galaxy_position_));
+    const float peculiar_redshift_     = redshift_for_radial_velocity(parallel_component_3d(HaloGal[galaxy_number_].Vel, lightcone_galaxy_position_));
     const float observed_redshift_     = combine_redshifts(cosmological_redshift_, peculiar_redshift_);
     
     if(observed_redshift_ < lightcone_lower_redshift ||
@@ -647,27 +613,33 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
 
 #ifdef GALAXYTREE
 
-#ifdef STAR_FORMATION_HISTORY
-    galaxy_output_.sfh_numbins = galaxy_output_.sfh_ibin;
-#endif /* defined STAR_FORMATION_HISTORY */
-
+#ifdef OUTPUT_BUFFERING
+    push_back_lightcone_galaxy_from_galaxy_output(&galaxy_output_buffer, &galaxy_output_);
+#else  /* not defined OUTPUT_BUFFERING */
     myfwrite_lightcone_galaxy_from_galaxy_output(&galaxy_output_, 1, FdLightconeGalTree);
+#endif /* not defined OUTPUT_BUFFERING */ 
+
     TotLightconeGalCount++; //this will be written later
   
 #else /* not defined GALAXYTREE */
+
+#ifdef OUTPUT_BUFFERING
+    push_back_lightcone_galaxy_from_galaxy_output(&galaxy_output_buffer[output_number_], &galaxy_output_);
+#else  /* not defined OUTPUT_BUFFERING */
     myfwrite_lightcone_galaxy_from_galaxy_output(&galaxy_output_, 1, FdLightconeGalDumps[output_number_]);
+#endif /* not defined OUTPUT_BUFFERING */ 
+    
     TotLightconeGalaxies[output_number_]++;  //this will be written later
+    
 #endif /* not defined GALAXYTREE */
   }
 }
 
-
-/** @brief updates galaxies in lightcone galaxy output file to contain proper tree info
- * 
- * requires that all galaxies in_ tree have been constructed and that tree info in_ memory
- * has been updated
- * 
- * then uses tree info in memory to update lightcone galaxies on disk
+/** @brief all things to be done on output files before next tree arrives 
+ *
+ * updates galaxies in output file to contain proper tree info.
+ * requires that all galaxies in tree have been constructed and that tree info in memory
+ * has been updated. then uses tree info in memory to update lightcone galaxies on disk.
  */
 void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 {
@@ -676,9 +648,37 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
   {
     // order GalTree by current order of storage in_ file (lightcone_galaxy_number_in_file_begin)
     qsort(GalTree, NGalTree, sizeof(struct galaxy_tree_data), save_lightcone_galaxy_tree_compare);
+    
+#ifdef OUTPUT_BUFFERING      
+
+    const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
+    const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
+    const long long N_galaxies_                  = galaxy_in_file_number_end_ - galaxy_in_file_number_begin_;
+
+    //debugging:
+    if(galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type))
+    {
+      printf("error: in save_lightcone_galaxy_finalize(): galaxy_output_buffer.size = %lu < %llu = N_galaxies_ * sizeof(lightcone_galaxy_output_type).\n"
+             "N_galaxies_ = %llu, sizeof(lightcone_galaxy_output_type) = %lu\n",
+             galaxy_output_buffer.size, N_galaxies_ * sizeof(lightcone_galaxy_output_type), N_galaxies_, sizeof(lightcone_galaxy_output_type));
+      terminate("error: in save_lightcone_galaxy_finalize(): galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type).\n");
+    }
+
+    lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) (galaxy_output_buffer.data + galaxy_output_buffer.size - N_galaxies_ * sizeof(lightcone_galaxy_output_type));
+
+    int galaxy_in_tree_number_;
+    long long galaxy_in_file_number_;
+    for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
+      for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
+      { prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_[galaxy_in_file_number_ - galaxy_in_file_number_begin_]); }
   
-#ifdef UPDATE_GALAXY_OUTPUT_IN_MEM
-/* updating done in memory */
+#ifdef SORT_GALAXY_OUTPUT
+    qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
+#endif /* not defined SORT_GALAXY_OUTPUT */  
+
+#else  /* not defined OUTPUT_BUFFERING */ 
+#if defined UPDATE_GALAXY_OUTPUT_IN_MEM || defined SORT_GALAXY_OUTPUT
+/* updating/sorting done in memory */
 
     const long long galaxy_in_file_number_begin_ = GalTree[0           ].lightcone_galaxy_number_in_file_begin;
     const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
@@ -704,7 +704,7 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 
     myfree(galaxy_output_);
 
-#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */
+#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM && not defined SORT_GALAXY_OUTPUT */
  /* updating done on disk with little memory overhead */
 
     lightcone_galaxy_output_type galaxy_output_;
@@ -721,14 +721,10 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
         myfwrite_lightcone_galaxy(&galaxy_output_, 1, FdLightconeGalTree);
       }
     }
-  
-#ifdef SORT_GALAXY_OUTPUT
-#warning "Sorry, save_lightcone_galaxy_finalize() not yet implemented for SORT_GALAXY_OUTPUT without UPDATE_GALAXY_OUTPUT_IN_MEM."
-/** @todo implement on-disk version for sorting galaxy output,
- *        taking inspiration from save_galaxy_tree_reorder_on_disk() */
 
-#endif /* not defined SORT_GALAXY_OUTPUT */  
-#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */  
+#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM && not defined SORT_GALAXY_OUTPUT */  
+#endif /* not defined OUTPUT_BUFFERING */
+
    /* after updating tree info in file, make sure that file position indicator is put back to end of file.
     * note: file position indicator should be at end of file already,
     * if GalTree[].lightcone_galaxy_number_in_file_begin/end work as expected an are propery sorted)
@@ -749,24 +745,20 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
   */
 void sort_lightcone_galaxy_in_file(FILE * lightcone_galaxy_file_)
 {
-#ifdef UPDATE_GALAXY_OUTPUT_IN_MEM
   long long N_galaxies_ = 0;
   myfread_lightcone_galaxy_number_of_entries(lightcone_galaxy_file_, &N_galaxies_);
 
-  lightcone_galaxy_output_type *galaxy_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
+  lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
   
   myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
-  myfread_lightcone_galaxy(galaxy_, N_galaxies_, lightcone_galaxy_file_);
+  myfread_lightcone_galaxy(galaxy_output_, N_galaxies_, lightcone_galaxy_file_);
 
-  qsort(galaxy_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
+  qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
   
   myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
-  myfwrite_lightcone_galaxy(galaxy_, N_galaxies_, lightcone_galaxy_file_);
+  myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, lightcone_galaxy_file_);
   
-#else /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */    
-#warning "Sorry, sort_lightcone_galaxy_in_file() not yet implemented without UPDATE_GALAXY_OUTPUT_IN_MEM."
-  (void)lightcone_galaxy_file_; /* avoid unused-parameter warning */
-#endif /* not defined UPDATE_GALAXY_OUTPUT_IN_MEM */  
+  myfree(galaxy_output_);
 }
 
 
@@ -801,15 +793,17 @@ int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightc
 {
 #ifdef GALAXYTREE 
   /* if GalID available, use GalID for sorting */
-  if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
+       if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return -1;
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return +1;
+  
+  else
 #endif /* defined GALAXYTREE */
 
   /* next, use CubeShiftIndex for sorting (if GalID is available, (GalID,CubeShiftIndex) provide total order) */
-  else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
+       if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
     return -1;
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)

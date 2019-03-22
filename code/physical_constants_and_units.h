@@ -101,6 +101,9 @@
 #define SEC_PER_GIGAYEAR                  3.1557600e16      /* Julian Giga year in cgs */
 #define LENGTH_10_PC_IN_CM                3.08567758e19     /* 10 parsec (standard distance for abs. mag.) in cgs */
 
+#define BYTES_PER_KB                      1024ull
+#define BYTES_PER_MB                      1048576ull
+#define BYTES_PER_GB                      1073741824ull
 
 /* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
 #define UNITLENGTH_IN_CM                  3.08567758e+24    /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
@@ -130,6 +133,10 @@
 #define SEC_PER_MEGAYEAR                  3.155e13          /* Julian Mega year in cgs */
 #define SEC_PER_GIGAYEAR                  3.155e16          /* Julian Giga year in cgs */
 #define LENGTH_10_PC_IN_CM                3.08567758e19     /* 10 parsec (standard distance for abs. mag.) in cgs */
+
+#define BYTES_PER_KB                      1024ull
+#define BYTES_PER_MB                      1048576ull
+#define BYTES_PER_GB                      1073741824ull
 
 /* basic internal units: in terms of external units (ignoring Hubble_h for masses and lengths): */
 #define UNITLENGTH_IN_CM                   3.08568e+24      /* Mpc - WATCH OUT, distances in the code are in Mpc/h */
