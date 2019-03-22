@@ -31,10 +31,10 @@
 #endif
 #endif
 
-/**@file io_tree.c
- * @brief Reads in the data from the dark matter simulation merger
- *        trees, creates output files and after calculations frees
- *        the allocated memory.
+/** @file io_tree.c
+ *  @brief Reads in the data from the dark matter simulation merger
+ *         trees, creates output files and after calculations frees
+ *         the allocated memory.
  *
  * There are three different input files: trees_** - normal tree
  * files; tree_dbids - file containing halo IDs (used if GALAXYTREE
@@ -43,7 +43,7 @@
  */
 
  
-/**@brief Reads tree data from tree files.
+/** @brief Reads tree data from tree files.
  *
  *  Modified versions of myfread/myfwrite/myfseek are called to either
  *  read individual trees from the files into structures or from the
@@ -64,7 +64,8 @@
  *  CountIDs_snaptree - number of Ids for each tree at each snapshot
  *  (TotSnaps * Ntrees); OffsetIDs_snaptree (TotSnaps * Ntrees);
  *  CountIDs_halo - Number of Ids per halo (NtotHalos); OffsetIDs_halo
- *  (int). */
+ *  (int).
+ */
 void load_tree_table(const int file_number_)
 {
   int i_, n_, totNHalos, SnapShotInFileName;
