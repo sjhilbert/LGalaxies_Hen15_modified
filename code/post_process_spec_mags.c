@@ -78,39 +78,27 @@ lum_to_lum_or_mag(const double lum_)
 }
 
 
-/** @brief adds metals if detailed metals on */
- #ifdef DETAILED_METALS_AND_MASS_RETURN
-static inline float 
-get_metals_total(struct metals metals_)
-{ return(metals_.type1a+metals_.type2+metals_.agb); }
-#else  /* not defined DETAILED_METALS_AND_MASS_RETURN */
-static inline float 
-get_metals_total(const float metals_)
-{ return(metals_); }
-#endif /* not defined DETAILED_METALS_AND_MASS_RETURN */
-
-
-/** @brief Used by add_to_luminosities() to interpolate into
+/** @brief Used by interpolated_luminosity() to interpolates into
  *         the age in the SSP tables.*/
 static inline void 
 find_age_luminosity_interpolation_parameters(double log10_age_, int *age_index_, double *f_age_1_, double *f_age_2_)
 {
-  if(log10_age_ > SSP_logAgeTab[SSP_NAGES - 1])        /* beyond table, take latest entry */
+  if(log10_age_ <= SSP_logAgeTab[0])        /* age younger than 1st enty, take 1st entry */
   {
-    *age_index_ = SSP_NAGES - 2;
+    *age_index_ = 0;
     *f_age_1_ = 0;
     *f_age_2_ = 1;
   }
-  else if(log10_age_ < SSP_logAgeTab[1])        /* age younger than 1st enty, take 1st entry */
+  else if(log10_age_ >= SSP_logAgeTab[SSP_NAGES - 1])        /* beyond table, take latest entry */
   {
-    *age_index_ = 0;
+    *age_index_ = SSP_NAGES - 2;
     *f_age_1_ = 0;
     *f_age_2_ = 1;
   }
   else
   {
     int idx_ = get_jump_index(log10_age_);
-    while(SSP_logAgeTab[idx_ + 1] < log10_age_) idx_++;
+    while(SSP_logAgeTab[idx_ + 1] < log10_age_) ++idx_;
     *age_index_ = idx_;
     const double frac_ = (log10_age_ - SSP_logAgeTab[idx_]) / (SSP_logAgeTab[idx_ + 1] - SSP_logAgeTab[idx_]);
     *f_age_1_ = 1 - frac_;
@@ -119,27 +107,27 @@ find_age_luminosity_interpolation_parameters(double log10_age_, int *age_index_,
 }
 
 
-/** @brief Used by add_to_luminosities() to interpolates into
+/** @brief Used by interpolated_luminosity() to interpolates into
  *         the metallicity in the SSP tables.*/
 static inline void 
 find_metallicity_luminosity_interpolation_parameters(const double log10_metallicity_, int *met_index_, double *f_met_1_, double *f_met_2_)
 {
-  if(log10_metallicity_ > SSP_logMetalTab[SSP_NMETALLICITES - 1])        /* beyond table, take latest entry */
-  {
-    *met_index_ = SSP_NMETALLICITES - 2;
-    *f_met_1_ = 0;
-    *f_met_2_ = 1;
-  }
-  else if(log10_metallicity_ < SSP_logMetalTab[0])        /* mettallicity smaller 1st enty, take 1st entry */
+  if(log10_metallicity_ <= SSP_logMetalTab[0])        /* mettallicity smaller than 1st enty, take 1st entry */
   {
     *met_index_ = 0;
     *f_met_1_ = 1;
     *f_met_2_ = 0;
   }
+  else if(log10_metallicity_ >= SSP_logMetalTab[SSP_NMETALLICITES - 1]) /* beyond table, take last entry */
+  {
+    *met_index_ = SSP_NMETALLICITES - 2;
+    *f_met_1_ = 0;
+    *f_met_2_ = 1;
+  }
   else
   {
     int idx_ = 0;
-    while(SSP_logMetalTab[idx_ + 1] < log10_metallicity_) idx_++;
+    while(SSP_logMetalTab[idx_ + 1] < log10_metallicity_) ++idx_;
     *met_index_ = idx_;
     const double frac_ = (log10_metallicity_ - SSP_logMetalTab[idx_]) / (SSP_logMetalTab[idx_ + 1] - SSP_logMetalTab[idx_]);
     *f_met_1_ = 1 - frac_;
@@ -257,7 +245,8 @@ make_dust_correction_for_disk_luminosities(const int filter_number_, const int s
   /* now convert from 10^10 M_sun/h / (Mpc/h)^2 to (2.1 10^21 atoms/cm^2) */
   /* note: 3252.37 = 10^(3.5122) */
   /* add  redshift dependence of dust-to-ColdGas_ ratio */
-  const double n_h_ = ColdGas_ / (M_PI * pow(GasDiskRadius_ * 0.94, 2) * 1.4 * 3252.37 * (1 + ZZ[snapshot_number_]));
+//  const double n_h_ = ColdGas_ / (M_PI * pow(GasDiskRadius_ * 0.94, 2) * 1.4 * 3252.37 * (1 + ZZ[snapshot_number_]));
+  const double n_h_ = cold_gas_ / ((M_PI * 0.94 * 0.94 * 1.4 * 3252.37) * gas_disk_radius_ * gas_disk_radius_ * (1 + ZZ[snapshot_number_]));
 
  /* minimum inclination ~80 degrees, i.e. CosInclination_ == 0.2 */
   const double n_h_sec_ = (CosInclination_ < 0.2) ? (5. * n_h_) : (n_h_ / CosInclination_);
@@ -329,7 +318,7 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
   const double birthcloud_age_ = 10.0 / UnitTime_in_Megayears * Hubble_h;
 
   /* used for dust corrections: */
-  const double Z_g_ = metals_total(galaxy_->MetalsColdGas)/galaxy_->ColdGas/0.02;
+  const double Z_g_        = 50. * metals_total(galaxy_->MetalsColdGas) / galaxy_->ColdGas;
   const double t_snapshot_ = NumToTime(galaxy_->SnapNum);
 
   /* used for interpolating luminosities: */
@@ -344,7 +333,7 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
   /* precompute parameters for interpolating luminosities: */
   for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
   {
-    const double log10_age_ = log10(SFH_t[galaxy_->SnapNum][0][sfh_bin_number_]+SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_]/2 - t_snapshot_ );
+    const double log10_age_ = log10(SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_ );
     find_age_luminosity_interpolation_parameters(log10_age_ , &(age_index_[sfh_bin_number_]), &(f_age_1_[sfh_bin_number_]), &(f_age_2_[sfh_bin_number_]));
   }
   
@@ -368,19 +357,19 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
     {
       if(galaxy_->sfh_DiskMass [sfh_bin_number_] > 0.)
       {
-        const double log10_disk_metal_fraction_  = log10(get_metals_total(galaxy_->sfh_MetalsDiskMass [sfh_bin_number_]) / galaxy_->sfh_DiskMass [sfh_bin_number_]);
+        const double log10_disk_metal_fraction_  = log10(metals_total(galaxy_->sfh_MetalsDiskMass [sfh_bin_number_]) / galaxy_->sfh_DiskMass [sfh_bin_number_]);
         find_metallicity_luminosity_interpolation_parameters(log10_disk_metal_fraction_ , &(disk_met_index_ [sfh_bin_number_]), &(disk_f_met_1_ [sfh_bin_number_]), &(disk_f_met_2_ [sfh_bin_number_]));
       }
       
       if(galaxy_->sfh_BulgeMass[sfh_bin_number_] > 0.)
       {
-        const double log10_bulge_metal_fraction_ = log10(get_metals_total(galaxy_->sfh_MetalsBulgeMass[sfh_bin_number_]) / galaxy_->sfh_BulgeMass[sfh_bin_number_]);
+        const double log10_bulge_metal_fraction_ = log10(metals_total(galaxy_->sfh_MetalsBulgeMass[sfh_bin_number_]) / galaxy_->sfh_BulgeMass[sfh_bin_number_]);
         find_metallicity_luminosity_interpolation_parameters(log10_bulge_metal_fraction_, &(bulge_met_index_[sfh_bin_number_]), &(bulge_f_met_1_[sfh_bin_number_]), &(bulge_f_met_2_[sfh_bin_number_]));
       }
 #ifdef ICL
       if(galaxy_->sfh_ICM      [sfh_bin_number_] > 0.)
       {
-        const double log10_icm_metal_fraction_   = log10(get_metals_total(galaxy_->sfh_MetalsICM      [sfh_bin_number_]) / galaxy_->sfh_ICM      [sfh_bin_number_]);
+        const double log10_icm_metal_fraction_   = log10(metals_total(galaxy_->sfh_MetalsICM      [sfh_bin_number_]) / galaxy_->sfh_ICM      [sfh_bin_number_]);
         find_metallicity_luminosity_interpolation_parameters(log10_icm_metal_fraction_  , &(icm_met_index_  [sfh_bin_number_]), &(icm_f_met_1_  [sfh_bin_number_]), &(icm_f_met_2_  [sfh_bin_number_]));
       }
 #endif /* defined ICL */
@@ -444,8 +433,8 @@ void post_process_spec_mags(struct GALAXY_OUTPUT *galaxy_)
     //loop on SFH bins
     for(sfh_bin_number_ = 0; sfh_bin_number_ <= galaxy_->sfh_ibin; sfh_bin_number_++)
     {
-      const double age_ = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_]+SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_]/2 - t_snapshot_;
-      const bool is_affected_by_birthclould_ = (age_ <= birthcloud_age_);
+      const double age_                        = SFH_t[galaxy_->SnapNum][0][sfh_bin_number_] + 0.5 * SFH_dt[galaxy_->SnapNum][0][sfh_bin_number_] - t_snapshot_;
+      const bool   is_affected_by_birthclould_ = (age_ <= birthcloud_age_);
 
       /* The stellar populations tables have magnitudes for all the mass
        * formed in stars including what will be shortly lost by SNII   */

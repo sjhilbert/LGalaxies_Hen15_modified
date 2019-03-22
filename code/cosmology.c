@@ -171,7 +171,7 @@ double redshift_for_comoving_los_distance(const double d_)
     return redshift_table_for_interpolation[N_REDSHIFTS_FOR_INTERPOLATION - 1];
     
   int i_ = 0;
-  while((i_ < N_REDSHIFTS_FOR_INTERPOLATION - 1) && (d_ > distance_table_for_interpolation[i_ + 1])) i_++;
+  while((i_ < N_REDSHIFTS_FOR_INTERPOLATION - 2) && (d_ > distance_table_for_interpolation[i_ + 1])) ++i_;
   
   const double x = (d_ -  distance_table_for_interpolation[i_]) / (distance_table_for_interpolation[i_ + 1] - distance_table_for_interpolation[i_]);
   return (1. - x) * redshift_table_for_interpolation[i_] + x * redshift_table_for_interpolation[i_ + 1];

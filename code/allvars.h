@@ -23,21 +23,20 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define MIN_ALLOC_NUMBER       1000
-#define ALLOC_INCREASE_FACTOR  1.1
-#define ALLOC_DECREASE_FACTOR  0.7
 
-#define PRECISION_LIMIT 1.e-7
-
+/* simple min, max, etc.: */
 #define  min(x,y)  ((x)<(y) ?(x):(y))
 #define  max(x,y)  ((x)>(y) ?(x):(y))
 #define  wrap(x,y) ( (x)>((y)/2.) ? ((x)-(y)) : ((x)<(-(y)/2.)?((x)+(y)):(x)) )
 #define  pow2(x)   ((x)*(x))
 #define  pow3(x)   ((x)*(x)*(x))
 
-#define set_array_to(arr_, value_) \
-do { size_t arr_##idx_; for(arr_##idx_ = 0; arr_##idx_ < (sizeof arr_ / sizeof *arr_); arr_##idx_++) { arr_[arr_##idx_] = value_; } } while (0)
 
+#define MIN_ALLOC_NUMBER       1000
+#define ALLOC_INCREASE_FACTOR  1.1
+#define ALLOC_DECREASE_FACTOR  0.7
+
+#define PRECISION_LIMIT 1.e-7
 
 #define  terminate(x) {char termbuf[5000]; sprintf(termbuf, "code termination on task=%d, function %s(), file %s, line %d: %s\n", ThisTask, __FUNCTION__, __FILE__, __LINE__, x); printf("%s", termbuf); fflush(stdout); endrun(1);}
 
@@ -53,18 +52,18 @@ do { size_t arr_##idx_; for(arr_##idx_ = 0; arr_##idx_ < (sizeof arr_ / sizeof *
 
 #define  report_memory_usage(x, y) report_detailed_memory_usage_of_largest_task(x, y, __FUNCTION__, __FILE__, __LINE__)
 
+#ifdef MASS_CHECKS
+#define mass_checks(t, p) perform_mass_checks(t, p)
+#else  /* not defined MASS_CHECKS */
+#define mass_checks(t, p)
+#endif /* not defined MASS_CHECKS */ 
+
 
 #ifdef GALAXYTREE
 #define  CORRECTDBFLOAT(x)  ((fabs(x)<(1.e-30) || isnan(x)) ?(0.0):(x))
 #else
 #define  CORRECTDBFLOAT(x) x
 #endif
-
-#ifdef MASS_CHECKS
-#define mass_checks(t, p) perform_mass_checks(t, p)
-#else  /* not defined MASS_CHECKS */
-#define mass_checks(t, p)
-#endif /* not defined MASS_CHECKS */ 
 
 //WATCH OUT! In the case of MCMC running both MR and MRII the larger value is used to "allocate" all the arrays
 //inside the code its LastDarkMatterSnapShot+1 that defines the extent of the loops

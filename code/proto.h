@@ -18,6 +18,8 @@
 
 #include "allvars.h"
 
+#include "aux_functions_inline.h"
+
 #include "metals_inline.h"
 
 #include <math.h>
