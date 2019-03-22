@@ -192,7 +192,12 @@ int main(int argc_, char **argv_)
       while(difftime(current_time_, start_time_) < 1.0 * ThisTask);
 #endif /* defined PARALLEL */
 
+      // printf("loading tree table %d.\n", tree_file_number_);
+
       load_tree_table(tree_file_number_);
+      
+     // printf("running SAM for tree %d.\n", tree_file_number_);
+     
       SAM(tree_file_number_); // run the model in NORMAL MODE
 
       time(&current_time_);

@@ -113,31 +113,31 @@ struct MCMC_OBSCONSTRAINTS
 
 struct MCMC_GALAXY
 {
-  float StellarMass[NOUT];
-  float ColdGas[NOUT];
-  float BulgeMass[NOUT];
+  float StellarMass  [NOUT];
+  float ColdGas      [NOUT];
+  float BulgeMass    [NOUT];
   float BlackHoleMass[NOUT];
-  float Sfr[NOUT];
-  float MagU[NOUT];
-  float MagB[NOUT];
-  float MagV[NOUT];
-  float MagJ[NOUT];
-  float MagK[NOUT];
-  float Magu[NOUT];
-  float Magg[NOUT];
-  float Magr[NOUT];
-  float Magi[NOUT];
-  float Magz[NOUT];
-  float Weight[NOUT];
+  float Sfr          [NOUT];
+  float MagU         [NOUT];
+  float MagB         [NOUT];
+  float MagV         [NOUT];
+  float MagJ         [NOUT];
+  float MagK         [NOUT];
+  float Magu         [NOUT];
+  float Magg         [NOUT];
+  float Magr         [NOUT];
+  float Magi         [NOUT];
+  float Magz         [NOUT];
+  float Weight       [NOUT];
 #ifdef HALOMODEL
-  int fofid[NOUT];
-  float M_Crit200[NOUT];
-  float M_Mean200[NOUT];
-  float x[NOUT];
-  float y[NOUT];
-  float z[NOUT];
-  int Type[NOUT];
-  int ngal[NOUT];
+  int fofid          [NOUT];
+  float M_Crit200    [NOUT];
+  float M_Mean200    [NOUT];
+  float x            [NOUT];
+  float y            [NOUT];
+  float z            [NOUT];
+  int Type           [NOUT];
+  int ngal           [NOUT];
 #endif
 } *MCMC_GAL;
 

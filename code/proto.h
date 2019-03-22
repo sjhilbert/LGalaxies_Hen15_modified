@@ -12,7 +12,13 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
-
+ 
+/** @file proto.h
+ * 
+ * @author Stefan Hilbert (hilbert)
+ * @date   2018
+ */
+ 
 #ifndef PROTO_H
 #define PROTO_H
 
@@ -98,17 +104,18 @@ void read_file_nrs(void);
 int get_nr_files_to_process();
 void assign_files_to_tasks(int *FileToProcess_, int *TaskToProcess_, int n_files_);
 
-/* io_tree.c */
-void load_tree_table(const int file_number_);
-void free_tree_table(void);
-void load_tree(const int tree_number_);
-void free_galaxies_and_tree(void);
-
+/* io.c */
 size_t myfread(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_);
 size_t myfwrite(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_);
 size_t myfwrite_large_data(void *ptr, const size_t size_, const size_t n_memb_, FILE * stream_);
 size_t myffill(void *ptr_, const size_t size_, const size_t n_memb_, FILE * stream_);
 int myfseek(FILE * stream_, const long offset_, const int whence_);
+
+/* io_tree.c */
+void load_tree_table(const int file_number_);
+void free_tree_table(void);
+void load_tree(const int tree_number_);
+void free_galaxies_and_tree(void);
 
 /* model.c */
 double SAM(const int tree_file_number_);

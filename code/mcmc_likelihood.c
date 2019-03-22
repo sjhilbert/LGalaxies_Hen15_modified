@@ -47,8 +47,6 @@
 #define MAXIT 100
 
 
-
-
 //////////////
 //LIKELIHOOD//
 //////////////
@@ -90,184 +88,185 @@
  * 10th Test - Binomial test for the Black Hole-Bulge Mass relation
  * MCMC_Obs[].ObsUp[0] & MCMC_Obs[].ObsDown[0] - observations for the BHBM from Haring & Rix 2004
  * MCMC_GAL[].Bulge & MCMC_GAL[].BlackHoleMass - masses from SAM
- * binblackholeup - numbers of galaxies in the two upper bins on the bulge-blackhole mass relation
- * binblackholedown - numbers of galaxies in the two lower bins on the bulge-blackhole mass relation */
+ * bin_black_hole_up_ - numbers of galaxies in the two upper bins on the bulge-blackhole mass relation
+ * bin_black_hole_down_ - numbers of galaxies in the two lower bins on the bulge-blackhole mass relation */
 
 #ifdef MCMC
 double get_likelihood()
 {
   //Variables for all the LF/SM function like tests
-  double *binsamdata, *samdata;
+  double *bin_sam_data_, *sam_data_;
   //variables for the bulge-blackhole mass test using binomial
-  double binblackholeup[2]={0.0,0.0}, binblackholedown[2]={0.0,0.0};
-  double final_probability, redshift_probability, current_probability;
+  double bin_black_hole_up_  [2] = {0.0, 0.0};
+  double bin_black_hole_down_[2] = {0.0, 0.0};
+  double final_probability_, redshift_probability_, current_probability_;
   // double prob_SMF_z0;
-  int i, j, snap;
-  double color_UV, color_VJ;
+  int i_, j_, output_number_;
+  double color_U_minus_V_, color_V_minus_J_;
   //BEST FIT TO MODEL CUT
 #ifndef HALOMODEL
-  double offset_color_cut[NOUT]={0.00, 1.085, 1.1, 1.0, 1.15}; //not used at z=0
-  double slope_color_cut[NOUT]={0.00, 0.5, 0.48, 0.38, 0.18};
+  const double offset_color_cut[NOUT]={0.00, 1.085, 1.1, 1.0, 1.15}; //not used at z=0
+  const double slope_color_cut[NOUT]={0.00, 0.5, 0.48, 0.38, 0.18};
 #else
-  double offset_color_cut[NOUT]={0.00}; //not used at z=0
-  double slope_color_cut[NOUT]={0.00};
+  const double offset_color_cut[NOUT]={0.00}; //not used at z=0
+  const double slope_color_cut[NOUT]={0.00};
 #endif
-  FILE *fa;
-  char buf[1000];
+  FILE *file_;
+  char file_name_[1000];
 
-  /* Bin samdata into binsamdata according to observational constraints.
+  /* Bin sam_data_ into bin_sam_data_ according to observational constraints.
    * The first argument of the bin functions and of the likelihood
    * function (Chi^2 ot MLM) indicates the observational data set to use.
    * ALL Luminosity Function to be compared in units of M-5logh and phi(Mpc-3h-3mag-1) */
 
-  final_probability=1.;
-  for(snap=0;snap<NOUT;snap++)
+  final_probability_ = 1.;
+  for(output_number_=0;output_number_<NOUT;output_number_++)
   {
-    printf("snap=%d\n",snap);
-    redshift_probability=1.;
+    printf("output_number = %d\n",output_number_);
+    redshift_probability_=1.;
 
-    if((samdata = malloc(sizeof(double) * TotMCMCGals[snap])) == NULL)
+    if((sam_data_ = malloc(sizeof(double) * TotMCMCGals[output_number_])) == NULL)
       terminate("get_likelihood");
 
 #ifdef HALOMODEL
-    correct_for_correlation(snap);
+    correct_for_correlation(output_number_);
 #endif
 
-    for(i=0;i<MCMCNConstraints;i++)
+    for(i_=0;i_<MCMCNConstraints;i_++)
     {
-      if(MCMC_Obs[i].ObsTest_Switch_z[snap]==1)
+      if(MCMC_Obs[i_].ObsTest_Switch_z[output_number_]==1)
       {
-        if((binsamdata = malloc(sizeof(double) * Nbins[snap][i])) == NULL)
+        if((bin_sam_data_ = malloc(sizeof(double) * Nbins[output_number_][i_])) == NULL)
           terminate("get_likelihood");
         
         /* default prob. for unreckognized test: */
-        current_probability = 1;
-        // current_probability = 0;
+        current_probability_ = 1;
+        // current_probability_ = 0;
 
 /******************************
 **     Chi_Sq TESTS         **
 ******************************/
-        if(strcmp(MCMC_Obs[i].TestType,"chi_sq")==0)
+        if(strcmp(MCMC_Obs[i_].TestType,"chi_sq")==0)
         {
-          //bin all the galaxies into binsamdata for properties that just require normal histograms
-          for(j = 0; j < TotMCMCGals[snap]; j++)
+          //bin all the galaxies into bin_sam_data_ for properties that just require normal histograms
+          for(j_ = 0; j_ < TotMCMCGals[output_number_]; j_++)
           {
-            samdata[j] = 0.; //initialize
-            if(strcmp(MCMC_Obs[i].Name,"StellarMassFunction")==0)
-            { samdata[j] = MCMC_GAL[j].StellarMass[snap]; }
-            else if(strcmp(MCMC_Obs[i].Name,"KBandLF")==0)
-            { samdata[j] = MCMC_GAL[j].MagK[snap]; }
-            else if(strcmp(MCMC_Obs[i].Name,"BBandLF")==0)
+            sam_data_[j_] = 0.; //initialize
+            if(strcmp(MCMC_Obs[i_].Name,"StellarMassFunction")==0)
+            { sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_]; }
+            else if(strcmp(MCMC_Obs[i_].Name,"KBandLF")==0)
+            { sam_data_[j_] = MCMC_GAL[j_].MagK[output_number_]; }
+            else if(strcmp(MCMC_Obs[i_].Name,"BBandLF")==0)
             {
-              if((double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.)<0.2) //Bj band at z=0
-                samdata[j]=MCMC_GAL[j].MagB[snap]-0.28*(MCMC_GAL[j].MagB[snap]-MCMC_GAL[j].MagV[snap]);
+              if((double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.)<0.2) //Bj band at z=0
+                sam_data_[j_]=MCMC_GAL[j_].MagB[output_number_]-0.28*(MCMC_GAL[j_].MagB[output_number_]-MCMC_GAL[j_].MagV[output_number_]);
               else //BBand at all other z
-                samdata[j]=MCMC_GAL[j].MagB[snap];
+                sam_data_[j_]=MCMC_GAL[j_].MagB[output_number_];
             }
-            else if(strcmp(MCMC_Obs[i].Name,"uBandLF")==0)
-            { samdata[j] = MCMC_GAL[i].Magu[snap]; }
-            else if(strcmp(MCMC_Obs[i].Name,"ColdGasMassFunction")==0)
-            {  samdata[j] = MCMC_GAL[j].ColdGas[snap]*0.54; }
+            else if(strcmp(MCMC_Obs[i_].Name,"uBandLF")==0)
+            { sam_data_[j_] = MCMC_GAL[i_].Magu[output_number_]; }
+            else if(strcmp(MCMC_Obs[i_].Name,"ColdGasMassFunction")==0)
+            {  sam_data_[j_] = MCMC_GAL[j_].ColdGas[output_number_]*0.54; }
 
             //Stellar Mass Function of Passive Galaxies
-            else if(strcmp(MCMC_Obs[i].Name,"StellarMassFunctionPassive")==0)
+            else if(strcmp(MCMC_Obs[i_].Name,"StellarMassFunctionPassive")==0)
             {
-              if( MCMC_GAL[j].Sfr[snap]* 1.e9 /pow(10.,MCMC_GAL[j].StellarMass[snap]) < 0.01 )
-                samdata[j] = MCMC_GAL[j].StellarMass[snap];
+              if( MCMC_GAL[j_].Sfr[output_number_]* 1.e9 /pow(10.,MCMC_GAL[j_].StellarMass[output_number_]) < 0.01 )
+                sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_];
             }
             //Stellar Mass Function of Active Galaxies
-            else if(strcmp(MCMC_Obs[i].Name,"StellarMassFunctionActive")==0)
+            else if(strcmp(MCMC_Obs[i_].Name,"StellarMassFunctionActive")==0)
             {
-              if( MCMC_GAL[j].Sfr[snap]* 1.e9 /pow(10.,MCMC_GAL[j].StellarMass[snap]) > 0.3 )
-                samdata[j] = MCMC_GAL[j].StellarMass[snap];
+              if( MCMC_GAL[j_].Sfr[output_number_]* 1.e9 /pow(10.,MCMC_GAL[j_].StellarMass[output_number_]) > 0.3 )
+                sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_];
             }
             //Stellar Mass Function of Red Galaxies
-            //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[j].Magr[snap]+20.07)/1.09))
-            else if(strcmp(MCMC_Obs[i].Name,"StellarMassFunctionRed")==0)
+            //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[j_].Magr[output_number_]+20.07)/1.09))
+            else if(strcmp(MCMC_Obs[i_].Name,"StellarMassFunctionRed")==0)
             {
-              if((double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.)<0.2) //z=0
+              if((double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.)<0.2) //z=0
               {
-                if( (MCMC_GAL[j].Magu[snap]-MCMC_GAL[j].Magr[snap]) > (1.9-0.244*tanh((MCMC_GAL[j].Magr[snap]+20.07)/1.09)))
-                  samdata[j] = MCMC_GAL[j].StellarMass[snap];
+                if( (MCMC_GAL[j_].Magu[output_number_]-MCMC_GAL[j_].Magr[output_number_]) > (1.9-0.244*tanh((MCMC_GAL[j_].Magr[output_number_]+20.07)/1.09)))
+                  sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_];
               }
               else //z>0
               {
-                color_UV=(MCMC_GAL[j].MagU[snap]-MCMC_GAL[j].MagV[snap]);
-                color_VJ=(MCMC_GAL[j].MagV[snap]-MCMC_GAL[j].MagJ[snap]);
-                if( (color_VJ < (1.3-offset_color_cut[snap])/slope_color_cut[snap] && color_UV > 1.3) ||
-                    (color_VJ > (1.3-offset_color_cut[snap])/slope_color_cut[snap] && color_UV > color_VJ*slope_color_cut[snap]+offset_color_cut[snap]) )
-                  samdata[j] = MCMC_GAL[j].StellarMass[snap];
+                color_U_minus_V_=(MCMC_GAL[j_].MagU[output_number_]-MCMC_GAL[j_].MagV[output_number_]);
+                color_V_minus_J_=(MCMC_GAL[j_].MagV[output_number_]-MCMC_GAL[j_].MagJ[output_number_]);
+                if( (color_V_minus_J_ < (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ > 1.3) ||
+                    (color_V_minus_J_ > (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ > color_V_minus_J_*slope_color_cut[output_number_]+offset_color_cut[output_number_]) )
+                  sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_];
               }
             }
 
             //Stellar Mass Function of Blue Galaxies
-            //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[j].Magr[snap]+20.07)/1.09))
-            else if(strcmp(MCMC_Obs[i].Name,"StellarMassFunctionBlue")==0)
+            //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[j_].Magr[output_number_]+20.07)/1.09))
+            else if(strcmp(MCMC_Obs[i_].Name,"StellarMassFunctionBlue")==0)
             {
-              if((double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.)<0.2) //z=0
+              if((double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.)<0.2) //z=0
               {
-                if( (MCMC_GAL[j].Magu[snap]-MCMC_GAL[j].Magr[snap]) < (1.9-0.244*tanh((MCMC_GAL[j].Magr[snap]+20.07)/1.09)))
-                  samdata[j] = MCMC_GAL[j].StellarMass[snap];
+                if( (MCMC_GAL[j_].Magu[output_number_]-MCMC_GAL[j_].Magr[output_number_]) < (1.9-0.244*tanh((MCMC_GAL[j_].Magr[output_number_]+20.07)/1.09)))
+                  sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_];
               }
               else //z>0
               {
-                color_UV=(MCMC_GAL[j].MagU[snap]-MCMC_GAL[j].MagV[snap]);
-                color_VJ=(MCMC_GAL[j].MagV[snap]-MCMC_GAL[j].MagJ[snap]);
+                color_U_minus_V_=(MCMC_GAL[j_].MagU[output_number_]-MCMC_GAL[j_].MagV[output_number_]);
+                color_V_minus_J_=(MCMC_GAL[j_].MagV[output_number_]-MCMC_GAL[j_].MagJ[output_number_]);
 
-                if( (color_VJ < (1.3-offset_color_cut[snap])/slope_color_cut[snap] && color_UV < 1.3) ||
-                    (color_VJ > (1.3-offset_color_cut[snap])/slope_color_cut[snap] && color_UV < color_VJ*slope_color_cut[snap]+offset_color_cut[snap]) )
-                  samdata[j] = MCMC_GAL[j].StellarMass[snap];
+                if( (color_V_minus_J_ < (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ < 1.3) ||
+                    (color_V_minus_J_ > (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ < color_V_minus_J_*slope_color_cut[output_number_]+offset_color_cut[output_number_]) )
+                  sam_data_[j_] = MCMC_GAL[j_].StellarMass[output_number_];
               }
             }
 
             //SFRF
-            else if(strcmp(MCMC_Obs[i].Name,"SFRF")==0)
-            { samdata[j] = MCMC_GAL[j].Sfr[snap]; }
+            else if(strcmp(MCMC_Obs[i_].Name,"SFRF")==0)
+            { sam_data_[j_] = MCMC_GAL[j_].Sfr[output_number_]; }
 
           }//end loop on number of galaxies
-          bin_function(i, binsamdata, samdata, snap);
+          bin_function(i_, bin_sam_data_, sam_data_, output_number_);
 
           //SFRD only has one bin
-          if(strcmp(MCMC_Obs[i].Name,"SFRD")==0)
+          if(strcmp(MCMC_Obs[i_].Name,"SFRD")==0)
           {
-            binsamdata[0]=0;
-            for(j = 0; j < TotMCMCGals[snap]; j++)
-              binsamdata[0]+=MCMC_GAL[j].Sfr[snap]*MCMC_GAL[j].Weight[snap];
+            bin_sam_data_[0]=0;
+            for(j_ = 0; j_ < TotMCMCGals[output_number_]; j_++)
+              bin_sam_data_[0]+=MCMC_GAL[j_].Sfr[output_number_]*MCMC_GAL[j_].Weight[output_number_];
           }
 
 #ifdef HALOMODEL
           //Correlation Function - requires more than just binning
-          else if(strncmp(MCMC_Obs[i].Name,"Clustering_MassBins_8.77_9.27",28)==0)
-            compute_correlation_func(i, binsamdata, snap, 8.77, 9.27);
-          else if(strncmp(MCMC_Obs[i].Name,"Clustering_MassBins_9.27_9.77",28)==0)
-            compute_correlation_func(i, binsamdata, snap, 9.27, 9.77);
-          else if(strncmp(MCMC_Obs[i].Name,"Clustering_MassBins_9.77_10.27",28)==0)
-            compute_correlation_func(i, binsamdata, snap, 9.77, 10.27);
-          else if(strncmp(MCMC_Obs[i].Name,"Clustering_MassBins_10.27_10.77",28)==0)
-            compute_correlation_func(i, binsamdata, snap, 10.27, 10.77);
-          else if(strncmp(MCMC_Obs[i].Name,"Clustering_MassBins_10.77_11.27",28)==0)
-            compute_correlation_func(i, binsamdata, snap, 10.77, 11.27);
-          else if(strncmp(MCMC_Obs[i].Name,"Clustering_MassBins_11.27_11.47",28)==0)
-            compute_correlation_func(i, binsamdata, snap, 11.27, 11.77);
+          else if(strncmp(MCMC_Obs[i_].Name,"Clustering_MassBins_8.77_9.27",28)==0)
+            compute_correlation_func(i_, bin_sam_data_, output_number_, 8.77, 9.27);
+          else if(strncmp(MCMC_Obs[i_].Name,"Clustering_MassBins_9.27_9.77",28)==0)
+            compute_correlation_func(i_, bin_sam_data_, output_number_, 9.27, 9.77);
+          else if(strncmp(MCMC_Obs[i_].Name,"Clustering_MassBins_9.77_10.27",28)==0)
+            compute_correlation_func(i_, bin_sam_data_, output_number_, 9.77, 10.27);
+          else if(strncmp(MCMC_Obs[i_].Name,"Clustering_MassBins_10.27_10.77",28)==0)
+            compute_correlation_func(i_, bin_sam_data_, output_number_, 10.27, 10.77);
+          else if(strncmp(MCMC_Obs[i_].Name,"Clustering_MassBins_10.77_11.27",28)==0)
+            compute_correlation_func(i_, bin_sam_data_, output_number_, 10.77, 11.27);
+          else if(strncmp(MCMC_Obs[i_].Name,"Clustering_MassBins_11.27_11.47",28)==0)
+            compute_correlation_func(i_, bin_sam_data_, output_number_, 11.27, 11.77);
 #endif
 
-          current_probability=chi_square_probability(i, binsamdata, snap);
+          current_probability_=chi_square_probability(i_, bin_sam_data_, output_number_);
 
 #ifndef PARALLEL
           //print comparison with observations into file (over-write, only makes sense if not PARALLEL)
-          sprintf(buf, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,i,(double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.));
-          if(!(fa = fopen(buf, "w")))
+          sprintf(file_name_, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,i_,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
+          if(!(file_ = fopen(file_name_, "w")))
           {
             char error_message_[1000];
-            sprintf(error_message_, "can't open file `%s'\n", buf);
+            sprintf(error_message_, "can't open file `%s'\n", file_name_);
             terminate(error_message_);
           }
           int ii;
-          for(ii = 0; ii < Nbins[snap][i]; ii++)
-            fprintf(fa, "%g %g %g %g\n",
-                    MCMC_Obs[i].Bin_low[snap][ii]+(MCMC_Obs[i].Bin_high[snap][ii]-MCMC_Obs[i].Bin_low[snap][ii])/2.,
-                    MCMC_Obs[i].Obs[snap][ii], MCMC_Obs[i].Error[snap][ii], binsamdata[ii]);
-          fclose(fa);
+          for(ii = 0; ii < Nbins[output_number_][i_]; ii++)
+            fprintf(file_, "%g %g %g %g\n",
+                    MCMC_Obs[i_].Bin_low[output_number_][ii]+(MCMC_Obs[i_].Bin_high[output_number_][ii]-MCMC_Obs[i_].Bin_low[output_number_][ii])/2.,
+                    MCMC_Obs[i_].Obs[output_number_][ii], MCMC_Obs[i_].Error[output_number_][ii], bin_sam_data_[ii]);
+          fclose(file_);
 #endif
 
         }//end chi_sq tests
@@ -276,91 +275,91 @@ double get_likelihood()
 /******************************
 ** Maximum Likelihood TESTS **
 ******************************/
-        else if(strcmp(MCMC_Obs[i].TestType,"maxlike")==0)
+        else if(strcmp(MCMC_Obs[i_].TestType,"maxlike")==0)
         {
-          if(strcmp(MCMC_Obs[i].Name,"RedFraction")==0)
+          if(strcmp(MCMC_Obs[i_].Name,"RedFraction")==0)
           {
-            bin_red_fraction(i, binsamdata, snap);
-            current_probability=maximum_likelihood_probability(i, binsamdata, snap);
+            bin_red_fraction(i_, bin_sam_data_, output_number_);
+            current_probability_=maximum_likelihood_probability(i_, bin_sam_data_, output_number_);
           }
 
-          if(strcmp(MCMC_Obs[i].Name,"ColdGasFractionvsStellarMass")==0)
+          if(strcmp(MCMC_Obs[i_].Name,"ColdGasFractionvsStellarMass")==0)
           {
-            bin_ColdGasFractionvsStellarMass(i, binsamdata, snap);
-            current_probability=maximum_likelihood_probability(i, binsamdata, snap);
+            bin_ColdGasFractionvsStellarMass(i_, bin_sam_data_, output_number_);
+            current_probability_=maximum_likelihood_probability(i_, bin_sam_data_, output_number_);
           }
 
-          if(strcmp(MCMC_Obs[i].Name,"PassiveFraction")==0)
+          if(strcmp(MCMC_Obs[i_].Name,"PassiveFraction")==0)
           {
-            bin_passive_fraction(i, binsamdata, snap);
-            current_probability=maximum_likelihood_probability(i, binsamdata, snap);
+            bin_passive_fraction(i_, bin_sam_data_, output_number_);
+            current_probability_=maximum_likelihood_probability(i_, bin_sam_data_, output_number_);
           }
 
-          if(strcmp(MCMC_Obs[i].Name,"BulgeFraction")==0)
+          if(strcmp(MCMC_Obs[i_].Name,"BulgeFraction")==0)
           {
-            bin_bulge_fraction(i, binsamdata, snap);
-            current_probability=maximum_likelihood_probability(i, binsamdata, snap);
+            bin_bulge_fraction(i_, bin_sam_data_, output_number_);
+            current_probability_=maximum_likelihood_probability(i_, bin_sam_data_, output_number_);
           }
         }
 
 /******************************
 **    Binomial TESTS        **
 ******************************/
-        else if(strcmp(MCMC_Obs[i].TestType,"binomial")==0)
+        else if(strcmp(MCMC_Obs[i_].TestType,"binomial")==0)
         {
-          if(strcmp(MCMC_Obs[i].Name,"BlackHoleBulgeMass")==0)
+          if(strcmp(MCMC_Obs[i_].Name,"BlackHoleBulgeMass")==0)
           {
-            bin_bhbm(binblackholeup, binblackholedown, snap);
-            current_probability=binomial_probability(i, binblackholeup, binblackholedown, snap);
+            bin_bhbm(bin_black_hole_up_, bin_black_hole_down_, output_number_);
+            current_probability_=binomial_probability(i_, bin_black_hole_up_, bin_black_hole_down_, output_number_);
           }
         }
 //END BINOMIAL TESTS
 
-        free(binsamdata);
+        free(bin_sam_data_);
 
-        redshift_probability *= current_probability;
-        printf("prob[%d]=%0.5e\n",i,current_probability);
+        redshift_probability_ *= current_probability_;
+        printf("prob[%d]=%0.5e\n",i_,current_probability_);
         //write likelihood for each constraint at each MCMC step
-        fprintf(FILE_MCMC_PredictionsPerStep[snap][i], " %0.5e", current_probability);
+        fprintf(FILE_MCMC_PredictionsPerStep[output_number_][i_], " %0.5e", current_probability_);
 
-      }//end if(MCMC_Obs[i].ObsTest_Switch_z[snap]==1)
+      }//end if(MCMC_Obs[i_].ObsTest_Switch_z[output_number_]==1)
     }//end loop on MCMCNConstraints
 
-    printf("snap[%d] prob=%0.5e\n",snap, redshift_probability);
+    printf("output_number_[%d] prob=%0.5e\n",output_number_, redshift_probability_);
 
-    final_probability *= redshift_probability;
-    free(samdata);
+    final_probability_ *= redshift_probability_;
+    free(sam_data_);
 #ifdef HALOMODEL
     free(MCMC_FOF2);
     free(HashTable);
 #endif
-  }//end loop on snaps
+  }//end loop on output_number_s
 
 
-  printf("final prob=%0.5e\nlog_like=%0.8g\n",final_probability, -log10(final_probability));
+  printf("final prob=%0.5e\nlog_like=%0.8g\n",final_probability_, -log10(final_probability_));
 
   //write total likelihood into separate files and into
   //the end of the line on the file with the comparison to each constraint
-  fprintf(FILE_MCMC_LIKELIHOOD,"%0.8g\n",-log10(final_probability));
+  fprintf(FILE_MCMC_LIKELIHOOD,"%0.8g\n",-log10(final_probability_));
   fflush(FILE_MCMC_LIKELIHOOD);
-  for(i=0;i<MCMCNConstraints;i++)
-    for(snap=0;snap<NOUT;snap++)
-      if(MCMC_Obs[i].ObsTest_Switch_z[snap]==1)
+  for(i_=0;i_<MCMCNConstraints;i_++)
+    for(output_number_=0;output_number_<NOUT;output_number_++)
+      if(MCMC_Obs[i_].ObsTest_Switch_z[output_number_]==1)
       {
-        fprintf(FILE_MCMC_PredictionsPerStep[snap][i], " %0.8g\n", -log10(final_probability));
-        fflush(FILE_MCMC_PredictionsPerStep[snap][i]);
+        fprintf(FILE_MCMC_PredictionsPerStep[output_number_][i_], " %0.8g\n", -log10(final_probability_));
+        fflush(FILE_MCMC_PredictionsPerStep[output_number_][i_]);
       }
 
-  return final_probability;
+  return final_probability_;
 }
 
 
 /**@brief Bin Luminosity or Stellar Mass Function*/
-void bin_function(int ObsNr, double *binsamdata, double *samdata, int snap)
+void bin_function(int ObsNr, double *bin_sam_data_, double *sam_data_, int output_number_)
 {
   int ii, jj, kk, Nsamples, AddErrors;
-  double aux_binsamdata, aux_samdata;
-  // FILE *fa;
+  double aux_bin_sam_data_, aux_samdata;
+  // FILE *file_;
 
   //because of the convolution with a random error, when masses are involved
   //we would get a different output for the same model parameters. Therefore
@@ -381,33 +380,33 @@ void bin_function(int ObsNr, double *binsamdata, double *samdata, int snap)
       Nsamples=1;
     }
 
-  for(ii = 0; ii < Nbins[snap][ObsNr]; ii++)
+  for(ii = 0; ii < Nbins[output_number_][ObsNr]; ii++)
     {
       //for a given stellar mass bin, calculate Nsamples number densities, then average
-      //just keep adding everything on aux_binsamdata and then divide by Nsamples
-      binsamdata[ii] = 0.;
+      //just keep adding everything on aux_bin_sam_data_ and then divide by Nsamples
+      bin_sam_data_[ii] = 0.;
       for(jj = 0; jj < Nsamples; jj++)
         {
-          aux_binsamdata = 0.;
-          for(kk=0;kk<TotMCMCGals[snap];kk++)
+          aux_bin_sam_data_ = 0.;
+          for(kk=0;kk<TotMCMCGals[output_number_];kk++)
             {
-              aux_samdata=samdata[kk];
+              aux_samdata=sam_data_[kk];
               if(AddErrors==1)
-                aux_samdata+=gassdev(&MCMCseed)*AddedErrOnMass*(1+MCMCConstraintsZZ[snap]);
-              if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[snap][ii] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[snap][ii])
-                aux_binsamdata+=MCMC_GAL[kk].Weight[snap];
+                aux_samdata+=gassdev(&MCMCseed)*AddedErrOnMass*(1+MCMCConstraintsZZ[output_number_]);
+              if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[output_number_][ii] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[output_number_][ii])
+                aux_bin_sam_data_+=MCMC_GAL[kk].Weight[output_number_];
             }
-          binsamdata[ii]+=aux_binsamdata/((float)(Nsamples));
+          bin_sam_data_[ii]+=aux_bin_sam_data_/((float)(Nsamples));
         }
-      binsamdata[ii]/=(MCMC_Obs[ObsNr].Bin_high[snap][ii]-MCMC_Obs[ObsNr].Bin_low[snap][ii]);
+      bin_sam_data_[ii]/=(MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii]);
     }
 
-  for(ii = 0; ii < Nbins[snap][ObsNr]; ii++)
+  for(ii = 0; ii < Nbins[output_number_][ObsNr]; ii++)
     {
-      fprintf(FILE_MCMC_PredictionsPerStep[snap][ObsNr], " %0.5e", binsamdata[ii]);
+      fprintf(FILE_MCMC_PredictionsPerStep[output_number_][ObsNr], " %0.5e", bin_sam_data_[ii]);
 //#ifndef PARALLEL
-   /*   fprintf(fa, "%g %g %g %g\n", MCMC_Obs[ObsNr].Bin_low[snap][ii]+(MCMC_Obs[ObsNr].Bin_high[snap][ii]-MCMC_Obs[ObsNr].Bin_low[snap][ii])/2.,
-              MCMC_Obs[ObsNr].Obs[snap][ii], MCMC_Obs[ObsNr].Error[snap][ii], binsamdata[ii]);*/
+   /*   fprintf(file_, "%g %g %g %g\n", MCMC_Obs[ObsNr].Bin_low[output_number_][ii]+(MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii])/2.,
+              MCMC_Obs[ObsNr].Obs[output_number_][ii], MCMC_Obs[ObsNr].Error[output_number_][ii], bin_sam_data_[ii]);*/
 //#endif
     }
 }
@@ -416,14 +415,14 @@ void bin_function(int ObsNr, double *binsamdata, double *samdata, int snap)
 /**@brief Bin fraction of red galaxies.
  *    The separation is done based on g-r color
  *    at z=0 and and U-V vs V-J at higher z */
-void bin_red_fraction(int ObsNr, double *binredfraction, int snap)
+void bin_red_fraction(int ObsNr, double *binredfraction, int output_number_)
 {
-  int i, jj, k, IsRedGalaxy, Nsamples=1000;
+  int i_, jj, k, IsRedGalaxy, Nsamples=1000;
   double red, blue;
-  double color, color_UV, color_VJ, aux_samdata;
+  double color, color_U_minus_V_, color_V_minus_J_, aux_samdata;
   //OBSERVATIONAL CUT
-  //double offset_color_cut[snap]={0.00, 0.69, 0.59, 0.59, 0.59}; //not used at z=0
-  //double slope_color_cut[snap]={0.00, 0.88, 0.88, 0.88, 0.88};
+  //double offset_color_cut[output_number_]={0.00, 0.69, 0.59, 0.59, 0.59}; //not used at z=0
+  //double slope_color_cut[output_number_]={0.00, 0.88, 0.88, 0.88, 0.88};
   //BEST FIT TO MODEL CUT
 #ifndef HALOMODEL
   double offset_color_cut[NOUT]={0.00, 1.085, 1.1, 1.0, 1.15}; //not used at z=0
@@ -433,297 +432,297 @@ void bin_red_fraction(int ObsNr, double *binredfraction, int snap)
   double slope_color_cut[NOUT]={0.00};
 #endif
 
-  FILE *fa;
-  char buf[1000];
+  FILE *file_;
+  char file_name_[1000];
 
 #ifndef PARALLEL
-  sprintf(buf, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,ObsNr,(double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.));
-  if(!(fa = fopen(buf, "w")))
+  sprintf(file_name_, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,ObsNr,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
+  if(!(file_ = fopen(file_name_, "w")))
     {
       char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
 #endif
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      binredfraction[i] = 0.;
+      binredfraction[i_] = 0.;
 
       for(jj = 0; jj < Nsamples; jj++)
         {
           red = 0.;
           blue = 0.;
 
-          for(k=0;k<TotMCMCGals[snap];k++)
+          for(k=0;k<TotMCMCGals[output_number_];k++)
             {
               //color g-r cut for z=0  - baldry 2004
-              //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[j].Magr[snap]+20.07)/1.09))
-              if((double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.)<0.2)
+              //original cut in bladry 2004 (2.06-0.244*tanh((MCMC_GAL[j_].Magr[output_number_]+20.07)/1.09))
+              if((double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.)<0.2)
                 {
-                  color=MCMC_GAL[k].Magu[snap]-MCMC_GAL[k].Magr[snap];
-                  IsRedGalaxy=(color > (1.9-0.244*tanh((MCMC_GAL[k].Magr[snap]+20.07)/1.09)));
+                  color=MCMC_GAL[k].Magu[output_number_]-MCMC_GAL[k].Magr[output_number_];
+                  IsRedGalaxy=(color > (1.9-0.244*tanh((MCMC_GAL[k].Magr[output_number_]+20.07)/1.09)));
                 }
               //U-V vs V-J at higher redshift
               else
                 {
-                  color_UV=(MCMC_GAL[k].MagU[snap]-MCMC_GAL[k].MagV[snap]);
-                  color_VJ=(MCMC_GAL[k].MagV[snap]-MCMC_GAL[k].MagJ[snap]);
-                  IsRedGalaxy=( (color_VJ < (1.3-offset_color_cut[snap])/slope_color_cut[snap] && color_UV > 1.3 ) ||
-                      (color_VJ > (1.3-offset_color_cut[snap])/slope_color_cut[snap] && color_UV > color_VJ*slope_color_cut[snap]+offset_color_cut[snap]) );
+                  color_U_minus_V_=(MCMC_GAL[k].MagU[output_number_]-MCMC_GAL[k].MagV[output_number_]);
+                  color_V_minus_J_=(MCMC_GAL[k].MagV[output_number_]-MCMC_GAL[k].MagJ[output_number_]);
+                  IsRedGalaxy=( (color_V_minus_J_ < (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ > 1.3 ) ||
+                      (color_V_minus_J_ > (1.3-offset_color_cut[output_number_])/slope_color_cut[output_number_] && color_U_minus_V_ > color_V_minus_J_*slope_color_cut[output_number_]+offset_color_cut[output_number_]) );
                 }
 
-              aux_samdata=MCMC_GAL[k].StellarMass[snap]+gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[snap]);
+              aux_samdata=MCMC_GAL[k].StellarMass[output_number_]+gassdev(&MCMCseed)*0.08*(1+MCMCConstraintsZZ[output_number_]);
 
               if(IsRedGalaxy == 1)
                 {
-                  if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[snap][i] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[snap][i])
-                    red+=MCMC_GAL[k].Weight[snap];
+                  if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
+                    red+=MCMC_GAL[k].Weight[output_number_];
                 }
               else
                 {
-                  if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[snap][i] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[snap][i])
-                    blue+=MCMC_GAL[k].Weight[snap];
+                  if(aux_samdata>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_] && aux_samdata <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
+                    blue+=MCMC_GAL[k].Weight[output_number_];
                 }
             } //endfor
 
 
           if((blue + red) > 0)
-            binredfraction[i] += red * 1.0 / (blue * 1.0 + red * 1.0)/((float)(Nsamples));
+            binredfraction[i_] += red * 1.0 / (blue * 1.0 + red * 1.0)/((float)(Nsamples));
           else
-            binredfraction[i] += 0.;
+            binredfraction[i_] += 0.;
 
             } //endfor
 
-      fprintf(FILE_MCMC_PredictionsPerStep[snap][ObsNr], " %0.5e", binredfraction[i]);
+      fprintf(FILE_MCMC_PredictionsPerStep[output_number_][ObsNr], " %0.5e", binredfraction[i_]);
 
 #ifndef PARALLEL
-      fprintf(fa, "%g %g %g %g\n",  MCMC_Obs[ObsNr].Bin_low[snap][i]+(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2., MCMC_Obs[ObsNr].Obs[snap][i],
-                                                 MCMC_Obs[ObsNr].Error[snap][i], binredfraction[i]);
+      fprintf(file_, "%g %g %g %g\n",  MCMC_Obs[ObsNr].Bin_low[output_number_][i_]+(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2., MCMC_Obs[ObsNr].Obs[output_number_][i_],
+                                                 MCMC_Obs[ObsNr].Error[output_number_][i_], binredfraction[i_]);
 #endif
     }
 #ifndef PARALLEL
-  fclose(fa);
+  fclose(file_);
 #endif
 }
 
 
 /**@brief Bin fraction of passive galaxies.
  *    The separation is done based on sfr*/
-void bin_passive_fraction(int ObsNr, double *binpassivefraction, int snap)
+void bin_passive_fraction(int ObsNr, double *binpassivefraction, int output_number_)
 {
-  int i, k, IsPassiveGalaxy;
+  int i_, k, IsPassiveGalaxy;
   double passive, active;
   //if (strcmp(cq,"Cold")==0) {
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      binpassivefraction[i] = 0.;
+      binpassivefraction[i_] = 0.;
       passive = 0.;
       active = 0.;
 
-      for(k=0;k<TotMCMCGals[snap];k++)
+      for(k=0;k<TotMCMCGals[output_number_];k++)
       {
-              IsPassiveGalaxy=(MCMC_GAL[k].Sfr[snap]* 1.e9 /pow(10.,MCMC_GAL[k].StellarMass[snap]) < 0.01);
+              IsPassiveGalaxy=(MCMC_GAL[k].Sfr[output_number_]* 1.e9 /pow(10.,MCMC_GAL[k].StellarMass[output_number_]) < 0.01);
 
               if(IsPassiveGalaxy == 1)
                 {
-                  if(MCMC_GAL[k].StellarMass[snap]>=MCMC_Obs[ObsNr].Bin_low[snap][i]
-                && MCMC_GAL[k].StellarMass[snap] <= MCMC_Obs[ObsNr].Bin_high[snap][i])
-                    passive += MCMC_GAL[k].Weight[snap];
+                  if(MCMC_GAL[k].StellarMass[output_number_]>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_]
+                && MCMC_GAL[k].StellarMass[output_number_] <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
+                    passive += MCMC_GAL[k].Weight[output_number_];
                 }
               else
                 {
-                  if(MCMC_GAL[k].StellarMass[snap]>=MCMC_Obs[ObsNr].Bin_low[snap][i]
-                && MCMC_GAL[k].StellarMass[snap] <= MCMC_Obs[ObsNr].Bin_high[snap][i])
-                    active += MCMC_GAL[k].Weight[snap];
+                  if(MCMC_GAL[k].StellarMass[output_number_]>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_]
+                && MCMC_GAL[k].StellarMass[output_number_] <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
+                    active += MCMC_GAL[k].Weight[output_number_];
                 }
       }
 
       if((passive + active) > 0)
-              binpassivefraction[i] = passive * 1.0 / (active * 1.0 + passive * 1.0);
+              binpassivefraction[i_] = passive * 1.0 / (active * 1.0 + passive * 1.0);
       else
-              binpassivefraction[i] = 0.;
-      //printf("mass=%f obs =%f samcolors=%f\n",(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2., MCMC_Obs[ObsNr].Obs[snap][i], binpassivefraction[i]);
+              binpassivefraction[i_] = 0.;
+      //printf("mass=%f obs =%f samcolors=%f\n",(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2., MCMC_Obs[ObsNr].Obs[output_number_][i_], binpassivefraction[i_]);
     }
 }
 
 
 /**@brief Bin fraction of bulge galaxies.*/
-void bin_bulge_fraction(int ObsNr, double *binbulgefraction, int snap)
+void bin_bulge_fraction(int ObsNr, double *binbulgefraction, int output_number_)
 {
-  int i, k, IsBulgeGalaxy;
+  int i_, k, IsBulgeGalaxy;
   double bulge, non_bulge;
   //if (strcmp(cq,"Cold")==0) {
-  FILE *fa;
-  char buf[1000];
+  FILE *file_;
+  char file_name_[1000];
 
 #ifndef PARALLEL
-  sprintf(buf, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,ObsNr,(double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.));
-  if(!(fa = fopen(buf, "w")))
+  sprintf(file_name_, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,ObsNr,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
+  if(!(file_ = fopen(file_name_, "w")))
     {
       char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
 #endif
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      binbulgefraction[i] = 0.;
+      binbulgefraction[i_] = 0.;
       bulge = 0.;
       non_bulge = 0.;
 
-      for(k=0;k<TotMCMCGals[snap];k++)
+      for(k=0;k<TotMCMCGals[output_number_];k++)
       {
               //log10(0.7)=-0.154902
-              IsBulgeGalaxy=((MCMC_GAL[k].BulgeMass[snap]-MCMC_GAL[k].StellarMass[snap]) > -0.154902);
+              IsBulgeGalaxy=((MCMC_GAL[k].BulgeMass[output_number_]-MCMC_GAL[k].StellarMass[output_number_]) > -0.154902);
 
               if(IsBulgeGalaxy == 1)
                 {
-                  if(MCMC_GAL[k].StellarMass[snap]-2.*log10(Hubble_h)>=MCMC_Obs[ObsNr].Bin_low[snap][i]
-                && MCMC_GAL[k].StellarMass[snap]-2.*log10(Hubble_h) <= MCMC_Obs[ObsNr].Bin_high[snap][i])
-                    bulge += MCMC_GAL[k].Weight[snap];
+                  if(MCMC_GAL[k].StellarMass[output_number_]-2.*log10(Hubble_h)>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_]
+                && MCMC_GAL[k].StellarMass[output_number_]-2.*log10(Hubble_h) <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
+                    bulge += MCMC_GAL[k].Weight[output_number_];
                 }
               else
                 {
-                  if(MCMC_GAL[k].StellarMass[snap]-2.*log10(Hubble_h)>=MCMC_Obs[ObsNr].Bin_low[snap][i]
-                        && MCMC_GAL[k].StellarMass[snap]-2.*log10(Hubble_h) <= MCMC_Obs[ObsNr].Bin_high[snap][i])
-                    non_bulge += MCMC_GAL[k].Weight[snap];
+                  if(MCMC_GAL[k].StellarMass[output_number_]-2.*log10(Hubble_h)>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_]
+                        && MCMC_GAL[k].StellarMass[output_number_]-2.*log10(Hubble_h) <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
+                    non_bulge += MCMC_GAL[k].Weight[output_number_];
                 }
       }
 
       if((bulge + non_bulge) > 0)
-              binbulgefraction[i] = bulge * 1.0 / (bulge * 1.0 + non_bulge * 1.0);
+              binbulgefraction[i_] = bulge * 1.0 / (bulge * 1.0 + non_bulge * 1.0);
       else
-              binbulgefraction[i] = 0.;
-      //printf("mass=%f obs =%f samcolors=%f\n",(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2., MCMC_Obs[ObsNr].Obs[snap][i], binpassivefraction[i]);
+              binbulgefraction[i_] = 0.;
+      //printf("mass=%f obs =%f samcolors=%f\n",(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2., MCMC_Obs[ObsNr].Obs[output_number_][i_], binpassivefraction[i_]);
 
 #ifndef PARALLEL
-      fprintf(fa, "%g %g %g %g\n",  MCMC_Obs[ObsNr].Bin_low[snap][i]+(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2., MCMC_Obs[ObsNr].Obs[snap][i],
-                                                 MCMC_Obs[ObsNr].Error[snap][i], binbulgefraction[i]);
+      fprintf(file_, "%g %g %g %g\n",  MCMC_Obs[ObsNr].Bin_low[output_number_][i_]+(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2., MCMC_Obs[ObsNr].Obs[output_number_][i_],
+                                                 MCMC_Obs[ObsNr].Error[output_number_][i_], binbulgefraction[i_]);
 #endif
     }
 #ifndef PARALLEL
-  fclose(fa);
+  fclose(file_);
 #endif
 }
 
 
 /**@brief Bin fraction of bulge galaxies.*/
-void bin_ColdGasFractionvsStellarMass(int ObsNr, double *bingasfraction, int snap)
+void bin_ColdGasFractionvsStellarMass(int ObsNr, double *bingasfraction, int output_number_)
 {
-  int i, k;
+  int i_, k;
   float ngals;
   //if (strcmp(cq,"Cold")==0) {
-  FILE *fa;
-  char buf[1000];
+  FILE *file_;
+  char file_name_[1000];
 
 #ifndef PARALLEL
-  sprintf(buf, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,ObsNr,(double)((int)((MCMCConstraintsZZ[snap]*10)+0.5)/10.));
-  if(!(fa = fopen(buf, "w")))
+  sprintf(file_name_, "%s/mcmc_plus_obs%d_z%1.2f.txt",OutputDir,ObsNr,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
+  if(!(file_ = fopen(file_name_, "w")))
     {
       char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
 #endif
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      bingasfraction[i] = 0.;
+      bingasfraction[i_] = 0.;
       ngals=0.;
 
-      for(k=0;k<TotMCMCGals[snap];k++)
+      for(k=0;k<TotMCMCGals[output_number_];k++)
         {
 
-          if(MCMC_GAL[k].StellarMass[snap]>=MCMC_Obs[ObsNr].Bin_low[snap][i]
-              && MCMC_GAL[k].StellarMass[snap] <= MCMC_Obs[ObsNr].Bin_high[snap][i])
+          if(MCMC_GAL[k].StellarMass[output_number_]>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_]
+              && MCMC_GAL[k].StellarMass[output_number_] <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_])
             {
-              bingasfraction[i] += pow(10.,MCMC_GAL[k].ColdGas[snap])/pow(10.,MCMC_GAL[k].StellarMass[snap])*MCMC_GAL[k].Weight[snap];
-              ngals+=MCMC_GAL[k].Weight[snap];
+              bingasfraction[i_] += pow(10.,MCMC_GAL[k].ColdGas[output_number_])/pow(10.,MCMC_GAL[k].StellarMass[output_number_])*MCMC_GAL[k].Weight[output_number_];
+              ngals+=MCMC_GAL[k].Weight[output_number_];
             }
         }
-      bingasfraction[i] /=ngals*1.;
+      bingasfraction[i_] /=ngals*1.;
 #ifndef PARALLEL
-      fprintf(fa, "%g %g %g %g\n",  MCMC_Obs[ObsNr].Bin_low[snap][i]+(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2., MCMC_Obs[ObsNr].Obs[snap][i],
-                                                 MCMC_Obs[ObsNr].Error[snap][i], bingasfraction[i]);
+      fprintf(file_, "%g %g %g %g\n",  MCMC_Obs[ObsNr].Bin_low[output_number_][i_]+(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2., MCMC_Obs[ObsNr].Obs[output_number_][i_],
+                                                 MCMC_Obs[ObsNr].Error[output_number_][i_], bingasfraction[i_]);
 #endif
     }
 #ifndef PARALLEL
-  fclose(fa);
+  fclose(file_);
 #endif
 }
 
 
 /**@brief Bin SAM colours according to observations of Baldry2004*/
-void bin_color_hist(int ObsNr, double *bincolorhist, int snap)
+void bin_color_hist(int ObsNr, double *bincolorhist, int output_number_)
 {
-  int i, k;
+  int i_, k;
   double color;
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      bincolorhist[i] = 0;
+      bincolorhist[i_] = 0;
 
-      for(k=0;k<TotMCMCGals[snap];k++)
+      for(k=0;k<TotMCMCGals[output_number_];k++)
         {
-          color=MCMC_GAL[k].Magg[snap]-MCMC_GAL[k].Magr[snap];
-          if(color>=MCMC_Obs[ObsNr].Bin_low[snap][i]
-               && color <= MCMC_Obs[ObsNr].Bin_high[snap][i]
-                   && MCMC_GAL[k].StellarMass[snap] > 9.0 && MCMC_GAL[k].StellarMass[snap] < 9.5)
-            bincolorhist[i]=bincolorhist[i]+MCMC_GAL[k].Weight[snap];
+          color=MCMC_GAL[k].Magg[output_number_]-MCMC_GAL[k].Magr[output_number_];
+          if(color>=MCMC_Obs[ObsNr].Bin_low[output_number_][i_]
+               && color <= MCMC_Obs[ObsNr].Bin_high[output_number_][i_]
+                   && MCMC_GAL[k].StellarMass[output_number_] > 9.0 && MCMC_GAL[k].StellarMass[output_number_] < 9.5)
+            bincolorhist[i_]=bincolorhist[i_]+MCMC_GAL[k].Weight[output_number_];
       }
-      //printf("%f %f %f\n",(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2., MCMC_Obs[ObsNr].Obs[snap][i],bincolorhist[i]);
+      //printf("%f %f %f\n",(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2., MCMC_Obs[ObsNr].Obs[output_number_][i_],bincolorhist[i_]);
     }
 
 }
 
 
 /**@brief Bin SAM BH and BM according to observations of Haring and Rix 2004*/
-void bin_bhbm(double *binblackholeup, double *binblackholedown, int snap)
+void bin_bhbm(double *bin_black_hole_up_, double *bin_black_hole_down_, int output_number_)
 {
   int k;
 
   //for MCconnell & Ma 2012
-  for(k = 0; k < TotMCMCGals[snap]; k++)
+  for(k = 0; k < TotMCMCGals[output_number_]; k++)
     {
-      if(MCMC_GAL[k].BlackHoleMass[snap]>1.05*MCMC_GAL[k].BulgeMass[snap]-2.91961)
+      if(MCMC_GAL[k].BlackHoleMass[output_number_]>1.05*MCMC_GAL[k].BulgeMass[output_number_]-2.91961)
         {
-          if((MCMC_GAL[k].BlackHoleMass[snap]>-0.952381*MCMC_GAL[k].BulgeMass[snap]+17.2)
-              && (MCMC_GAL[k].BlackHoleMass[snap]<-0.952381*MCMC_GAL[k].BulgeMass[snap]+18.88))
-            binblackholeup[0]+=MCMC_GAL[k].Weight[snap];
-          else if (MCMC_GAL[k].BlackHoleMass[snap]>-0.952381*MCMC_GAL[k].BulgeMass[snap]+18.88)
-            binblackholeup[1]+=MCMC_GAL[k].Weight[snap];
+          if((MCMC_GAL[k].BlackHoleMass[output_number_]>-0.952381*MCMC_GAL[k].BulgeMass[output_number_]+17.2)
+              && (MCMC_GAL[k].BlackHoleMass[output_number_]<-0.952381*MCMC_GAL[k].BulgeMass[output_number_]+18.88))
+            bin_black_hole_up_[0]+=MCMC_GAL[k].Weight[output_number_];
+          else if (MCMC_GAL[k].BlackHoleMass[output_number_]>-0.952381*MCMC_GAL[k].BulgeMass[output_number_]+18.88)
+            bin_black_hole_up_[1]+=MCMC_GAL[k].Weight[output_number_];
         }
-      else if((MCMC_GAL[k].BlackHoleMass[snap]>-0.952381*MCMC_GAL[k].BulgeMass[snap]+17.2)
-          && (MCMC_GAL[k].BlackHoleMass[snap]<-0.952381*MCMC_GAL[k].BulgeMass[snap]+18.88))
-        binblackholedown[0]+=MCMC_GAL[k].Weight[snap];
-      else if(MCMC_GAL[k].BlackHoleMass[snap]>-0.952381*MCMC_GAL[k].BulgeMass[snap]+18.88)
-        binblackholedown[1]+=MCMC_GAL[k].Weight[snap];
+      else if((MCMC_GAL[k].BlackHoleMass[output_number_]>-0.952381*MCMC_GAL[k].BulgeMass[output_number_]+17.2)
+          && (MCMC_GAL[k].BlackHoleMass[output_number_]<-0.952381*MCMC_GAL[k].BulgeMass[output_number_]+18.88))
+        bin_black_hole_down_[0]+=MCMC_GAL[k].Weight[output_number_];
+      else if(MCMC_GAL[k].BlackHoleMass[output_number_]>-0.952381*MCMC_GAL[k].BulgeMass[output_number_]+18.88)
+        bin_black_hole_down_[1]+=MCMC_GAL[k].Weight[output_number_];
     }
   //printf("binup0=%f bindown0=%f binup1=%f bindown1=%f\n",
-  //          binblackholeup[0], binblackholedown[0], binblackholeup[1], binblackholedown[1]);
+  //          bin_black_hole_up_[0], bin_black_hole_down_[0], bin_black_hole_up_[1], bin_black_hole_down_[1]);
 }
 
 
-double chi_square_probability(int ObsNr, double *samdata, int snap)
+double chi_square_probability(int ObsNr, double *sam_data_, int output_number_)
 {
-  int df, i, knstrn = 0;
+  int df, i_, knstrn = 0;
   double chsq = 0.0, temp = 0.0, prob = 0.0;
   double obs, obserror;
 
-  df = Nbins[snap][ObsNr] - knstrn;
+  df = Nbins[output_number_][ObsNr] - knstrn;
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      obs = MCMC_Obs[ObsNr].Obs[snap][i];
-      obserror = MCMC_Obs[ObsNr].Error[snap][i];
+      obs = MCMC_Obs[ObsNr].Obs[output_number_][i_];
+      obserror = MCMC_Obs[ObsNr].Error[output_number_][i_];
 
-      if(obs < 0.0 || (obs == 0 && samdata[i] > 0))
+      if(obs < 0.0 || (obs == 0 && sam_data_[i_] > 0))
             printf("Bad expected number in chsone\n");
 
-      if(obs == 0 && samdata[i] == 0)
+      if(obs == 0 && sam_data_[i_] == 0)
         --df;
       else
         {
@@ -731,12 +730,12 @@ double chi_square_probability(int ObsNr, double *samdata, int snap)
             obserror= MCMC_Minimum_Obs_Error*obs;
         }
 
-          temp=samdata[i]-obs;
-          chsq += (temp*temp)/(obserror*obserror)/MCMC_Obs[ObsNr].ObsTest_Weight_z[snap];
+          temp=sam_data_[i_]-obs;
+          chsq += (temp*temp)/(obserror*obserror)/MCMC_Obs[ObsNr].ObsTest_Weight_z[output_number_];
           //if(ObsNr==0)
-         // printf("OBS[%d] snap=%d bin=%f sam=%f obs=%f error=%f chsq=%f\n",
-         //                 ObsNr, snap, MCMC_Obs[ObsNr].Bin_low[snap][i]+(MCMC_Obs[ObsNr].Bin_high[snap][i]-MCMC_Obs[ObsNr].Bin_low[snap][i])/2.,
-         //                 samdata[i], obs, obserror,(temp*temp)/(obserror*obserror));
+         // printf("OBS[%d] output_number_=%d bin=%f sam=%f obs=%f error=%f chsq=%f\n",
+         //                 ObsNr, output_number_, MCMC_Obs[ObsNr].Bin_low[output_number_][i_]+(MCMC_Obs[ObsNr].Bin_high[output_number_][i_]-MCMC_Obs[ObsNr].Bin_low[output_number_][i_])/2.,
+         //                 sam_data_[i_], obs, obserror,(temp*temp)/(obserror*obserror));
     }
 
   prob=exp(-chsq/2.);
@@ -744,18 +743,18 @@ double chi_square_probability(int ObsNr, double *samdata, int snap)
 }
 
 
-double maximum_likelihood_probability(int ObsNr, double *samfract, int snap)
+double maximum_likelihood_probability(int ObsNr, double *samfract, int output_number_)
 {
   double fracterr = 0.025, probaux = 99.0, prob = 99.0;
-  int i;
+  int i_;
   double obs, obserror;
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      obs = MCMC_Obs[ObsNr].Obs[snap][i];
-      obserror = MCMC_Obs[ObsNr].Error[snap][i];
-      probaux=exp(-(pow2(samfract[i]-obs)/(2.*(fracterr*fracterr+obserror*obserror)))/MCMC_Obs[ObsNr].ObsTest_Weight_z[snap]);
-      if(i==0) prob=probaux;
+      obs = MCMC_Obs[ObsNr].Obs[output_number_][i_];
+      obserror = MCMC_Obs[ObsNr].Error[output_number_][i_];
+      probaux=exp(-(pow2(samfract[i_]-obs)/(2.*(fracterr*fracterr+obserror*obserror)))/MCMC_Obs[ObsNr].ObsTest_Weight_z[output_number_]);
+      if(i_==0) prob=probaux;
       else prob=prob*probaux;
     }
 
@@ -763,23 +762,23 @@ double maximum_likelihood_probability(int ObsNr, double *samfract, int snap)
 }
 
 
-double binomial_probability(int ObsNr, double *samup, double *samdown, int snap)
+double binomial_probability(int ObsNr, double *samup, double *samdown, int output_number_)
 {
-  int i;
+  int i_;
   double prob = 99.0, probaux = 99.0;
   double obsup, obsdown;
 
-  for(i = 0; i < Nbins[snap][ObsNr]; i++)
+  for(i_ = 0; i_ < Nbins[output_number_][ObsNr]; i_++)
     {
-      obsup = MCMC_Obs[ObsNr].ObsUp[snap][i];
-      obsdown = MCMC_Obs[ObsNr].ObsDown[snap][i];
+      obsup = MCMC_Obs[ObsNr].ObsUp[output_number_][i_];
+      obsdown = MCMC_Obs[ObsNr].ObsDown[output_number_][i_];
 
-      if((1.0-betai(obsup,obsdown+1.0,samup[i]/(samup[i]+samdown[i])))>betai(obsup,obsdown+1.0,samup[i]/(samup[i]+samdown[i])))
-        probaux=2.0*betai(obsup,obsdown+1.0,samup[i]/(samup[i]+samdown[i]))+1e-20;
+      if((1.0-betai(obsup,obsdown+1.0,samup[i_]/(samup[i_]+samdown[i_])))>betai(obsup,obsdown+1.0,samup[i_]/(samup[i_]+samdown[i_])))
+        probaux=2.0*betai(obsup,obsdown+1.0,samup[i_]/(samup[i_]+samdown[i_]))+1e-20;
       else
-        probaux=2.0*(1.0-betai(obsup,obsdown+1.0,samup[i]/(samup[i]+samdown[i])))+1e-20;
+        probaux=2.0*(1.0-betai(obsup,obsdown+1.0,samup[i_]/(samup[i_]+samdown[i_])))+1e-20;
 
-      if(i==0) prob=probaux;
+      if(i_==0) prob=probaux;
       else prob=prob*probaux;
     }
   //printf("\nBinomial Probability=%f\n",prob);
@@ -788,57 +787,57 @@ double binomial_probability(int ObsNr, double *samup, double *samdown, int snap)
 
 
 #ifdef HALOMODEL
-void correct_for_correlation(int snap)
+void correct_for_correlation(int output_number_)
 {
   int fof, jj, kk, *CumulativeNgals;
 
-  if((HashTable = malloc(sizeof(int) * TotMCMCGals[snap])) == NULL)
+  if((HashTable = malloc(sizeof(int) * TotMCMCGals[output_number_])) == NULL)
     terminate("correct_for_correlation");
 
-  MCMC_FOF2 = malloc(sizeof(struct MCMC_FOF_struct) * NFofsInSample[snap]);
-  CumulativeNgals = malloc(sizeof(int) * NFofsInSample[snap]);
+  MCMC_FOF2 = malloc(sizeof(struct MCMC_FOF_struct) * NFofsInSample[output_number_]);
+  CumulativeNgals = malloc(sizeof(int) * NFofsInSample[output_number_]);
 
   CumulativeNgals[0]=0;
 
-  for(fof=0;fof<NFofsInSample[snap]; fof++)
+  for(fof=0;fof<NFofsInSample[output_number_]; fof++)
     {
-      if (fof<NFofsInSample[snap]-1)
-        CumulativeNgals[fof+1] = CumulativeNgals[fof]+MCMC_FOF[fof].NGalsInFoF[snap];
-      MCMC_FOF2[fof].M_Crit200[snap] = MCMC_FOF[fof].M_Crit200[snap];
-      MCMC_FOF2[fof].M_Mean200[snap] = MCMC_FOF[fof].M_Mean200[snap];
-      if(MCMC_FOF[fof].NGalsInFoF[snap]>0)
+      if (fof<NFofsInSample[output_number_]-1)
+        CumulativeNgals[fof+1] = CumulativeNgals[fof]+MCMC_FOF[fof].NGalsInFoF[output_number_];
+      MCMC_FOF2[fof].M_Crit200[output_number_] = MCMC_FOF[fof].M_Crit200[output_number_];
+      MCMC_FOF2[fof].M_Mean200[output_number_] = MCMC_FOF[fof].M_Mean200[output_number_];
+      if(MCMC_FOF[fof].NGalsInFoF[output_number_]>0)
         {
-          MCMC_FOF2[fof].NGalsInFoF[snap] = MCMC_FOF[fof].NGalsInFoF[snap];
-          MCMC_FOF2[fof].IndexOfCentralGal[snap] = MCMC_FOF[fof].IndexOfCentralGal[snap];
+          MCMC_FOF2[fof].NGalsInFoF[output_number_] = MCMC_FOF[fof].NGalsInFoF[output_number_];
+          MCMC_FOF2[fof].IndexOfCentralGal[output_number_] = MCMC_FOF[fof].IndexOfCentralGal[output_number_];
         }
       else
         {
-          MCMC_FOF2[fof].NGalsInFoF[snap] = 0;
-          MCMC_FOF2[fof].IndexOfCentralGal[snap] = -1;
+          MCMC_FOF2[fof].NGalsInFoF[output_number_] = 0;
+          MCMC_FOF2[fof].IndexOfCentralGal[output_number_] = -1;
         }
     }
-  UsedFofsInSample[snap]=NFofsInSample[snap];
+  UsedFofsInSample[output_number_]=NFofsInSample[output_number_];
 
   //BUILD HASHTABLE
-  for(jj=0;jj<TotMCMCGals[snap];jj++)
+  for(jj=0;jj<TotMCMCGals[output_number_];jj++)
     HashTable[jj]=-1;
 
-  for(fof=0;fof<NFofsInSample[snap]; fof++)
+  for(fof=0;fof<NFofsInSample[output_number_]; fof++)
     {
-      for(jj=0;jj<TotMCMCGals[snap];jj++)
+      for(jj=0;jj<TotMCMCGals[output_number_];jj++)
         {
-          if(MCMC_GAL[jj].fofid[snap]==fof)
+          if(MCMC_GAL[jj].fofid[output_number_]==fof)
             {
-              MCMC_GAL[jj].ngal[snap]=MCMC_FOF2[fof].NGalsInFoF[snap];
+              MCMC_GAL[jj].ngal[output_number_]=MCMC_FOF2[fof].NGalsInFoF[output_number_];
               //if type=0 it gets the first place in hashtable for this group (CumulativeNgals[fof])
-              if(MCMC_GAL[jj].Type[snap]==0)
+              if(MCMC_GAL[jj].Type[output_number_]==0)
                 {
                   HashTable[CumulativeNgals[fof]]=jj;
-                  MCMC_FOF2[fof].IndexOfCentralGal[snap]=CumulativeNgals[fof];
+                  MCMC_FOF2[fof].IndexOfCentralGal[output_number_]=CumulativeNgals[fof];
                 }
               //if not gets the first available place in hashtable for this group (CumulativeNgals[fof]+kk)
               else
-                for(kk=1;kk<MCMC_FOF2[fof].NGalsInFoF[snap];kk++)
+                for(kk=1;kk<MCMC_FOF2[fof].NGalsInFoF[output_number_];kk++)
                   if(HashTable[CumulativeNgals[fof]+kk]==-1)
                     {
                       HashTable[CumulativeNgals[fof]+kk]=jj;
@@ -852,13 +851,13 @@ void correct_for_correlation(int snap)
 }
 
 
-void compute_correlation_func(int ObsNr, double *binsamdata, int snap, float mingalmass, float maxgalmass)
+void compute_correlation_func(int ObsNr, double *bin_sam_data_, int output_number_, float mingalmass, float maxgalmass)
 {
   double *r,*proj;
   int ii;
 #ifndef PARALLEL
-  char buf[1000];
-  FILE *fa;
+  char file_name_[1000];
+  FILE *file_;
 #endif
   gsl_spline *Proj_Spline;
   gsl_interp_accel *Proj_SplineAcc;
@@ -867,28 +866,28 @@ void compute_correlation_func(int ObsNr, double *binsamdata, int snap, float min
   r=malloc(NR*sizeof(double));
   proj=malloc(NR*sizeof(double));
 
-  halomodel(r,proj,mingalmass,maxgalmass,snap);
+  halomodel(r,proj,mingalmass,maxgalmass,output_number_);
 
   Proj_Spline=gsl_spline_alloc(gsl_interp_cspline,NR);
   Proj_SplineAcc=gsl_interp_accel_alloc();
   gsl_spline_init(Proj_Spline,r,proj,NR);
 
-  for(ii=0;ii<Nbins[snap][ObsNr]-1;ii++)
-    binsamdata[ii]=gsl_spline_eval(Proj_Spline,MCMC_Obs[ObsNr].Bin_low[snap][ii]+(MCMC_Obs[ObsNr].Bin_high[snap][ii]-MCMC_Obs[ObsNr].Bin_low[snap][ii])/2.,Proj_SplineAcc);
+  for(ii=0;ii<Nbins[output_number_][ObsNr]-1;ii++)
+    bin_sam_data_[ii]=gsl_spline_eval(Proj_Spline,MCMC_Obs[ObsNr].Bin_low[output_number_][ii]+(MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii])/2.,Proj_SplineAcc);
 
 #ifndef PARALLEL
   //full3 - full PLANCK
-  sprintf(buf, "%s/correlation_guo10_bug_fix_Mmean_z0.00_%0.2f_%0.2f.txt",OutputDir, mingalmass,maxgalmass);
-  if(!(fa = fopen(buf, "w")))
+  sprintf(file_name_, "%s/correlation_guo10_bug_fix_Mmean_z0.00_%0.2f_%0.2f.txt",OutputDir, mingalmass,maxgalmass);
+  if(!(file_ = fopen(file_name_, "w")))
     {
       char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
-  for(ii=0;ii<Nbins[snap][ObsNr]-1;ii++)
-    fprintf(fa, "%g %g %g\n", MCMC_Obs[ObsNr].Bin_low[snap][ii]+(MCMC_Obs[ObsNr].Bin_high[snap][ii]-MCMC_Obs[ObsNr].Bin_low[snap][ii])/2.,
-            binsamdata[ii],binsamdata[ii]*0.1);
-  fclose(fa);
+  for(ii=0;ii<Nbins[output_number_][ObsNr]-1;ii++)
+    fprintf(file_, "%g %g %g\n", MCMC_Obs[ObsNr].Bin_low[output_number_][ii]+(MCMC_Obs[ObsNr].Bin_high[output_number_][ii]-MCMC_Obs[ObsNr].Bin_low[output_number_][ii])/2.,
+            bin_sam_data_[ii],bin_sam_data_[ii]*0.1);
+  fclose(file_);
 #endif
   free(r);
   free(proj);
@@ -953,7 +952,7 @@ double gser(double a, double x)
 double gcf(double a, double x)
 {
   double gln;
-  int i;
+  int i_;
   double an, b, c, d, del, h;
 
   gln = gammln(a);
@@ -962,9 +961,9 @@ double gcf(double a, double x)
   d = 1.0 / b;
   h = d;
 
-  for(i = 1; i <= ASWITCH; i++)
+  for(i_ = 1; i_ <= ASWITCH; i_++)
     {
-      an = -i * (i - a);
+      an = -i_ * (i_ - a);
       b += 2.0;
       d = an * d + b;
       if(fabs(d) < FPMIN)
@@ -995,7 +994,7 @@ double gammpapprox(double a, double x, int psig)
     0.076598410645870640, 0.079687828912071670, 0.082187266704339706, 0.084078218979661945,
     0.085346685739338721, 0.085983275670394821
   };
-  int j, ngau = 18;
+  int j_, ngau = 18;
   double xu, t, sum, ans;
   double a1 = a - 1.0, lna1 = log(a1), sqrta1 = sqrt(a1);
   double gln;
@@ -1020,10 +1019,10 @@ double gammpapprox(double a, double x, int psig)
 
 
   sum = 0;
-  for(j = 0; j < ngau; j++)
+  for(j_ = 0; j_ < ngau; j_++)
     {
-      t = x + (xu - x) * y[j];
-      sum += w[j] * exp(-(t - a1) + a1 * (log(t) - lna1));
+      t = x + (xu - x) * y[j_];
+      sum += w[j_] * exp(-(t - a1) + a1 * (log(t) - lna1));
     }
   ans = sum * (xu - x) * exp(a1 * (lna1 - 1.) - gln);
 
@@ -1050,7 +1049,7 @@ double gammpapprox(double a, double x, int psig)
 
 double gammln(double xx)
 {
-  int j;
+  int j_;
   double x, tmp, y = 0, ser;
 
   double cof[14] = { 57.1562356658629235, -59.5979603554754912,
@@ -1065,8 +1064,8 @@ double gammln(double xx)
   tmp = x + 5.24218750000000000;
   tmp = (x + 0.5) * log(tmp) - tmp;
   ser = 0.999999999999997092;
-  for(j = 0; j < 14; j++)
-    ser += cof[j] / ++y;
+  for(j_ = 0; j_ < 14; j_++)
+    ser += cof[j_] / ++y;
   return tmp + log(2.5066282746310005 * ser / x);
 }
 

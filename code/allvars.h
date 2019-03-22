@@ -713,15 +713,15 @@ extern struct halo_ids_data
 #endif /* defined MRII */
   double    Redshift;
   int       PeanoKey;
-  int       dummy;      /* need to use this padding for 64bit alignment */
+  int       dummy;      /* padding to ensure 64bit alignment */
 } *HaloIDs, *HaloIDs_Data;
 #else  /* defined MCMC */
 extern struct  halo_ids_data
 {
   long long FirstHaloInFOFgroup;
-  int       MCMC_FOF_number[NOUT];
 } *HaloIDs, *HaloIDs_Data;
 #endif /* defined MCMC */
+
 
 
 // Documentation can be found in the database
@@ -739,6 +739,10 @@ extern struct halo_aux_data  /* auxiliary halo data */
 	float Vmax_Unscaled;
 	float Spin_Unscaled[3];
 #endif /* defined ALLOW_UNSCALE_COSMOLOGY */
+
+#ifdef  MCMC
+  bool halo_is_in_MCMC_sample_for_output[NOUT];
+#endif /* defined MCMC */
 }
  *HaloAux;
 

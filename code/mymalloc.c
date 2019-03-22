@@ -95,7 +95,6 @@ void report_detailed_memory_usage_of_largest_task(size_t * OldHighMarkBytes_, co
 }
 
 
-
 void dump_memory_table(void)
 {
   unsigned int block_number_;
@@ -431,6 +430,7 @@ void *myrealloc_movable_fullinfo(void *ptr_, size_t n_, const char *func_, const
 
   return Table[nr];
 }
+
 
 void endrun(const int error_number_)
 {

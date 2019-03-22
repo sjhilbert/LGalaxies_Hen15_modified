@@ -13,11 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2008
- *      Author: Bruno Henriques
+ 
+/** @file mcmc_proto.h
+ * 
+ * @author Bruno Henriques
+ * @author Stefan Hilbert
+ * @date   2008, 2018
  */
-
+ 
 // Routines used in the MCMC sampling
 void Senna (void);
 void print_parameters (const bool current_MCMC_step_is_accepted_, FILE *fmcmc);
@@ -29,7 +32,8 @@ void read_observations(void);
 void open_files_with_comparison_to_observations(void);
 void close_files_with_comparison_to_observations(void);
 double propose_new_parameters(void);
-void save_galaxy_for_mcmc(const int gal_index);
+void mark_halos_in_MCMC_sample(const int tree_number_);
+void save_galaxy_for_mcmc(const int gal_index_);
 #ifdef MR_PLUS_MRII
 void change_dark_matter_sim(const char SimName[]);
 #endif

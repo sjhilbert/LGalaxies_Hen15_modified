@@ -117,6 +117,11 @@ double SAM(const int tree_file_number_)
 #endif /* defined MR_PLUS_MRII */
 
     load_tree(tree_number_);
+
+#ifdef MCMC  
+    mark_halos_in_MCMC_sample(tree_number_);
+#endif /* defined MCMC */   
+   
 #ifdef MCMC
 #ifdef PRELOAD_TREES
     if(CurrentMCMCStep == 0)
@@ -138,7 +143,6 @@ double SAM(const int tree_file_number_)
     int snapshot_number_;
     for(snapshot_number_ = 0; snapshot_number_ <= LastSnapShotNr; snapshot_number_++)
     {
-      
 #ifdef MCMC
       /* read the appropriate parameter list for current snapshot_number_
        * into the parameter variables to be used in construct_galaxies */
@@ -158,7 +162,7 @@ double SAM(const int tree_file_number_)
  * which then also takes care of all other halos in that fof group,
  * assuming, all progenitors have been constructed already
  * (i.e. acknowledge loop over snapshots) */
-        if( halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup && Halo[halo_number_].SnapNum == snapshot_number_)
+        if(halo_number_ == Halo[halo_number_].FirstHaloInFOFgroup && Halo[halo_number_].SnapNum == snapshot_number_)
           construct_galaxies_in_fof(tree_number_, halo_number_);
 #else  /* not defined FIRST_HALO_FIRST */
 /* construct halos starting with whatever halos come first in input file,

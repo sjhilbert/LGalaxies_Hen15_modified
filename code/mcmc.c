@@ -590,18 +590,18 @@ void read_sample_info (void)
   int DumbTreeNrColector_, DumbFileNrColector_, max_n_fof_in_sample_;
   int fof_number_, output_number_;
   FILE *file_;
-  char buf_[1000];
+  char file_name_[1000];
+  char error_message_[1000];
 
   max_n_fof_in_sample_ = 0;
 
 #ifdef MR_PLUS_MRII
   if(Switch_MR_MRII==1)
   {
-    sprintf(buf_, "%s/%ssample_allz_nh_Switch_MR_MRII_%d.dat", MCMCSampleDir, MCMCSampleFilePrefix, MCMCSampleFile);
-    if(!(file_ = fopen(buf_, "r")))
+    sprintf(file_name_, "%s/%ssample_allz_nh_Switch_MR_MRII_%d.dat", MCMCSampleDir, MCMCSampleFilePrefix, MCMCSampleFile);
+    if(!(file_ = fopen(file_name_, "r")))
     {
-      char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
     fscanf(file_, "%d \n", &NTrees_Switch_MR_MRII);
@@ -611,12 +611,11 @@ void read_sample_info (void)
 
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
-    sprintf(buf_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
+    sprintf(file_name_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
             MCMCSampleFile, ListOutputSnaps[output_number_]);
-    if(!(file_ = fopen(buf_, "r")))
+    if(!(file_ = fopen(file_name_, "r")))
     {
-      char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
 
@@ -624,7 +623,7 @@ void read_sample_info (void)
 
     if(max_n_fof_in_sample_<NFofsInSample[output_number_])
       max_n_fof_in_sample_=NFofsInSample[output_number_];
-    //printf("reading sample %s\n",buf_);
+    //printf("reading sample %s\n",file_name_);
     fclose(file_);
   }
 
@@ -634,19 +633,16 @@ void read_sample_info (void)
 
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
-
-    sprintf(buf_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix,
-            MCMCSampleFile, ListOutputSnaps[output_number_]);
-    if(!(file_ = fopen(buf_, "r")))
+    sprintf(file_name_, "%s/%ssample_allz_nh_%d%d.dat", MCMCSampleDir, MCMCSampleFilePrefix, MCMCSampleFile, ListOutputSnaps[output_number_]);
+    if(!(file_ = fopen(file_name_, "r")))
     {
-      char error_message_[1000];
-      sprintf(error_message_, "can't open file `%s'\n", buf_);
+      sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
 
     fscanf(file_, "%d \n", &NFofsInSample[output_number_]);
     
-    for(fof_number_=0;fof_number_<NFofsInSample[output_number_];fof_number_++)
+    for(fof_number_ = 0; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
     {
       fscanf(file_, "%lld %d %d %lg\n", &MCMC_FOF[fof_number_].FoFID[output_number_], &DumbTreeNrColector_, &DumbFileNrColector_, &MCMC_FOF[fof_number_].Weight[output_number_]);
       MCMC_FOF[fof_number_].Weight[output_number_]/=BoxSize*BoxSize*BoxSize;
@@ -657,6 +653,20 @@ void read_sample_info (void)
     }
 
     fclose(file_);
+    
+    // // debugging: checks ordering by fof id (order would ease work later):
+    // for(fof_number_ = 1; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
+    // {
+    //   if(!(MCMC_FOF[fof_number_ - 1].FoFID[output_number_] < MCMC_FOF[fof_number_].FoFID[output_number_]))
+    //   {
+    //     printf("fof ids not ordered in file `%s': output_number_ = %d, fof_number_ = %d, !(%lld < %lld)\n",
+    //       file_name_, output_number_, fof_number_, MCMC_FOF[fof_number_ - 1].FoFID[output_number_], MCMC_FOF[fof_number_].FoFID[output_number_]);        
+    //     // sprintf(error_message_, "fof ids not ordered in file `%s': output_number_ = %d, fof_number_ = %d, !(%lld < %lld)\n",
+    //     //   file_name_, output_number_, fof_number_, MCMC_FOF[fof_number_ - 1].FoFID[output_number_], MCMC_FOF[fof_number_].FoFID[output_number_]);
+    //     // terminate(error_message_);
+    //     break;
+    //   }
+    // }
   }
 }
 
@@ -818,12 +828,12 @@ void read_observations (void)
 void open_files_with_comparison_to_observations()
 {
   int constraint_number_, snapshot_number_;
-  char buf_[1000], error_message_[1000];
+  char file_name_[1000], error_message_[1000];
 
-  sprintf(buf_, "%sMCMC_LIKELIHOOD_%d.txt", OutputDir, ThisTask+FirstChainNumber);
-  if((FILE_MCMC_LIKELIHOOD = fopen(buf_, "w")) == NULL)
+  sprintf(file_name_, "%sMCMC_LIKELIHOOD_%d.txt", OutputDir, ThisTask+FirstChainNumber);
+  if((FILE_MCMC_LIKELIHOOD = fopen(file_name_, "w")) == NULL)
   {
-    sprintf(error_message_, "can't open file `%s'\n", buf_);
+    sprintf(error_message_, "can't open file `%s'\n", file_name_);
     terminate(error_message_);
   }
 
@@ -832,11 +842,11 @@ void open_files_with_comparison_to_observations()
     {
       if(MCMC_Obs[constraint_number_].ObsTest_Switch_z[snapshot_number_]==1)
       {
-        sprintf(buf_, "%sPredictionsPerStep_%s_z%1.2f_%d.txt", OutputDir, MCMC_Obs[constraint_number_].Name,
+        sprintf(file_name_, "%sPredictionsPerStep_%s_z%1.2f_%d.txt", OutputDir, MCMC_Obs[constraint_number_].Name,
                 (double)((int)((MCMCConstraintsZZ[snapshot_number_]*10)+0.5)/10.), ThisTask+FirstChainNumber);
-        if((FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_] = fopen(buf_, "w")) == NULL)
+        if((FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_] = fopen(file_name_, "w")) == NULL)
         {
-          sprintf(error_message_, "can't open file `%s'\n", buf_);
+          sprintf(error_message_, "can't open file `%s'\n", file_name_);
           terminate(error_message_);
         }
         fprintf(FILE_MCMC_PredictionsPerStep[snapshot_number_][constraint_number_], " %d\n", ChainLength+1);

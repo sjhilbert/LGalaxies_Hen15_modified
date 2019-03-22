@@ -33,6 +33,60 @@
 #ifdef MCMC
 
 
+/**@brief marks halos that will be used in MCMC sampling
+ *
+ * - requires MCMC_FOF[].FoFID[], NFofsInSample[] to be up to date, 
+ *   which is currently read from file in read_sample_info().
+ * - requires MCMC_FOF[].FoFID[] ordered for binary search.
+ * - requires HaloIDs, HaloAux, TreeNHalos to be upto date,
+ *   which are currently allocated/read in load_tree(tree_number_).
+ */
+void mark_halos_in_MCMC_sample(const int tree_number_)
+{
+  int halo_number_, output_number_, fof_number_ /*, fof_number_lower_bound_, fof_number_upper_bound_*/;
+  
+  printf("marking halos for tree %d.\n", tree_number_);
+  
+  for(halo_number_ = 0; halo_number_ < TreeNHalos[tree_number_]; halo_number_++)
+  {
+    for(output_number_ = 0; output_number_ < NOUT; output_number_++)
+    {
+      HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = false;
+
+      const long long fof_id_of_halo_ = HaloIDs[halo_number_].FirstHaloInFOFgroup;
+      
+      // linear search:
+      for(fof_number_ = 0; fof_number_ < NFofsInSample[output_number_]; fof_number_++)
+        if(fof_id_of_halo_ == MCMC_FOF[fof_number_].FoFID[output_number_])
+        {
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = true;
+          break;
+        }
+
+      /*
+      //binary search:
+      if((NFofsInSample[output_number_] > 0) && (MCMC_FOF[0].FoFID[output_number_] <= fof_id_of_halo_) && (fof_id_of_halo_ <= MCMC_FOF[NFofsInSample[output_number_] - 1].FoFID[output_number_]))
+      {
+        fof_number_lower_bound_ = 0;
+        fof_number_upper_bound_ = NFofsInSample[output_number_] - 1;
+        while(fof_number_ = (fof_number_lower_bound_ + fof_number_upper_bound_) / 2, fof_number_lower_bound_ < fof_number_upper_bound_)
+        {
+          if(MCMC_FOF[fof_number_].FoFID[output_number_] < fof_id_of_halo_)
+            fof_number_lower_bound_ = fof_number_ + 1;
+          else
+            fof_number_upper_bound_ = fof_number_;
+        }
+        if(fof_id_of_halo_ == MCMC_FOF[fof_number_].FoFID[output_number_])
+          HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output[output_number_] = true;
+      }
+      */
+      
+    }
+  }
+  printf("done marking halos for tree %d.\n", tree_number_);
+}
+
+
 /** @brief Writes galaxies into a structure to be used by the MCMC */
 void save_galaxy_for_mcmc(const int gal_index_)
 {

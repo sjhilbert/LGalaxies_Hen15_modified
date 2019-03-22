@@ -144,10 +144,6 @@ void close_galaxy_files(void)
  *        After that the GALAXY_OUTPUT structure is created and written.
  *        input: int file number (current file where the output is
  *        being written), int tree number (tree being currently treated).
- *
- *        If USE_MEMORY_TO_MINIMIZE_IO ON, this write statements in this
- *        routine copy the galaxy data from the working structures into
- *        pointers until that has been done for all the tree in a given file.
  */
 void save_galaxy_append(const int tree_number_, const int galaxy_number_, const int output_number_)
 {
