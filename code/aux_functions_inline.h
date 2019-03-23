@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,12 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/** @file aux_functions_inline.h
- * 
- * @author Stefan Hilbert (hilbert)
- * @author ? (for stuff moved from allvars.h and proto.h)
- * 
+/** @file   aux_functions_inline.h
+ *  @date   2016-2019
+ *  @author ? (for stuff moved from allvars.h and proto.h)
+ *  @author Stefan Hilbert
+ *  
+ *  @brief  general aux. functions (most defined as macro functions)
  */
+ 
 #ifndef AUX_FUNCTIONS_INLINE_H
 #define AUX_FUNCTIONS_INLINE_H
 

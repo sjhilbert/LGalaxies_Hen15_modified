@@ -1,10 +1,10 @@
-# extract a block starting with a line containing MOMAF_INPUTS and ending with a }
+# extract a block starting with a line containing lightcone_galaxy_output_type_ and ending with a }
 BEGIN {
 flag=0
 line=""
 d=""
 }
-/MOMAF_INPUT/,/\}/ {   
+/custom_lightcone_galaxy_output_type_/,/\}/ {   
 line=$0
 if(flag == 0 && line ~ /\{/) {
 	ic=index(line,"{")

@@ -1,8 +1,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PRO LGalaxy__define
 tmp = {LGalaxy $
+, GalID : 0LL $ 
+, HaloID : 0LL $ 
+, FirstProgGal : 0LL $ 
+, NextProgGal : 0LL $ 
+, LastProgGal : 0LL $ 
+, FOFCentralGal : 0LL $ 
+, FileTreeNr : 0LL $ 
+, DescendantGal : 0LL $ 
+, MainLeafId : 0LL $ 
+, TreeRootId : 0LL $ 
+, SubID : 0LL $ 
+, MMSubID : 0LL $ 
+, PeanoKey : 0L $ 
+, Redshift : 0.0 $ 
 , Type : 0L $ 
-, HaloIndex : 0L $ 
 , SnapNum : 0L $ 
 , LookBackTimeToSnap : 0.0 $ 
 , CentralMvir : 0.0 $ 
@@ -54,9 +67,9 @@ tmp = {LGalaxy $
 , CosInclination : 0.0 $ 
 , DisruptOn : 0L $ 
 , MergeOn : 0L $ 
-, MagDust : fltarr(40) $ 
-, Mag : fltarr(40) $ 
-, MagBulge : fltarr(40) $ 
+, ObsMagDust : fltarr(20) $ 
+, ObsMag : fltarr(20) $ 
+, ObsMagBulge : fltarr(20) $ 
 , MassWeightAge : 0.0 $ 
 , rbandWeightAge : 0.0 $ 
 , sfh_ibin : 0L $ 

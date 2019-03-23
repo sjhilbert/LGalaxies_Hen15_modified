@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,13 +13,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
- /** @file check_compile_time_options.h
+ /** @file   check_compile_time_options.h
+ *   @date   2018-2019
+ *   @author Stefan Hilbert
  *
- * @brief check  Makefile options.
- *
- * compile time (and runtime) check of
- * compile time options
- * */
+ *   @brief compile-time (and runtime) check of
+ *          compile-time options (check Makefile options)
+ **/
 
 #ifndef CHECK_COMPILE_TIME_OPTIONS_H
 #define CHECK_COMPILE_TIME_OPTIONS_H
@@ -43,11 +43,6 @@
 static inline void 
 check_compile_time_options(void)
 {
-#if !(NOUT > 0)
-#error "Makefile option NOUT must be an integer > 0"
-/*   terminate("\n\n> Error : Makefile option NOUT must be an integer > 0\n"); */
-#endif /* !(NOUT > 0) */ 
-  
 #ifdef OUTPUT_FB_OBS_MAGS
 #ifndef OUTPUT_OBS_MAGS 
 #error "Makefile option OUTPUT_FB_OBS_MAGS requires option OUTPUT_OBS_MAGS"
@@ -55,6 +50,12 @@ check_compile_time_options(void)
 #endif /* not defined OUTPUT_OBS_MAGS */
 #endif /* defined OUTPUT_FB_OBS_MAGS */
 
+#ifndef GALAXYTREE
+#if !(NOUT > 0)
+#error "Makefile option NOUT must be an integer > 0"
+/*   terminate("\n\n> Error : Makefile option NOUT must be an integer > 0\n"); */
+#endif /* !(NOUT > 0) */ 
+#endif /* not defined GALAXYTREE */
 
 #ifdef GALAXYTREE
 #ifndef LOADIDS

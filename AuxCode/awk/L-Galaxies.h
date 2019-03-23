@@ -1,6 +1,19 @@
 struct LGalaxy {
+   long long GalID;
+   long long HaloID;
+   long long FirstProgGal;
+   long long NextProgGal;
+   long long LastProgGal;
+   long long FOFCentralGal;
+   long long FileTreeNr;
+   long long DescendantGal;
+   long long MainLeafId;
+   long long TreeRootId;
+   long long SubID;
+   long long MMSubID;
+   int PeanoKey;
+   float Redshift;
    int Type;
-   int HaloIndex;
    int SnapNum;
    float LookBackTimeToSnap;
    float CentralMvir;
@@ -52,9 +65,9 @@ struct LGalaxy {
    float CosInclination;
    int DisruptOn;
    int MergeOn;
-   float MagDust[40];
-   float Mag[40];
-   float MagBulge[40];
+   float ObsMagDust[20];
+   float ObsMag[20];
+   float ObsMagBulge[20];
    float MassWeightAge;
    float rbandWeightAge;
    int sfh_ibin;
@@ -65,15 +78,4 @@ struct LGalaxy {
    float sfh_MetalsDiskMass[20];
    float sfh_MetalsBulgeMass[20];
    float sfh_MetalsICM[20];
-};
-struct MoMaFGalaxy {
-  long long GalID;
-  short snapnum;
-     short sfh_ibin;
-   float sfh_DiskMass;
-   float sfh_BulgeMass;
-   float sfh_ICM;
-   float sfh_MetalsDiskMass;
-   float sfh_MetalsBulgeMass;
-   float sfh_MetalsICM;
 };

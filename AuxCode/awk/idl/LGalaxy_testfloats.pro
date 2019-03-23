@@ -4,6 +4,13 @@ FUNCTION LGalaxy_testfloats, LGs, nstart
 ; assumes the existence of a function testFloat accepting an array of floats
  badranges = []
  bad = 0
+ sel = testFloat(LGs.Redshift)
+ if(sel(0) gt -1) then begin
+     bad=1
+     print, 'Redshift --- ', nstart+sel
+     print, 'Redshift --- ', LGs[sel].Redshift
+     badranges=[badranges,sel]
+ endif
  sel = testFloat(LGs.LookBackTimeToSnap)
  if(sel(0) gt -1) then begin
      bad=1
@@ -396,844 +403,424 @@ FUNCTION LGalaxy_testfloats, LGs, nstart
      print, 'CosInclination --- ', LGs[sel].CosInclination
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(0))
+ sel = testFloat(LGs.ObsMagDust(0))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[0] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(0)
+     print, 'ObsMagDust[0] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(0)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(1))
+ sel = testFloat(LGs.ObsMagDust(1))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[1] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(1)
+     print, 'ObsMagDust[1] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(1)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(2))
+ sel = testFloat(LGs.ObsMagDust(2))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[2] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(2)
+     print, 'ObsMagDust[2] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(2)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(3))
+ sel = testFloat(LGs.ObsMagDust(3))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[3] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(3)
+     print, 'ObsMagDust[3] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(3)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(4))
+ sel = testFloat(LGs.ObsMagDust(4))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[4] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(4)
+     print, 'ObsMagDust[4] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(4)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(5))
+ sel = testFloat(LGs.ObsMagDust(5))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[5] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(5)
+     print, 'ObsMagDust[5] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(5)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(6))
+ sel = testFloat(LGs.ObsMagDust(6))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[6] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(6)
+     print, 'ObsMagDust[6] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(6)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(7))
+ sel = testFloat(LGs.ObsMagDust(7))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[7] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(7)
+     print, 'ObsMagDust[7] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(7)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(8))
+ sel = testFloat(LGs.ObsMagDust(8))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[8] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(8)
+     print, 'ObsMagDust[8] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(8)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(9))
+ sel = testFloat(LGs.ObsMagDust(9))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[9] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(9)
+     print, 'ObsMagDust[9] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(9)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(10))
+ sel = testFloat(LGs.ObsMagDust(10))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[10] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(10)
+     print, 'ObsMagDust[10] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(10)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(11))
+ sel = testFloat(LGs.ObsMagDust(11))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[11] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(11)
+     print, 'ObsMagDust[11] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(11)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(12))
+ sel = testFloat(LGs.ObsMagDust(12))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[12] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(12)
+     print, 'ObsMagDust[12] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(12)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(13))
+ sel = testFloat(LGs.ObsMagDust(13))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[13] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(13)
+     print, 'ObsMagDust[13] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(13)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(14))
+ sel = testFloat(LGs.ObsMagDust(14))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[14] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(14)
+     print, 'ObsMagDust[14] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(14)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(15))
+ sel = testFloat(LGs.ObsMagDust(15))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[15] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(15)
+     print, 'ObsMagDust[15] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(15)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(16))
+ sel = testFloat(LGs.ObsMagDust(16))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[16] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(16)
+     print, 'ObsMagDust[16] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(16)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(17))
+ sel = testFloat(LGs.ObsMagDust(17))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[17] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(17)
+     print, 'ObsMagDust[17] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(17)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(18))
+ sel = testFloat(LGs.ObsMagDust(18))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[18] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(18)
+     print, 'ObsMagDust[18] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(18)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(19))
+ sel = testFloat(LGs.ObsMagDust(19))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[19] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(19)
+     print, 'ObsMagDust[19] --- ', nstart+sel
+     print, 'ObsMagDust --- ', LGs[sel].ObsMagDust(19)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(20))
+ sel = testFloat(LGs.ObsMag(0))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[20] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(20)
+     print, 'ObsMag[0] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(0)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(21))
+ sel = testFloat(LGs.ObsMag(1))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[21] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(21)
+     print, 'ObsMag[1] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(1)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(22))
+ sel = testFloat(LGs.ObsMag(2))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[22] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(22)
+     print, 'ObsMag[2] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(2)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(23))
+ sel = testFloat(LGs.ObsMag(3))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[23] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(23)
+     print, 'ObsMag[3] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(3)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(24))
+ sel = testFloat(LGs.ObsMag(4))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[24] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(24)
+     print, 'ObsMag[4] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(4)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(25))
+ sel = testFloat(LGs.ObsMag(5))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[25] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(25)
+     print, 'ObsMag[5] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(5)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(26))
+ sel = testFloat(LGs.ObsMag(6))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[26] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(26)
+     print, 'ObsMag[6] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(6)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(27))
+ sel = testFloat(LGs.ObsMag(7))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[27] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(27)
+     print, 'ObsMag[7] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(7)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(28))
+ sel = testFloat(LGs.ObsMag(8))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[28] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(28)
+     print, 'ObsMag[8] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(8)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(29))
+ sel = testFloat(LGs.ObsMag(9))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[29] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(29)
+     print, 'ObsMag[9] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(9)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(30))
+ sel = testFloat(LGs.ObsMag(10))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[30] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(30)
+     print, 'ObsMag[10] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(10)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(31))
+ sel = testFloat(LGs.ObsMag(11))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[31] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(31)
+     print, 'ObsMag[11] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(11)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(32))
+ sel = testFloat(LGs.ObsMag(12))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[32] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(32)
+     print, 'ObsMag[12] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(12)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(33))
+ sel = testFloat(LGs.ObsMag(13))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[33] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(33)
+     print, 'ObsMag[13] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(13)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(34))
+ sel = testFloat(LGs.ObsMag(14))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[34] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(34)
+     print, 'ObsMag[14] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(14)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(35))
+ sel = testFloat(LGs.ObsMag(15))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[35] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(35)
+     print, 'ObsMag[15] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(15)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(36))
+ sel = testFloat(LGs.ObsMag(16))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[36] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(36)
+     print, 'ObsMag[16] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(16)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(37))
+ sel = testFloat(LGs.ObsMag(17))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[37] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(37)
+     print, 'ObsMag[17] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(17)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(38))
+ sel = testFloat(LGs.ObsMag(18))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[38] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(38)
+     print, 'ObsMag[18] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(18)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.MagDust(39))
+ sel = testFloat(LGs.ObsMag(19))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'MagDust[39] --- ', nstart+sel
-     print, 'MagDust --- ', LGs[sel].MagDust(39)
+     print, 'ObsMag[19] --- ', nstart+sel
+     print, 'ObsMag --- ', LGs[sel].ObsMag(19)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(0))
+ sel = testFloat(LGs.ObsMagBulge(0))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[0] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(0)
+     print, 'ObsMagBulge[0] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(0)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(1))
+ sel = testFloat(LGs.ObsMagBulge(1))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[1] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(1)
+     print, 'ObsMagBulge[1] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(1)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(2))
+ sel = testFloat(LGs.ObsMagBulge(2))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[2] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(2)
+     print, 'ObsMagBulge[2] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(2)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(3))
+ sel = testFloat(LGs.ObsMagBulge(3))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[3] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(3)
+     print, 'ObsMagBulge[3] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(3)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(4))
+ sel = testFloat(LGs.ObsMagBulge(4))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[4] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(4)
+     print, 'ObsMagBulge[4] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(4)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(5))
+ sel = testFloat(LGs.ObsMagBulge(5))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[5] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(5)
+     print, 'ObsMagBulge[5] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(5)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(6))
+ sel = testFloat(LGs.ObsMagBulge(6))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[6] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(6)
+     print, 'ObsMagBulge[6] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(6)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(7))
+ sel = testFloat(LGs.ObsMagBulge(7))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[7] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(7)
+     print, 'ObsMagBulge[7] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(7)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(8))
+ sel = testFloat(LGs.ObsMagBulge(8))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[8] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(8)
+     print, 'ObsMagBulge[8] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(8)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(9))
+ sel = testFloat(LGs.ObsMagBulge(9))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[9] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(9)
+     print, 'ObsMagBulge[9] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(9)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(10))
+ sel = testFloat(LGs.ObsMagBulge(10))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[10] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(10)
+     print, 'ObsMagBulge[10] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(10)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(11))
+ sel = testFloat(LGs.ObsMagBulge(11))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[11] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(11)
+     print, 'ObsMagBulge[11] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(11)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(12))
+ sel = testFloat(LGs.ObsMagBulge(12))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[12] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(12)
+     print, 'ObsMagBulge[12] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(12)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(13))
+ sel = testFloat(LGs.ObsMagBulge(13))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[13] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(13)
+     print, 'ObsMagBulge[13] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(13)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(14))
+ sel = testFloat(LGs.ObsMagBulge(14))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[14] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(14)
+     print, 'ObsMagBulge[14] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(14)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(15))
+ sel = testFloat(LGs.ObsMagBulge(15))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[15] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(15)
+     print, 'ObsMagBulge[15] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(15)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(16))
+ sel = testFloat(LGs.ObsMagBulge(16))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[16] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(16)
+     print, 'ObsMagBulge[16] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(16)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(17))
+ sel = testFloat(LGs.ObsMagBulge(17))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[17] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(17)
+     print, 'ObsMagBulge[17] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(17)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(18))
+ sel = testFloat(LGs.ObsMagBulge(18))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[18] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(18)
+     print, 'ObsMagBulge[18] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(18)
      badranges=[badranges,sel]
  endif
- sel = testFloat(LGs.Mag(19))
+ sel = testFloat(LGs.ObsMagBulge(19))
  if(sel(0) gt -1) then begin
      bad=1
-     print, 'Mag[19] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(19)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(20))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[20] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(20)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(21))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[21] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(21)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(22))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[22] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(22)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(23))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[23] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(23)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(24))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[24] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(24)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(25))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[25] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(25)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(26))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[26] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(26)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(27))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[27] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(27)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(28))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[28] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(28)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(29))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[29] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(29)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(30))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[30] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(30)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(31))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[31] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(31)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(32))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[32] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(32)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(33))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[33] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(33)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(34))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[34] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(34)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(35))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[35] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(35)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(36))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[36] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(36)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(37))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[37] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(37)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(38))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[38] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(38)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.Mag(39))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'Mag[39] --- ', nstart+sel
-     print, 'Mag --- ', LGs[sel].Mag(39)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(0))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[0] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(0)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(1))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[1] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(1)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(2))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[2] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(2)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(3))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[3] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(3)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(4))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[4] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(4)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(5))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[5] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(5)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(6))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[6] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(6)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(7))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[7] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(7)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(8))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[8] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(8)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(9))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[9] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(9)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(10))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[10] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(10)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(11))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[11] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(11)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(12))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[12] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(12)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(13))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[13] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(13)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(14))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[14] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(14)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(15))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[15] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(15)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(16))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[16] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(16)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(17))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[17] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(17)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(18))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[18] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(18)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(19))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[19] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(19)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(20))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[20] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(20)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(21))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[21] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(21)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(22))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[22] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(22)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(23))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[23] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(23)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(24))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[24] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(24)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(25))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[25] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(25)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(26))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[26] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(26)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(27))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[27] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(27)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(28))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[28] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(28)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(29))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[29] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(29)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(30))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[30] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(30)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(31))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[31] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(31)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(32))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[32] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(32)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(33))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[33] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(33)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(34))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[34] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(34)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(35))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[35] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(35)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(36))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[36] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(36)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(37))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[37] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(37)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(38))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[38] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(38)
-     badranges=[badranges,sel]
- endif
- sel = testFloat(LGs.MagBulge(39))
- if(sel(0) gt -1) then begin
-     bad=1
-     print, 'MagBulge[39] --- ', nstart+sel
-     print, 'MagBulge --- ', LGs[sel].MagBulge(39)
+     print, 'ObsMagBulge[19] --- ', nstart+sel
+     print, 'ObsMagBulge --- ', LGs[sel].ObsMagBulge(19)
      badranges=[badranges,sel]
  endif
  sel = testFloat(LGs.MassWeightAge)

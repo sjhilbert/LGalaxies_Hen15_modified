@@ -1,0 +1,2 @@
+typedef struct custom_lightcone_galaxy_output_type_ {
+} custom_lightcone_galaxy_output_type;

@@ -13,38 +13,95 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+
+.SUFFIXES:
+.SUFFIXES: .o .c .h .dep
+# suffixes of the file names to be used in the makefile
+
+VPATH = .
+# paths to be looked into by make while processing the makefile
+
+##################################################################
+# setting path variables for sources,deps,etc.:                  #
+##################################################################
+
+SRCDIR = ./code
+# SRCDIR = ./version_2018_02_06_code
+OBJDIR = ./obj
+BINDIR = ./bin
+DEPDIR = ./dep
+
+AWKDIR = ./AuxCode/awk
+
+##################################################################
+# the executable's name:                                         #
+##################################################################
+
 EXEC   = L-Galaxies
 
-OBJS   = ./code/main.o ./code/io_tree.o ./code/init.o ./code/cool_func.o \
-     ./code/save.o ./code/save_galtree.o \
-     ./code/mymalloc.o ./code/read_parameters.o \
-	 ./code/peano.o ./code/allvars.o ./code/age.o ./code/update_type_two.o \
-	 ./code/metals.o \
-	 ./code/model_infall.o \
-	 ./code/model_cooling.o \
-	 ./code/model_starformation_and_feedback.o \
-	 ./code/model_reincorporation.o \
-	 ./code/model_mergers.o \
-	 ./code/model_dust.o \
-	 ./code/model_misc.o \
-	 ./code/model_disrupt.o \
-	 ./code/model_stripping.o \
-	 ./code/scale_cosmology.o
+EXEC  := $(BINDIR)/$(EXEC)
 
-INCL   = ./code/allvars.h  ./code/proto.h  Makefile
+##################################################################
+# the source and object files:                                   #
+##################################################################
 
+SRCS   = main.c \
+         allvars.c \
+	 mymalloc.c \
+	 io.c \
+	 io_tree.c \
+	 init.c \
+	 read_parameters.c \
+	 cosmology.c \
+         peano.c \
+	 update_type_two.c \
+	 model.c \
+         model_cooling.c \
+         model_disrupt.c \
+         model_dust.c \
+         model_infall.c \
+         model_mergers.c \
+         model_misc.c \
+         model_reincorporation.c \
+         model_starformation_and_feedback.c \
+         model_stripping.c \
+         save.c \
+         scale_cosmology.c
+
+OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
+
+
+##################################################################
+# files for all (not found by dep files below):                 #
+##################################################################
+
+DEPSFORALL = Makefile Makefile_options Makefile_compilers 
+
+# ./code/allvars.h  ./code/proto.h  ./code/aux_functions_inline.h  ./code/metals_inline.h
+
+##################################################################
+# include files for compile time options:                        #
+##################################################################
 
 # Either include the default set of Makefile options, or define your own
-include My_Makefile_options
-#include My_Makefile_options_MCMC
-#include My_Makefile_options_MCMC_HaloModel
+include Makefile_options
 
-# Choose your system type (needs to match an entry in Makefile_compilers)
-SYSTYPE = "MyMachine"
+##################################################################
+# include files for compiler choice:                             #
+##################################################################
+
+# Choose your system type in Makefile_compilers:
 include Makefile_compilers
 
+##################################################################
+# removing excessive whitespace in options:                      #
+##################################################################
+# (comment if your make does not like this)
+OPT := $(strip $(OPT))
 
-
+##################################################################
+# now for real:                                                  #
+##################################################################
 
 LIBS   =   -g $(LDFLAGS) -lm  $(GSL_LIBS)  $(RLIBS) -lgsl -lgslcblas 
 
@@ -53,9 +110,25 @@ CFLAGS =   -g $(OPTIONS) $(OPT) -DCOMPILETIMESETTINGS=\""$(OPT)"\" $(OPTIMIZE) $
 $(EXEC): $(OBJS) 
 	$(CC) $(OPTIMIZE) $(OBJS) $(LIBS)   -o  $(EXEC)  
 
-$(OBJS): $(INCL) My_Makefile_options Makefile_compilers
-#$(OBJS): $(INCL) My_Makefile_options_MCMC Makefile_compilers
-#$(OBJS): $(INCL) My_Makefile_options_MCMC_haloModel Makefile_compilers
+# the rule for making the object files %.o from the source files %.cpp:
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(DEPSFORALL)
+	$(CC) -c -o $@ $(CFLAGS) $<
+
+# files containing the dependencies of the object files:
+DEPS = $(SRCS:%.c=$(DEPDIR)/%.dep)
+
+$(DEPDIR)/%.dep: $(SRCDIR)/%.c
+	@set -e; rm -f $@; \
+         $(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+         sed 's,\($*\)\.o[ :]*,$(OBJDIR)/\1.o $@ : ,g' < $@.$$$$ > $@;\
+         rm -f $@.$$$$
+
+include $(DEPS)
+
+##################################################################
+# phony targets:
+##################################################################
+.PHONY: clean tidy metadata metadata_db
 
 clean:
 	rm -f $(OBJS)
@@ -68,24 +141,26 @@ tidy:
 # then calls awk scripts from ./awk/ folder to extract cleand-up version of GALAXY_OUTPUT struct
 # and generate different representations of use for post-processing the result 	
 metadata:
-	${CC_MD} ${OPT} ${CFLAGS} -E ./code/allvars.h -o ./code/allvars.i
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/GALAXY_OUTPUT_2_TypeString.awk > ./AuxCode/awk/L-Galaxies_Types.txt
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/GALAXY_OUTPUT_2_DDL.awk > ./AuxCode/awk/L-Galaxies_DDL.sql	
+	${CC_MD} ${OPT} ${CFLAGS} -E $(SRCDIR)/allvars.h -o $(SRCDIR)/allvars.i
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/GALAXY_OUTPUT_2_TypeString.awk > $(AWKDIR)/L-Galaxies_Types.txt
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/GALAXY_OUTPUT_2_DDL.awk > $(AWKDIR)/L-Galaxies_DDL.sql	
+	${CC_MD} ${OPT} ${CFLAGS} -E $(SRCDIR)/lightcone_galaxy_output_type.h -o $(SRCDIR)/lightcone_galaxy_output_type.i
 ifeq (NORMALIZEDDB,$(findstring NORMALIZEDDB,$(OPT)))
-	awk -f ./AuxCode/awk/extractSFH_BIN.awk ./code/allvars.i |awk -f ./AuxCode/awk/SFH_BIN_2_DDL.awk >> ./AuxCode/awk/L-Galaxies_DDL.sql
+	awk -f $(AWKDIR)/extractSFH_BIN.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/SFH_BIN_2_DDL.awk >> $(AWKDIR)/L-Galaxies_DDL.sql
 else
-	awk -f ./AuxCode/awk/extractSFH_Time.awk ./code/allvars.i |awk -f ./AuxCode/awk/SFH_Time_2_DDL.awk >> ./AuxCode/awk/L-Galaxies_DDL.sql
+	awk -f $(AWKDIR)/extractSFH_Time.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/SFH_Time_2_DDL.awk >> $(AWKDIR)/L-Galaxies_DDL.sql
 endif	
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/idl/GALAXY_OUTPUT_2_IDL_struct.awk >  ./AuxCode/awk/idl/LGalaxy.pro
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/idl/GALAXY_OUTPUT_2_IDL_hists.awk > ./AuxCode/awk/idl/LGalaxy_plot.pro
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/idl/GALAXY_OUTPUT_2_IDL_testfloats.awk > ./AuxCode/awk/idl/LGalaxy_testfloats.pro
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/idl/GALAXY_OUTPUT_2_IDL_zerofloats.awk > ./AuxCode/awk/idl/LGalaxy_zerofloats.pro
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/GALAXY_OUTPUT_2_LGalaxy.awk > ./AuxCode/awk/L-Galaxies.h
-	awk -f ./AuxCode/awk/extractGALAXY_OUTPUT.awk ./code/allvars.i |awk -f ./AuxCode/awk/GALAXY_OUTPUT_2_FileFormat.awk > ./AuxCode/awk/L-Galaxies_FileFormat.csv
-	awk -f ./AuxCode/awk/extractSFH_BIN.awk ./code/allvars.i |awk -f ./AuxCode/awk/MOMAF_INPUT_2_MoMaFGalaxy.awk >> ./AuxCode/awk/L-Galaxies.h
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/idl/GALAXY_OUTPUT_2_IDL_struct.awk >  $(AWKDIR)/idl/LGalaxy.pro
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/idl/GALAXY_OUTPUT_2_IDL_hists.awk > $(AWKDIR)/idl/LGalaxy_plot.pro
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/idl/GALAXY_OUTPUT_2_IDL_testfloats.awk > $(AWKDIR)/idl/LGalaxy_testfloats.pro
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/idl/GALAXY_OUTPUT_2_IDL_zerofloats.awk > $(AWKDIR)/idl/LGalaxy_zerofloats.pro
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/GALAXY_OUTPUT_2_python_struct.awk > $(AWKDIR)/LGalaxy.py
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/GALAXY_OUTPUT_2_LGalaxy.awk > $(AWKDIR)/L-Galaxies.h
+	awk -f $(AWKDIR)/extractGALAXY_OUTPUT.awk $(SRCDIR)/allvars.i |awk -f $(AWKDIR)/GALAXY_OUTPUT_2_FileFormat.awk > $(AWKDIR)/L-Galaxies_FileFormat.csv
+	awk -f $(AWKDIR)/extract_lightcone_galaxy_output_type.awk $(SRCDIR)/lightcone_galaxy_output_type.i |awk -f $(AWKDIR)/lightcone_galaxy_output_type_2_lightcone_galaxy_output_type.awk > $(AWKDIR)/lightcone_galaxy_output_type.h
+	awk -f $(AWKDIR)/extract_lightcone_galaxy_output_type.awk $(SRCDIR)/lightcone_galaxy_output_type.i |awk -f $(AWKDIR)/lightcone_galaxy_output_type_2_python_struct.awk > $(AWKDIR)/lightcone_galaxy_output_type.py
 
 metadata_db:
-	awk -f ./AuxCode/awk/extract_struct_metals.awk ./code/allvars.i > ./AuxCode/awk/structs.dat
-	awk -f ./AuxCode/awk/extract_struct_elements.awk ./code/allvars.i >> ./AuxCode/awk/structs.dat
-	awk -f ./AuxCode/awk/extract_struct_GALAXY_OUTPUT.awk ./code/allvars.i >> ./AuxCode/awk/structs.dat
-	
+	awk -f $(AWKDIR)/extract_struct_metals.awk $(SRCDIR)/allvars.i > $(AWKDIR)/structs.dat
+	awk -f $(AWKDIR)/extract_struct_elements.awk $(SRCDIR)/allvars.i >> $(AWKDIR)/structs.dat
+	awk -f $(AWKDIR)/extract_struct_GALAXY_OUTPUT.awk $(SRCDIR)/allvars.i >> $(AWKDIR)/structs.dat

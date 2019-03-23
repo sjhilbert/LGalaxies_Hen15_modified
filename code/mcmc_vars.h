@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,9 +14,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
 /** @file   mcmc_vars.h
- *  @date   2008, 2018
+ *  @date   2008-2019
  *  @author Bruno Henriques
  *  @author Stefan Hilbert
+ *
+ *  @brief  declares structs and variables for MCMC mode
  */
 
 #include <gsl/gsl_rng.h>
@@ -175,7 +177,6 @@ struct MCMC_FOF_struct
 
 int *HashTable;
 
-int NR;
 #define massbins 65
 
 #define minfofmass 9.5

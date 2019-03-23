@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,12 +13,11 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/** @file lightcone_galaxy_output_type.h
- *  @brief   type for outputting galaxies on lightcone to disk
- *
- *  @author  Stefan Hilbert
+/** @file   lightcone_galaxy_output_type.h
+ *  @date   2018-2019
+ *  @author Stefan Hilbert
  * 
- *  @date    2018
+ *  @brief  type for outputting galaxies on lightcone to disk
  */
 
 #ifndef LIGHTCONE_GALAXY_OUTPUT_TYPE_H

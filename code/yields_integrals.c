@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,16 +12,14 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
-
-/*
- * yield_integrals.c
+ 
+/** @file   yields_integrals.c
+ *  @date   2012
+ *  @author Rob Yates
  *
- * Pre-calculates the normalised ejecta rates at every timestep, assuming 1 Msun populations.
- * Multiply by SFR from SFH bins (and interpolate between default metallicities) to obtain
- * true ejecta rates (done in recipe_yields.c).
- *
- *  Created on: 10.05.2012
- *      Author: robyates
+ *  @brief Pre-calculates the normalised ejecta rates at every timestep, assuming 1 Msun populations.
+ *         Multiply by SFR from SFH bins (and interpolate between default metallicities) to obtain
+ *         true ejecta rates (done in recipe_yields.c).
  */
 
 #include <stdio.h>

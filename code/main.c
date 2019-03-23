@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,15 +13,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
+/** @file   main.c
+ *  @date   1978-2019
+ *  @author Gabriella De Lucia, Qi Guo, Bruno Henriques, Stefan Hilbert, Guinevere Kauffmann,
+ *          Volker Springel, Peter Thomas, Marcel van Daalen, Simon White, Rob Yates, et al.
+ *
+ *  @brief just the main function of L-Galaxies
+ *
  *  Created originally in 1978
  *  Re-written in 2001 by Volker Springel
  * 
- *  Major Contributors: Qi Guo, Gabriella De Lucia,  Bruno Henriques, Guinevere Kauffmann,
+ *  Major Contributors: Qi Guo, Gabriella De Lucia, Bruno Henriques, Guinevere Kauffmann,
  *                      Volker Springel, Peter Thomas, Marcel van Daalen, Rob Yates, Simon White
  *
  *  Contributors:       Stefan Hilbert, Rachel Asquith
- */
+ **/
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -18,14 +18,45 @@
 # SYSTYPE = "Sussex"
 # SYSTYPE = "VIP"
 # SYSTYPE = "COSMA"
+SYSTYPE = "PASCAL"
+# SYSTYPE = "PASCAL Intel"
 
 # Default set
 CC       = gcc                  # sets the C-compiler
 CC_MD    = gcc                  # for the metadata
 ifeq (DEBUG,$(findstring DEBUG,$(OPT)))
-OPTIMIZE =   -g -O3 -Wall	# optimization, debugging and warning flags
+OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wswitch-default -Wdisabled-optimization -Wstrict-aliasing -Wredundant-decls -Wlogical-op -Wformat -Wfatal-errors
 else
-OPTIMIZE = -O3                  # optimization
+OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wswitch-default -Wdisabled-optimization -Wstrict-aliasing -Wredundant-decls -Wlogical-op -Wformat -Wfatal-errors
+# OPTIMIZE = -O3                  # optimization
+endif
+
+
+ifeq ($(SYSTYPE),"PASCAL")
+ifeq (PARALLEL,$(findstring PARALLEL,$(OPT)))
+CC       =  mpicc
+# GSL_INCL = -I/usr/local/Cellar/open-mpi/1.10.1/include
+# GSL_LIBS = -L/usr/local/opt/libevent/lib -L/usr/local/Cellar/open-mpi/1.10.1/lib
+else
+CC       =   gcc
+# GSL_INCL = -I/usr/local/include
+# GSL_LIBS = -L/usr/local/lib
+endif
+endif
+
+
+ifeq ($(SYSTYPE),"PASCAL Intel")
+ifeq (PARALLEL,$(findstring PARALLEL,$(OPT)))
+CC       =  mpicc
+OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wdisabled-optimization -Wstrict-aliasing -Wformat -Wfatal-errors -diag-disable=1338
+# GSL_INCL = -I/usr/local/Cellar/open-mpi/1.10.1/include
+# GSL_LIBS = -L/usr/local/opt/libevent/lib -L/usr/local/Cellar/open-mpi/1.10.1/lib
+else
+CC       =   icc
+OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wdisabled-optimization -Wstrict-aliasing -Wformat -Wfatal-errors -diag-disable=1338
+# GSL_INCL = -I/usr/local/include
+# GSL_LIBS = -L/usr/local/lib
+endif
 endif
 
 

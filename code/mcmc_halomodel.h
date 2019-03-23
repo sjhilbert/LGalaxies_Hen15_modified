@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,15 +13,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2013
- *      Author: Marcel van Daalen
+/** @file   mcmc_halomodel.h
+ *  @date   2013-2019
+ *  @author Marcel van Daalen
+ *  @author Stefan Hilbert
+ *
+ *  @brief  prototypes for functions for halo model for mcmc.
  */
 
-#define SQR(a) ((a)*(a))
-#define CUB(a) ((a)*(a)*(a))
-
-void halomodel(double* r_arr,double* proj_arr,float masslimit_low,float masslimit_high,int snap);
+void halomodel(const int snap, const float masslimit_low, const float masslimit_high, const int number_of_r, double* r_arr,double* proj_arr);
 double TwoPowerSpec(double k,int censat);
 double pconv_W_P_func(double theta,void *p);
 double pconv_W_func(double lq,void *p);

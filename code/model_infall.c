@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,6 +13,17 @@
  *  You should have received a_ copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
+/**@file    model_infall.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ * @brief   calculates the amount of gas that infalls
+ *          into the galaxy hot gas component at each time step. This
+ *          is derived from the baryonic fraction taking reionization
+ *          into account.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,14 +32,6 @@
 
 #include "allvars.h"
 #include "proto.h"
-
-
-/**@file model_infall.c
- * @brief model_infall.c calculates the amount of gas that infalls
- *       into the galaxy hot gas component at each time step. This
- *       is derived from the baryonic fraction taking reionization
- *       into account.
- */
 
 double infall_recipe(const int central_galaxy_number_, const int n_galaxies_, double current_redshift_)
 {

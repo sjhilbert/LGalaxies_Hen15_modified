@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,7 +12,15 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
-
+ 
+/** @file   read_parameters.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief  reading program parameters from file and checking these
+ */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,9 +43,8 @@
 #define MAX_N_TAGS 300
 
 
-/** @file read_parameters.c reads all the parameters in input.par into global variables
+/** @brief reads all the parameters in input.par into global variables
  *       that can be used by the code. */
-
 void read_parameter_file(char *file_name_)
 {
   FILE *file_;

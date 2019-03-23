@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <201-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,10 +13,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2013
- *      Author: Marcel van Daalen
- */
+/** @file   mcmc_mpfit.h
+ *  @date   2013
+ *  @author Marcel van Daalen
+ *
+ *  @brief  declares vars, structs, and functions for parameter fitting
+ **/
 
 /* 
  * MINPACK-1 Least Squares Fitting Library

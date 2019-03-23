@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,9 +14,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
 /** @file   physical_constants_and_units.h
- *
+ *  @date   2016-2019
+ *  @author ?
  *  @author Stefan Hilbert
- *  @date   2018
  *
  *  @brief  Sets up some variables used to convert from physical to internal
  *          units obtained from
@@ -71,6 +71,7 @@
  *        for using the old public Henriques 2015 values, comment the new values and uncomment
  *        the old values below.
  **/
+
 #ifndef PHYSICAL_CONSTANTS_AND_UNITS_H
 #define PHYSICAL_CONSTANTS_AND_UNITS_H
 

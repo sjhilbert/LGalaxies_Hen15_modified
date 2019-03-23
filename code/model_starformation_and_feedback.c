@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,27 +13,17 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
-#include <time.h>
-
-#include <gsl/gsl_sf_lambert.h>
-
-
-#include "allvars.h"
-#include "proto.h"
-
-/** @file recipe_starformation_and_feedback.c
- *  @brief recipe_starformation_and_feedback.c computes the amount of stars
- *         formed from the cold gas, the amount of gas reheated from cold to hot
- *         and the amount of gas ejected from hot to external.
+/** @file model_starformation_and_feedback.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
  *
- * The routine is divided in two parts, star formation and SN feedback, with a
+ *  @brief  computes the amount of stars formed from the cold gas,
+ *          the amount of gas reheated from cold to hot,
+ *          and the amount of gas ejected from hot to external.
+ *
+ * The two main parts are star formation and SN feedback, with a
  * number of different implementations controlled by input parameters.
- *
  *
  *  0 -\f$M_{\rm{crit}}=3.8\times 10^9
  *     \left(\frac{V_{\rm{max}}}{200\,\rm{km s}^{-1}}\right)
@@ -41,7 +31,6 @@
  *     (Eq. 16 Guo2010) (StarFormationModel = 0), \n
  *        - same as 1 but using \f$V_{\rm{max}}\f$ or \f$V_{\rm{max,infall}}\f$
  *          instead of \f$V_{\rm{vir}}\f$ and allowing SF in satellites. *
-
  *
  * There are 2 options for the <B>SN Feedback Recipe</B>:
  *
@@ -55,6 +44,18 @@
  * Also, Guo2010 alowed for type 1 satellite to have gas cycles and receive
  * gas from their own satellites when these are outside Rvir of the type 0.
  * */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <math.h>
+#include <time.h>
+
+#include <gsl/gsl_sf_lambert.h>
+
+#include "allvars.h"
+#include "proto.h"
 
 
 /** @brief Main recipe, calculates the fraction_ of cold gas turned into stars due
@@ -158,7 +159,7 @@ void starformation(const int galaxy_number_, const int central_galaxy_number_, c
 }
 
 
- /** @brief update mass of stars_ formed due to reheating 
+ /** @brief update mass of stars formed due to reheating 
   * 
   * @bug Which is the true central galaxy? Gal[galaxy_number_].CentralGal or Gal[central_galaxy_number_]?
   *       Tests show, these are not always the same.

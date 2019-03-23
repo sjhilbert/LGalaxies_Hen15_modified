@@ -3,6 +3,10 @@ PRO LGalaxy_zerofloats, LGs
 ; test whether floats are NaN or too small for SQLServer
 ; if so, set offending values to 0
 ; assumes the existence of a function testFloat accepting an array of floats
+ sel = testFloat(LGs.Redshift)
+ if(sel(0) gt -1) then begin
+     LGs[sel].Redshift = 0
+ endif
  sel = testFloat(LGs.LookBackTimeToSnap)
  if(sel(0) gt -1) then begin
      LGs[sel].LookBackTimeToSnap = 0
@@ -227,485 +231,245 @@ PRO LGalaxy_zerofloats, LGs
  if(sel(0) gt -1) then begin
      LGs[sel].CosInclination = 0
  endif
- sel = testFloat(LGs.MagDust(0))
+ sel = testFloat(LGs.ObsMagDust(0))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(0) = 0
+     LGs[sel].ObsMagDust(0) = 0
  endif
- sel = testFloat(LGs.MagDust(1))
+ sel = testFloat(LGs.ObsMagDust(1))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(1) = 0
+     LGs[sel].ObsMagDust(1) = 0
  endif
- sel = testFloat(LGs.MagDust(2))
+ sel = testFloat(LGs.ObsMagDust(2))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(2) = 0
+     LGs[sel].ObsMagDust(2) = 0
  endif
- sel = testFloat(LGs.MagDust(3))
+ sel = testFloat(LGs.ObsMagDust(3))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(3) = 0
+     LGs[sel].ObsMagDust(3) = 0
  endif
- sel = testFloat(LGs.MagDust(4))
+ sel = testFloat(LGs.ObsMagDust(4))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(4) = 0
+     LGs[sel].ObsMagDust(4) = 0
  endif
- sel = testFloat(LGs.MagDust(5))
+ sel = testFloat(LGs.ObsMagDust(5))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(5) = 0
+     LGs[sel].ObsMagDust(5) = 0
  endif
- sel = testFloat(LGs.MagDust(6))
+ sel = testFloat(LGs.ObsMagDust(6))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(6) = 0
+     LGs[sel].ObsMagDust(6) = 0
  endif
- sel = testFloat(LGs.MagDust(7))
+ sel = testFloat(LGs.ObsMagDust(7))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(7) = 0
+     LGs[sel].ObsMagDust(7) = 0
  endif
- sel = testFloat(LGs.MagDust(8))
+ sel = testFloat(LGs.ObsMagDust(8))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(8) = 0
+     LGs[sel].ObsMagDust(8) = 0
  endif
- sel = testFloat(LGs.MagDust(9))
+ sel = testFloat(LGs.ObsMagDust(9))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(9) = 0
+     LGs[sel].ObsMagDust(9) = 0
  endif
- sel = testFloat(LGs.MagDust(10))
+ sel = testFloat(LGs.ObsMagDust(10))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(10) = 0
+     LGs[sel].ObsMagDust(10) = 0
  endif
- sel = testFloat(LGs.MagDust(11))
+ sel = testFloat(LGs.ObsMagDust(11))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(11) = 0
+     LGs[sel].ObsMagDust(11) = 0
  endif
- sel = testFloat(LGs.MagDust(12))
+ sel = testFloat(LGs.ObsMagDust(12))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(12) = 0
+     LGs[sel].ObsMagDust(12) = 0
  endif
- sel = testFloat(LGs.MagDust(13))
+ sel = testFloat(LGs.ObsMagDust(13))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(13) = 0
+     LGs[sel].ObsMagDust(13) = 0
  endif
- sel = testFloat(LGs.MagDust(14))
+ sel = testFloat(LGs.ObsMagDust(14))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(14) = 0
+     LGs[sel].ObsMagDust(14) = 0
  endif
- sel = testFloat(LGs.MagDust(15))
+ sel = testFloat(LGs.ObsMagDust(15))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(15) = 0
+     LGs[sel].ObsMagDust(15) = 0
  endif
- sel = testFloat(LGs.MagDust(16))
+ sel = testFloat(LGs.ObsMagDust(16))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(16) = 0
+     LGs[sel].ObsMagDust(16) = 0
  endif
- sel = testFloat(LGs.MagDust(17))
+ sel = testFloat(LGs.ObsMagDust(17))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(17) = 0
+     LGs[sel].ObsMagDust(17) = 0
  endif
- sel = testFloat(LGs.MagDust(18))
+ sel = testFloat(LGs.ObsMagDust(18))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(18) = 0
+     LGs[sel].ObsMagDust(18) = 0
  endif
- sel = testFloat(LGs.MagDust(19))
+ sel = testFloat(LGs.ObsMagDust(19))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(19) = 0
+     LGs[sel].ObsMagDust(19) = 0
  endif
- sel = testFloat(LGs.MagDust(20))
+ sel = testFloat(LGs.ObsMag(0))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(20) = 0
+     LGs[sel].ObsMag(0) = 0
  endif
- sel = testFloat(LGs.MagDust(21))
+ sel = testFloat(LGs.ObsMag(1))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(21) = 0
+     LGs[sel].ObsMag(1) = 0
  endif
- sel = testFloat(LGs.MagDust(22))
+ sel = testFloat(LGs.ObsMag(2))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(22) = 0
+     LGs[sel].ObsMag(2) = 0
  endif
- sel = testFloat(LGs.MagDust(23))
+ sel = testFloat(LGs.ObsMag(3))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(23) = 0
+     LGs[sel].ObsMag(3) = 0
  endif
- sel = testFloat(LGs.MagDust(24))
+ sel = testFloat(LGs.ObsMag(4))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(24) = 0
+     LGs[sel].ObsMag(4) = 0
  endif
- sel = testFloat(LGs.MagDust(25))
+ sel = testFloat(LGs.ObsMag(5))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(25) = 0
+     LGs[sel].ObsMag(5) = 0
  endif
- sel = testFloat(LGs.MagDust(26))
+ sel = testFloat(LGs.ObsMag(6))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(26) = 0
+     LGs[sel].ObsMag(6) = 0
  endif
- sel = testFloat(LGs.MagDust(27))
+ sel = testFloat(LGs.ObsMag(7))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(27) = 0
+     LGs[sel].ObsMag(7) = 0
  endif
- sel = testFloat(LGs.MagDust(28))
+ sel = testFloat(LGs.ObsMag(8))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(28) = 0
+     LGs[sel].ObsMag(8) = 0
  endif
- sel = testFloat(LGs.MagDust(29))
+ sel = testFloat(LGs.ObsMag(9))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(29) = 0
+     LGs[sel].ObsMag(9) = 0
  endif
- sel = testFloat(LGs.MagDust(30))
+ sel = testFloat(LGs.ObsMag(10))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(30) = 0
+     LGs[sel].ObsMag(10) = 0
  endif
- sel = testFloat(LGs.MagDust(31))
+ sel = testFloat(LGs.ObsMag(11))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(31) = 0
+     LGs[sel].ObsMag(11) = 0
  endif
- sel = testFloat(LGs.MagDust(32))
+ sel = testFloat(LGs.ObsMag(12))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(32) = 0
+     LGs[sel].ObsMag(12) = 0
  endif
- sel = testFloat(LGs.MagDust(33))
+ sel = testFloat(LGs.ObsMag(13))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(33) = 0
+     LGs[sel].ObsMag(13) = 0
  endif
- sel = testFloat(LGs.MagDust(34))
+ sel = testFloat(LGs.ObsMag(14))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(34) = 0
+     LGs[sel].ObsMag(14) = 0
  endif
- sel = testFloat(LGs.MagDust(35))
+ sel = testFloat(LGs.ObsMag(15))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(35) = 0
+     LGs[sel].ObsMag(15) = 0
  endif
- sel = testFloat(LGs.MagDust(36))
+ sel = testFloat(LGs.ObsMag(16))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(36) = 0
+     LGs[sel].ObsMag(16) = 0
  endif
- sel = testFloat(LGs.MagDust(37))
+ sel = testFloat(LGs.ObsMag(17))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(37) = 0
+     LGs[sel].ObsMag(17) = 0
  endif
- sel = testFloat(LGs.MagDust(38))
+ sel = testFloat(LGs.ObsMag(18))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(38) = 0
+     LGs[sel].ObsMag(18) = 0
  endif
- sel = testFloat(LGs.MagDust(39))
+ sel = testFloat(LGs.ObsMag(19))
  if(sel(0) gt -1) then begin
-     LGs[sel].MagDust(39) = 0
+     LGs[sel].ObsMag(19) = 0
  endif
- sel = testFloat(LGs.Mag(0))
+ sel = testFloat(LGs.ObsMagBulge(0))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(0) = 0
+     LGs[sel].ObsMagBulge(0) = 0
  endif
- sel = testFloat(LGs.Mag(1))
+ sel = testFloat(LGs.ObsMagBulge(1))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(1) = 0
+     LGs[sel].ObsMagBulge(1) = 0
  endif
- sel = testFloat(LGs.Mag(2))
+ sel = testFloat(LGs.ObsMagBulge(2))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(2) = 0
+     LGs[sel].ObsMagBulge(2) = 0
  endif
- sel = testFloat(LGs.Mag(3))
+ sel = testFloat(LGs.ObsMagBulge(3))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(3) = 0
+     LGs[sel].ObsMagBulge(3) = 0
  endif
- sel = testFloat(LGs.Mag(4))
+ sel = testFloat(LGs.ObsMagBulge(4))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(4) = 0
+     LGs[sel].ObsMagBulge(4) = 0
  endif
- sel = testFloat(LGs.Mag(5))
+ sel = testFloat(LGs.ObsMagBulge(5))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(5) = 0
+     LGs[sel].ObsMagBulge(5) = 0
  endif
- sel = testFloat(LGs.Mag(6))
+ sel = testFloat(LGs.ObsMagBulge(6))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(6) = 0
+     LGs[sel].ObsMagBulge(6) = 0
  endif
- sel = testFloat(LGs.Mag(7))
+ sel = testFloat(LGs.ObsMagBulge(7))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(7) = 0
+     LGs[sel].ObsMagBulge(7) = 0
  endif
- sel = testFloat(LGs.Mag(8))
+ sel = testFloat(LGs.ObsMagBulge(8))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(8) = 0
+     LGs[sel].ObsMagBulge(8) = 0
  endif
- sel = testFloat(LGs.Mag(9))
+ sel = testFloat(LGs.ObsMagBulge(9))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(9) = 0
+     LGs[sel].ObsMagBulge(9) = 0
  endif
- sel = testFloat(LGs.Mag(10))
+ sel = testFloat(LGs.ObsMagBulge(10))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(10) = 0
+     LGs[sel].ObsMagBulge(10) = 0
  endif
- sel = testFloat(LGs.Mag(11))
+ sel = testFloat(LGs.ObsMagBulge(11))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(11) = 0
+     LGs[sel].ObsMagBulge(11) = 0
  endif
- sel = testFloat(LGs.Mag(12))
+ sel = testFloat(LGs.ObsMagBulge(12))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(12) = 0
+     LGs[sel].ObsMagBulge(12) = 0
  endif
- sel = testFloat(LGs.Mag(13))
+ sel = testFloat(LGs.ObsMagBulge(13))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(13) = 0
+     LGs[sel].ObsMagBulge(13) = 0
  endif
- sel = testFloat(LGs.Mag(14))
+ sel = testFloat(LGs.ObsMagBulge(14))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(14) = 0
+     LGs[sel].ObsMagBulge(14) = 0
  endif
- sel = testFloat(LGs.Mag(15))
+ sel = testFloat(LGs.ObsMagBulge(15))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(15) = 0
+     LGs[sel].ObsMagBulge(15) = 0
  endif
- sel = testFloat(LGs.Mag(16))
+ sel = testFloat(LGs.ObsMagBulge(16))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(16) = 0
+     LGs[sel].ObsMagBulge(16) = 0
  endif
- sel = testFloat(LGs.Mag(17))
+ sel = testFloat(LGs.ObsMagBulge(17))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(17) = 0
+     LGs[sel].ObsMagBulge(17) = 0
  endif
- sel = testFloat(LGs.Mag(18))
+ sel = testFloat(LGs.ObsMagBulge(18))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(18) = 0
+     LGs[sel].ObsMagBulge(18) = 0
  endif
- sel = testFloat(LGs.Mag(19))
+ sel = testFloat(LGs.ObsMagBulge(19))
  if(sel(0) gt -1) then begin
-     LGs[sel].Mag(19) = 0
- endif
- sel = testFloat(LGs.Mag(20))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(20) = 0
- endif
- sel = testFloat(LGs.Mag(21))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(21) = 0
- endif
- sel = testFloat(LGs.Mag(22))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(22) = 0
- endif
- sel = testFloat(LGs.Mag(23))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(23) = 0
- endif
- sel = testFloat(LGs.Mag(24))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(24) = 0
- endif
- sel = testFloat(LGs.Mag(25))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(25) = 0
- endif
- sel = testFloat(LGs.Mag(26))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(26) = 0
- endif
- sel = testFloat(LGs.Mag(27))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(27) = 0
- endif
- sel = testFloat(LGs.Mag(28))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(28) = 0
- endif
- sel = testFloat(LGs.Mag(29))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(29) = 0
- endif
- sel = testFloat(LGs.Mag(30))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(30) = 0
- endif
- sel = testFloat(LGs.Mag(31))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(31) = 0
- endif
- sel = testFloat(LGs.Mag(32))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(32) = 0
- endif
- sel = testFloat(LGs.Mag(33))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(33) = 0
- endif
- sel = testFloat(LGs.Mag(34))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(34) = 0
- endif
- sel = testFloat(LGs.Mag(35))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(35) = 0
- endif
- sel = testFloat(LGs.Mag(36))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(36) = 0
- endif
- sel = testFloat(LGs.Mag(37))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(37) = 0
- endif
- sel = testFloat(LGs.Mag(38))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(38) = 0
- endif
- sel = testFloat(LGs.Mag(39))
- if(sel(0) gt -1) then begin
-     LGs[sel].Mag(39) = 0
- endif
- sel = testFloat(LGs.MagBulge(0))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(0) = 0
- endif
- sel = testFloat(LGs.MagBulge(1))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(1) = 0
- endif
- sel = testFloat(LGs.MagBulge(2))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(2) = 0
- endif
- sel = testFloat(LGs.MagBulge(3))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(3) = 0
- endif
- sel = testFloat(LGs.MagBulge(4))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(4) = 0
- endif
- sel = testFloat(LGs.MagBulge(5))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(5) = 0
- endif
- sel = testFloat(LGs.MagBulge(6))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(6) = 0
- endif
- sel = testFloat(LGs.MagBulge(7))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(7) = 0
- endif
- sel = testFloat(LGs.MagBulge(8))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(8) = 0
- endif
- sel = testFloat(LGs.MagBulge(9))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(9) = 0
- endif
- sel = testFloat(LGs.MagBulge(10))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(10) = 0
- endif
- sel = testFloat(LGs.MagBulge(11))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(11) = 0
- endif
- sel = testFloat(LGs.MagBulge(12))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(12) = 0
- endif
- sel = testFloat(LGs.MagBulge(13))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(13) = 0
- endif
- sel = testFloat(LGs.MagBulge(14))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(14) = 0
- endif
- sel = testFloat(LGs.MagBulge(15))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(15) = 0
- endif
- sel = testFloat(LGs.MagBulge(16))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(16) = 0
- endif
- sel = testFloat(LGs.MagBulge(17))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(17) = 0
- endif
- sel = testFloat(LGs.MagBulge(18))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(18) = 0
- endif
- sel = testFloat(LGs.MagBulge(19))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(19) = 0
- endif
- sel = testFloat(LGs.MagBulge(20))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(20) = 0
- endif
- sel = testFloat(LGs.MagBulge(21))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(21) = 0
- endif
- sel = testFloat(LGs.MagBulge(22))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(22) = 0
- endif
- sel = testFloat(LGs.MagBulge(23))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(23) = 0
- endif
- sel = testFloat(LGs.MagBulge(24))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(24) = 0
- endif
- sel = testFloat(LGs.MagBulge(25))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(25) = 0
- endif
- sel = testFloat(LGs.MagBulge(26))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(26) = 0
- endif
- sel = testFloat(LGs.MagBulge(27))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(27) = 0
- endif
- sel = testFloat(LGs.MagBulge(28))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(28) = 0
- endif
- sel = testFloat(LGs.MagBulge(29))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(29) = 0
- endif
- sel = testFloat(LGs.MagBulge(30))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(30) = 0
- endif
- sel = testFloat(LGs.MagBulge(31))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(31) = 0
- endif
- sel = testFloat(LGs.MagBulge(32))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(32) = 0
- endif
- sel = testFloat(LGs.MagBulge(33))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(33) = 0
- endif
- sel = testFloat(LGs.MagBulge(34))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(34) = 0
- endif
- sel = testFloat(LGs.MagBulge(35))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(35) = 0
- endif
- sel = testFloat(LGs.MagBulge(36))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(36) = 0
- endif
- sel = testFloat(LGs.MagBulge(37))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(37) = 0
- endif
- sel = testFloat(LGs.MagBulge(38))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(38) = 0
- endif
- sel = testFloat(LGs.MagBulge(39))
- if(sel(0) gt -1) then begin
-     LGs[sel].MagBulge(39) = 0
+     LGs[sel].ObsMagBulge(19) = 0
  endif
  sel = testFloat(LGs.MassWeightAge)
  if(sel(0) gt -1) then begin

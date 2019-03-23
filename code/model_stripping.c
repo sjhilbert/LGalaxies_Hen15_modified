@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
+/** @file   model_stripping.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief  models for stripping of gas and stars for satellites
+ **/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,15 +30,11 @@
 #include "allvars.h"
 #include "proto.h"
 
-
-/**@file recipe_stripping.c
- * @brief deal_with_satellites.c 
+/** @brief This is where the gas and ICM components of newly accreted satellites
+ *         are treated.
  *
- *       This is where the gas and ICM components of newly accreted satellites
- *       are treated.
- *
- *       There are basically 2 options for the way satellite components are
- *       added into centrals:
+ *         There are basically 2 options for the way satellite components are
+ *         added into centrals:
  *
  *         HotGasStrippingModel ==1
  *         If inside Rvir, hot and ejected gas from satellites of both types 1 and 2
@@ -48,9 +52,7 @@
  *         Gal[galaxy_number_].CentralGal is the galaxy around which each satellite orbits;
  *         For simplicity of reference in the comments in the code below, the latter
  *         will be called the type 1, even though it may be the same galaxy as the type 0.
- *
- *         */
-
+ **/
 void deal_with_satellites(const int central_galaxy_number_, const int n_galaxies_)
 {
   int galaxy_number_, merger_centre_;

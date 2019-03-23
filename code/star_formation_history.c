@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,19 +13,17 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- * star_formation_history.c
+/** @file   star_formation_history.c
+ *  @date   2010-2019
+ *  @author Peter Thomas (original code)
+ *  @author Stefan Hilbert
  *
- * Routine to track the star-formation history of galaxies.
- * Keeps bins of the size of the current step_number_ of the semi-analytic.
- * As a galaxy ages, bins are merged in factors of two.
+ *  @brief  Routines to track the star-formation history of galaxies.
+ *          Keeps bins of the size of the current step number of the semi-analytic.
+ *          As a galaxy ages, bins are merged in factors of two.
  *
- *  Created on: Oct 26, 2010
- *      Author: Peter Thomas (petert)
- */
-
-/* This version assumes that all stars formed on a particular timestep
- * go into a single time_ history bin with star formation time_ equal to
+ * This version assumes that all stars formed on a particular timestep
+ * go into a single time history bin with star formation time_ equal to
  * the mid point of the bin. All times are code units (Mpc/Km/s/h) and
  * are the time_ till present.
  *
@@ -81,7 +79,7 @@
  *    Disk mass in bin in standard mass units.
  * float sfh_MetalsDiskMass[SFH_NBIN];
  *    Metals locked up in stars in the disk ditto.
- */
+ **/
 
 #include "allvars.h"
 #include "proto.h"

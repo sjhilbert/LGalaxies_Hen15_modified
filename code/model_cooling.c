@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,16 +13,11 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
-
-#include "allvars.h"
-#include "proto.h"
-
-/** @file model_cooling.c
+/** @file   model_cooling.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
  *  @brief model_cooling.c calculates the amount of mass that cools
  *  from the hot to the cold phase at each timestep (this fraction
  *  is then reduced by AGN heating) and updates the hot and cold gas
@@ -83,6 +78,14 @@
  * read from files.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+
+#include "allvars.h"
+#include "proto.h"
 
 #define COOLING_FUNC_N_METALS_ 8
 #define COOLING_FUNC_N_TEMPRS_ 91
@@ -338,6 +341,7 @@ void compute_cooling(const int galaxy_number_, const double dt_)
   * 
   * @bug (fixed?) dist was used in comparison, but never set,
   *      now dist is computed as distance between galaxy and FoF center
+  * 
   */
 void do_AGN_heating(double dt_, const int n_galaxies_in_fof_group_)
 {

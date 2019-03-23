@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,6 +12,16 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
+
+/** @file   model_misc.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief model_misc.c contains a mix of recipes used to: calculate disk
+ *         sizes, initiate a galaxy structure, update central galaxy,
+ *         update type 1 and type2, transfer stars and gas between galaxies,
+ *         etc. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,13 +37,6 @@
 #ifdef PARALLEL
 #include <mpi.h>
 #endif
-
-/**@file model_misc.c
- * @brief model_misc.c contains a mix of recipes used to: calculate disk
- *        sizes, initiate a galaxy structure, update central galaxy,
- *        update type 1 and type2, transfer stars and gas between galaxies,
- *        etc. */
-
 
 /** @brief Calculates the separation of galaxies galaxy_number_a_ and galaxy_number_b_, allowing for wrapping */
 double separation_gal(const int galaxy_number_a_, const int galaxy_number_b_)

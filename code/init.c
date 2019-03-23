@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,7 +12,71 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
-
+ 
+/** @file   init.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
+ *
+ *  @brief  Sets up some unit conversion variables; converts SN and AGN feedback
+ *          variables into internal units; and reads in input tables, including
+ *          the desired output snapshots, the photometric and dust tables, the
+ *          cooling functions and reionization tables.
+ *    
+ *          <B>set_units()</B> - THIS IS FUNDAMENTAL TO UNDERSTAND THE UNITS IN
+ *          THE CODE! sets ups some variables used to convert from physical to
+ *          internal units (as UnitDensity_in_cgs). These are obtained from
+ *          UNITLENGTH_IN_CM, UNITMASS_IN_G and UNITVELOCITY_IN_CM_PER_S.
+ *         
+ *          <B>read_output_snaps()</B> - reads in the list of output redshifts from
+ *          file ./input/desired_output_redshifts.txt and converts them into snapsshots
+ *          for the given cosmology.
+ *         
+ *          <B>read_zlist()</B> - reads in 1/(z+1) from FileWithZList defined
+ *          in ./input/input.par and creates a table with output
+ *          redshift ZZ[] and ages Age[].
+ *         
+ *          <B>read_file_nrs()</B> - Done if SPECIFYFILENR OFF - the dark matter files
+ *          to read can be defined in a file, instead of being read sequentially.
+ *          These are defined in FileNrDir, in input.par, and read into
+ *          ListInputFileNr[].
+ *         
+ *          <B>read_reionization()</B> - Reads in Reion_z[] and Reion_Mc[] from
+ *          ./input/Mc.txt. These are used if UPDATEREIONIZATION ON to get Okamoto(2008)
+ *          fitting parameters (Mc), instead of Kravtsov(2004)  for the Gnedin (2000)
+ *          reionization formalism.
+ *         
+ *         
+ *          <B>read_dust_tables()</B> - Reads in the dust extinction for the same bands
+ *          read from the spectrophotometric tables both for the inter-galactic medium
+ *          (**_Set_Ext_table.dat) and young birth clouds (**_Set_YSExt_table.dat).
+ *          Detailed description at recipe_dust.c
+ *         
+ *          <B>read_cooling_functions()</B> - calls the functions that read in the
+ *          cooling functions defined in cool_func.c
+ *         
+ *          In init.c, but called from other files, are the function to interpolate
+ *          properties into different tables. They are all the same but interpolate
+ *          into different properties (have different inputs):
+ *         
+ *         
+ *          <B>find_interpolated_lum()</B> - Used by add_to_luminosities() to
+ *          interpolates into the age and metallicity in the SSP tables.
+ *         
+ *           <B>find_interpolate_reionization()</B> - Called from recipe_infall
+ *          interpolates into the Reion_z[], Reion_Mc[] table, giving a value of Mc
+ *          for a given redshift.
+ *         
+ *          SuperNovae and AGN feedback parameters are converted into internal units:
+ *         
+ *          \f$ AgnEfficiency = \frac{UnitMass_{\rm{g}}}{1.58e^{-26}UnitTime_{\rm{s}}}\f$
+ *         
+ *          \f$ EnergySNcode = \frac{EnergySN}{UnitEnergy_{\rm{cgs}}} h; \f$
+            \f$ EtaSNcode = EtaSN \frac{UnitMass_{\rm{g}}}{M_\odot h}. \f$
+           
+ *          */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,65 +94,6 @@
 #include "allvars.h"
 #include "proto.h"
 #include "mcmc_vars.h"
-
-/** @file init.c
- *  @brief Sets up some unit conversion variables; converts SN and AGN feedback
- *         variables into internal units; and reads in input tables, including
- *         the desired output snapshots, the photometric and dust tables, the
- *         cooling functions and reionization tables.
- *    
- *         <B>set_units()</B> - THIS IS FUNDAMENTAL TO UNDERSTAND THE UNITS IN
- *         THE CODE! sets ups some variables used to convert from physical to
- *         internal units (as UnitDensity_in_cgs). These are obtained from
- *         UNITLENGTH_IN_CM, UNITMASS_IN_G and UNITVELOCITY_IN_CM_PER_S.
- *    
- *         <B>read_output_snaps()</B> - reads in the list of output redshifts from
- *         file ./input/desired_output_redshifts.txt and converts them into snapsshots
- *         for the given cosmology.
- *    
- *         <B>read_zlist()</B> - reads in 1/(z+1) from FileWithZList defined
- *         in ./input/input.par and creates a table with output
- *         redshift ZZ[] and ages Age[].
- *    
- *         <B>read_file_nrs()</B> - Done if SPECIFYFILENR OFF - the dark matter files
- *         to read can be defined in a file, instead of being read sequentially.
- *         These are defined in FileNrDir, in input.par, and read into
- *         ListInputFileNr[].
- *    
- *         <B>read_reionization()</B> - Reads in Reion_z[] and Reion_Mc[] from
- *         ./input/Mc.txt. These are used if UPDATEREIONIZATION ON to get Okamoto(2008)
- *         fitting parameters (Mc), instead of Kravtsov(2004)  for the Gnedin (2000)
- *         reionization formalism.
- *    
- *    
- *         <B>read_dust_tables()</B> - Reads in the dust extinction for the same bands
- *         read from the spectrophotometric tables both for the inter-galactic medium
- *         (**_Set_Ext_table.dat) and young birth clouds (**_Set_YSExt_table.dat).
- *         Detailed description at recipe_dust.c
- *    
- *         <B>read_cooling_functions()</B> - calls the functions that read in the
- *         cooling functions defined in cool_func.c
- *    
- *         In init.c, but called from other files, are the function to interpolate
- *         properties into different tables. They are all the same but interpolate
- *         into different properties (have different inputs):
- *    
- *    
- *         <B>find_interpolated_lum()</B> - Used by add_to_luminosities() to
- *         interpolates into the age and metallicity in the SSP tables.
- *    
- *          <B>find_interpolate_reionization()</B> - Called from recipe_infall
- *         interpolates into the Reion_z[], Reion_Mc[] table, giving a value of Mc
- *         for a given redshift.
- *    
- *         SuperNovae and AGN feedback parameters are converted into internal units:
- *    
- *         \f$ AgnEfficiency = \frac{UnitMass_{\rm{g}}}{1.58e^{-26}UnitTime_{\rm{s}}}\f$
- *    
- *         \f$ EnergySNcode = \frac{EnergySN}{UnitEnergy_{\rm{cgs}}} h; \f$
-           \f$ EtaSNcode = EtaSN \frac{UnitMass_{\rm{g}}}{M_\odot h}. \f$
-      
- *         */
 
 
 /** @brief controlling recipe for init.c, calls functions to read in tables and

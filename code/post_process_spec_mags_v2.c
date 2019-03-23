@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,12 +13,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/* Created on: April 10, 2012
- *         by: Bruno Henriques (bmh20)
+/** @file   post_process_spec_mags_v2.c
+ *  @date   2012-2019
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
  *
- * modified on 2018 Jan 15+ by Stefan Hilbert (hilbert)
- */
-
+ *  @brief  compute mags or spectra from star formation histories,
+ *          also with dust corrections.
+ *
+ *  When STAR_FORMATION_HISTORY option is ON in the Makefile the code
+ *  stores the star formation history in the different components of
+ *  the galaxy in log bins. If POST_PROCESS_MAGS is ON these star
+ *  formation histories are used in this routine to compute magnitudes
+ *  just before output.
+ **/
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,16 +41,6 @@
 
 #include "model_dust_extinction_inline.h"
 
-/** @file post_process_spec_mags.c
- *  @brief post_process_spec_mags.c can be used to compute mags or spectra from
- *        star formation histories. It also applies dust corrections.
- *
- *  When STAR_FORMATION_HISTORY option is ON in the Makefile the code
- *  stores the star formation history in the different components of
- *  the galaxy in log bins. If POST_PROCESS_MAGS is ON these star
- *  formation histories are used in this routine to compute magnitudes
- *  just before output.
- * */
 
 /* standard #ifdef pattern for dealing with GALAXY_OUTPUT magnitudes: */
 #ifdef OUTPUT_REST_MAGS

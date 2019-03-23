@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,17 +13,13 @@
  *  You should have received a_ copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-#ifndef MODEL_DUST_EXTICTION_INLINE_H
-#define MODEL_DUST_EXTICTION_INLINE_H
-
-#include <math.h>
-
-#include "allvars.h"
-#include "proto.h"
-
 /** @file model_dust_extiction_inline.h
- *  @brief used to compute dust extinction as described
- *         in Delucia2007 + redshift_ dependence as Kitzbichler & White 2007.
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief  used to compute dust extinction as described
+ *          in Delucia2007 + redshift_ dependence as Kitzbichler & White 2007.
 
  *  There are 2 extinction sources:
  *  Extinction from a_ diffuse inter-stellar medium (ISM) (Devriendt1999);
@@ -59,6 +55,14 @@
  *  \f$\tau_{\lambda}^{BC}=\tau_{\rm{v}}^{\rm{ISM}}\left(\frac{1}{\mu}-1\right)
  *  \left(\frac{\lambda}{5500 \AA}\right)^{-0.7}\f$,
  */
+
+#ifndef MODEL_DUST_EXTICTION_INLINE_H
+#define MODEL_DUST_EXTICTION_INLINE_H
+
+#include <math.h>
+
+#include "allvars.h"
+#include "proto.h"
 
 
 #ifdef COMPUTE_SPECPHOT_PROPERTIES

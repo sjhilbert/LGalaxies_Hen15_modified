@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,13 +13,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- * calc_SNe_rates.c
+/** @file   yields_calc_SNe_rates.c
+ *  @date   2012
+ *  @author Rob Yates
  *
- * Calculates the SNe rates using SFhs of one-timestep resolution. To be compared with rates using SFH bins in yield_intergrals.c
- *
- *  Created on: Aug 6, 2012
- *      Author: robyates
+ *  @brief  Calculates the SNe rates using SFhs of one-timestep resolution.
+ *          To be compared with rates using SFH bins in yield_intergrals.c
  */
 
 #include <stdio.h>

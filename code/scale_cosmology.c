@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,14 +13,13 @@
  *  You should have received a_ copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
- /** @file scale_cosmology.c_
-  * 
-  *  @brief functions used to scale to a_ different cosmology
-  * 
-  *  @date  2010+
-  *
+ /** @file   scale_cosmology.c
+  *  @date   2010-2019
   *  @author Qi Guo (intitial version)
   *  @author Bruno Henriques
+  *  @author Stefan Hilbert
+  * 
+  *  @brief  functions used to scale to a different cosmology
   */
 
 #include <math.h>
@@ -232,10 +231,10 @@ double c_correction(const float halo_mass_, const int snapshot_number_)
   c_original_ = 5 * pow(0.0001 * halo_mass_, -0.1);
   
   Omega_new_ = Omega * 1./pow3(AA[snapshot_number_]) / 
-             (Omega * 1./pow3(AA[snapshot_number_]) + OmegaLambda);
+              (Omega * 1./pow3(AA[snapshot_number_]) + OmegaLambda);
   
   Omega_original_ = Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapshot_number_]) /
-                  (Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapshot_number_]) + OmegaLambda_OriginalCosm);
+                   (Omega_OriginalCosm * 1./pow3(AA_OriginalCosm[snapshot_number_]) + OmegaLambda_OriginalCosm);
                   
   ratio_ = Omega_original_/ Omega_new_;
   

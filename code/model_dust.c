@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,24 +13,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
-#include "allvars.h"
-#include "proto.h"
-
-#include "model_dust_extinction_inline.h"
-
-
 /** @file model_dust.c
- *  @brief model_dust.c is used to compute dust extinction as described
- *         in Delucia2007 + redshift dependence as Kitzbichler & White 2007.
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief  model_dust.c is used to compute dust extinction as described
+ *          in Delucia2007 + redshift dependence as Kitzbichler & White 2007.
 
  *  There are 2 extinction sources:
  *  Extinction from a diffuse inter-stellar medium (ISM) (Devriendt1999);
@@ -65,7 +54,21 @@
  *
  *  \f$\tau_{\lambda}^{BC}=\tau_{\rm{v}}^{\rm{ISM}}\left(\frac{1}{\mu}-1\right)
  *  \left(\frac{\lambda}{5500 \AA}\right)^{-0.7}\f$,
- */
+**/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+#include "allvars.h"
+#include "proto.h"
+
+#include "model_dust_extinction_inline.h"
 
 
 #ifdef COMPUTE_SPECPHOT_PROPERTIES

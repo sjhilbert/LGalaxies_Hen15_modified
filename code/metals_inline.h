@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,10 +13,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- * metals.c
- *
- * Routines to handle the creation and addition of containers for metals.
+/** @file   metals_inline.h
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+
+ *  @brief routines to handle the creation and addition of containers for metals
  *
  * The routines are needed even if the metallicity is a single float,
  * because the lines for creation and addition of floats in the code
@@ -39,7 +41,7 @@
  *
  * float metals_total(metal m);
  *  Function returns the total of all components of metal.
- */
+ **/
 
 #include <stdio.h>
 

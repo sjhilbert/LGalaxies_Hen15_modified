@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,18 +13,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
-
-#include "allvars.h"
-#include "proto.h"
-
-/** @file model_disrupt.c
- *  @brief model_disrupt.c checks if a type 2 satellite galaxy should
- *         or not be disrupted due to tidal forces
+/** @file   model_disrupt.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief  model_disrupt.c checks if a type 2 satellite galaxy should
+ *          or not be disrupted due to tidal forces
  *
  *  This routine takes into account the tidal effects that satellite
  *  galaxies experience while orbiting a central companion. Since the
@@ -57,9 +52,16 @@
  *  (Eq. 30 Guo2010)
  *
  *  the galaxy is disrupted.
- *
  *  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+
+#include "allvars.h"
+#include "proto.h"
 
 // static inline double get_isothermal_mass(const double Mvir, const double Rvir, const double dr)
 // {

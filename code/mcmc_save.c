@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,9 +13,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2008
- *      Author: Bruno Henriques
+/** @file   mcmc_save.c
+ *  @date   2008-2019
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
+ * 
+ *  @brief  storing galaxies in MCMC mode for analysis
  */
 
 #include <stdio.h>
@@ -156,6 +159,7 @@ void save_galaxy_for_mcmc(const int galaxy_index_)
           //NOW GET PROPERTIES FOR FOF GROUPS - done for the particular fof_number_ that current galaxy resides in
           ++MCMC_FOF[output_number_][fof_number_].NGalsInFoF;
 
+/** @note: reconsider, if assigning fof halo mass is required here, since this should have been done already for all MCMC_FOF before creating galaxies */
           if(HaloGal[galaxy_index_].Type==0)
           {
             MCMC_FOF[output_number_][fof_number_].IndexOfCentralGal = TotMCMCGals[output_number_];

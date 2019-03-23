@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,12 +13,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
- 
-/** @file mcmc_proto.h
- * 
- * @author Bruno Henriques
- * @author Stefan Hilbert
- * @date   2008, 2018
+/** @file   mcmc_proto.h
+ *  @date   2008-2019
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
+ *
+ *  @brief  declares functions used in MCMC mode
  */
  
 /* mcmc.c */
@@ -32,7 +32,7 @@ void read_observations(void);
 void open_files_with_comparison_to_observations(void);
 void close_files_with_comparison_to_observations(void);
 double propose_new_parameters(void);
-void mark_halos_in_MCMC_sample(const int tree_number_);
+void link_halos_and_MCMC_FOF(const int tree_number_);
 void free_MCMC_FOF(void);
 int MCMC_FOF_compare_FoFID(const void *MCMC_FOF_a_, const void *MCMC_FOF_b_);
 #ifdef MR_PLUS_MRII

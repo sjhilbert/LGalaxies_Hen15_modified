@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,6 +13,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
+/** @file   io_tree.c
+ *  @date   2016-2019 
+ *  @author ?
+ *  @author Stefan Hilbert
+ *
+ *  @brief  Reads in the data from the dark matter simulation merger
+ *          trees, creates output files and after calculations frees
+ *          the allocated memory.
+ *
+ * There are three different input files: trees_** - normal tree
+ * files; tree_dbids - file containing halo IDs (used if GALAXYTREE
+ * ON); tree_aux - file containing the particle data (used if
+ * UPDATETYPETWO ON).
+ **/
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

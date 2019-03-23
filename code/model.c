@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,14 +13,18 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/** @file sam.c
+/** @file   sam.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
+ *
  * @brief SAM Construct Galaxies, Join Galaxies of progenitors, Evolve Galaxies
  *
  * SAM is to be called for each of the chosen dark matter tree files and
  * for each tree, on each treefile: reads tree, constructs the galaxies, saves
  * the galaxies, frees memory for galaxies and tree.
- * */
-
+ **/
  
 /* library headers: */
 #include <stdio.h>
@@ -72,7 +76,7 @@ double SAM(const int tree_file_number_)
     int output_number_, fof_number_;
     for(output_number_=0;output_number_<NOUT;output_number_++)
       for(fof_number_=0;fof_number_<NFofsInSample[output_number_];fof_number_++)
-        MCMC_FOF[fof_number_].NGalsInFoF[output_number_]=0;
+        MCMC_FOF[output_number_][fof_number_].NGalsInFoF=0;
   }
 #endif /* defined HALOMODEL */
 #endif /* not defined MR_PLUS_MRII */
@@ -117,10 +121,6 @@ double SAM(const int tree_file_number_)
 #endif /* defined MR_PLUS_MRII */
 
     load_tree(tree_number_);
-
-#ifdef MCMC  
-    mark_halos_in_MCMC_sample(tree_number_);
-#endif /* defined MCMC */   
    
 #ifdef MCMC
 #ifdef PRELOAD_TREES
@@ -137,6 +137,10 @@ double SAM(const int tree_file_number_)
     IndexStored = 0;
 #endif/* defined GALAXYTREE */
 
+#ifdef MCMC
+    link_halos_and_MCMC_FOF(tree_number_);
+#endif /* defined MCMC */
+
     /* we process the snapshots now in temporal order 
      * (as a means to reduce peak memory usage).
      * LastSnapShotNr is the highest output snapshot. */
@@ -144,14 +148,9 @@ double SAM(const int tree_file_number_)
     for(snapshot_number_ = 0; snapshot_number_ <= LastSnapShotNr; snapshot_number_++)
     {
 #ifdef MCMC
-      /* read the appropriate parameter list for current snapshot_number_
+      /* read the appropriate parameter list for current snapshot_number
        * into the parameter variables to be used in construct_galaxies */
       read_mcmc_par(snapshot_number_);
-#ifdef HALOMODEL
-      //because we need halo masses even for FOFs
-      //with no galaxies it needs to be done here
-      assign_FOF_masses(snapshot_number_, tree_number_);
-#endif /* defined HALOMODEL */
 #endif /* defined MCMC */
 
       int halo_number_;

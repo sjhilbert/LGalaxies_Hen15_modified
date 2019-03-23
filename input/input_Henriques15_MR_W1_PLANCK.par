@@ -22,10 +22,12 @@ FileWithFilterNames       ./input/Filter_Names.txt
 
 SimulationDir	        ./MergerTrees/MR/
 
+
 LastDarkMatterSnapShot  63
 Hashbits                8    ;needed for Peano hilbert key output with the GALAXYTREE option
 
 OutputDir               ./output/
+
 
 MaxMemSize              3000 ; 70000 ; 100000 galtree
 
@@ -114,7 +116,7 @@ BHGrowthInDiskInstabilityModel 0   ; accretion of gas into the BH due to disk in
                                       %*0 -- no BH growth in disk instabilities
                                       % 1 -- cold gas moved into the BH in the same fraction as disk stars moved to bulge
 
-HotGasStripingModel            0   ;choice of stripping of satellite galaxies 
+HotGasStrippingModel            0   ;choice of stripping of satellite galaxies 
                                       %*0 -- gradual stripping (cooling in type 1's) (Guo2010) 
 				                           % Ejected gas of satellites distributed between type 1 and type 0, 
                                            % according to the fraction of dark matter retained in subhalos (Guo2010).
@@ -205,6 +207,7 @@ RamPressureStrip_CutOffMass  1.2e+4  ;(section 1.11.1 in Henriques15) In code Un
 
 EnergySN		    1.0e51           ;(section 1.7 in Henriques15)
 EtaSN			    8.0e-3
+
 
 
 

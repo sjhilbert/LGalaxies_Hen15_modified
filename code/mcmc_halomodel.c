@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,11 +12,15 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
-
-/*
- *  Created in: 2013
- *      Author: Marcel van Daalen
- */
+ 
+/** @file   mcmc_halomodel.c
+ *  @date   2013-2019
+ *  @author Marcel van Daalen
+ *  @author Stefan Hilbert
+ *
+ *  @brief  a halo model for clustering 
+ *          in the MCMC parameter estimation
+ **/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,14 +69,14 @@
 #define pc_low -1.0
 #define pc_high 1.5
 
-void halomodel(double* r_arr,double* proj_arr,float masslimit_low, float masslimit_high,int snap) 
+void halomodel(const int snap, const float masslimit_low, const float masslimit_high, const int NR, double* r_arr, double* proj_arr) 
 {
   int i;
-  int NK=60;
-  int extralin=16;
+  const int NK=60;
+  const int extralin=16;
   double k,p1h,p2h,m10,m11;
-  double kbin=6./79.;
-  double kstart=-2;
+  const double kbin=6./79.;
+  const double kstart=-2;
   double r,corrtmp;
   double *rCorrTable,*CorrTable;
   double Rhalo_cc,Rhalo_cs,Rhalo_ss,pcorr_cc,pcorr_cs,pcorr_ss;
@@ -81,11 +85,14 @@ void halomodel(double* r_arr,double* proj_arr,float masslimit_low, float masslim
   double *P2HTable_ss;
   double *kPcorrTable;
   double *PcorrTable;
+  
   gsl_set_error_handler_off();
   setbuf(stdout,NULL);
+  
   cutoff_low=malloc(6*sizeof(double));
   cutoff_high=malloc(6*sizeof(double));
-  init_numgal(masslimit_low,masslimit_high,snap);
+  
+  init_numgal(masslimit_low, masslimit_high, snap);
   ngal_mean=ngal_mean_calc(0);
   PowerTable=malloc((NK+extralin)*sizeof(double));
   kPowerTable=malloc((NK+extralin)*sizeof(double));
@@ -991,7 +998,7 @@ void init_numgal(float masslimit_low, float masslimit_high, int snap)
         rvir=pow(10.,(MCMC_GAL[snap][HashTable[i]].M_Mean200+massoffset)/3.);
         for (jj=1; jj<MCMC_GAL[snap][HashTable[i]].ngal; ++jj)
         {
-          if (MCMC_GAL[HashTable[i+jj]].StellarMass[snap]>masslimit_low && MCMC_GAL[snap][HashTable[i+jj]].StellarMass<=masslimit_high) {
+          if (MCMC_GAL[snap][HashTable[i+jj]].StellarMass>masslimit_low && MCMC_GAL[snap][HashTable[i+jj]].StellarMass<=masslimit_high) {
             found++;
             relx=min(fabs(MCMC_GAL[snap][HashTable[i+jj]].x-MCMC_GAL[snap][HashTable[i]].x),fabs(boxsize-fabs(MCMC_GAL[snap][HashTable[i+jj]].x-MCMC_GAL[snap][HashTable[i]].x)));
             rely=min(fabs(MCMC_GAL[snap][HashTable[i+jj]].y-MCMC_GAL[snap][HashTable[i]].y),fabs(boxsize-fabs(MCMC_GAL[snap][HashTable[i+jj]].y-MCMC_GAL[snap][HashTable[i]].y)));
@@ -1295,20 +1302,22 @@ void my_df(const gsl_vector *v,void *params,gsl_vector *df)
 
 
 /* Compute both f and df together. */
-void my_fdf(const gsl_vector *x,void *params,double *f,gsl_vector *df)
+void my_fdf(const gsl_vector *x,void *params,double *f, gsl_vector *df)
  {
-  *f=my_f(x,params); 
-  my_df(x,params,df);
+  *f = my_f(x,params); 
+  my_df(x, params, df);
 } //my_fdf
 
 
 void paramerror(double *x,double *p,double *perror)
  {
   int i;
-  double a=pow(10.,p[0]);
-  double b=pow(10.,p[1]);
-  double c=pow(10.,p[2]);
-  double polygamma0=gsl_sf_psi(a/c);
+  
+  const double a=pow(10.,p[0]);
+  const double b=pow(10.,p[1]);
+  const double c=pow(10.,p[2]);
+  const double polygamma0=gsl_sf_psi(a/c);
+  
   double dblderiv=0;
   for (i=0; i<numrad; ++i) dblderiv+=pow(a/c*polygamma0-a*log(x[i]/b),2);
   perror[0]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
@@ -1316,8 +1325,7 @@ void paramerror(double *x,double *p,double *perror)
   for (i=0; i<numrad; ++i) dblderiv+=pow(a-c*pow(x[i]/b,c),2);
   perror[1]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
   dblderiv=0;
-  for (i=0; i<numrad; ++i)
-dblderiv+=pow(1-c*log(x[i]/b)*pow(x[i]/b,c)+a/c*polygamma0,2);
+  for (i=0; i<numrad; ++i) dblderiv+=pow(1-c*log(x[i]/b)*pow(x[i]/b,c)+a/c*polygamma0,2);
   perror[2]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
 } //paramerror
 

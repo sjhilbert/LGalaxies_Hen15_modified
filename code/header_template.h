@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016-2018>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
- /** @file header_file_name_base.h
-  *  @brief 
-  *
+ /** @file   header_file_name_base.h
+  *  @date   2018-2019
   *  @author Stefan Hilbert
-  *  @author ...
+  *
+  *  @brief  ...
   **/
 
 #ifndef HEADER_FILE_NAME_BASE_H

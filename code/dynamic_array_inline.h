@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,13 +13,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/** @file dynamic_array_inline.h
- * 
- * @author Stefan Hilbert (hilbert)
+/** @file   dynamic_array_inline.h
+ *  @date   2018-2019
+ *  @author Stefan Hilbert (hilbert)
  *
- * 
- * 
+ *  @brief  dynamically allocated array (inspired by C++ STL vector)
  */
+ 
 #ifndef DYNAMIC_ARRAY_INLINE_H
 #define DYNAMIC_ARRAY_INLINE_H
 

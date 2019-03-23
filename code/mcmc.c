@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,7 +58,6 @@
  * less parameters then the default number, given by MCMCNpar can be sampled.
  * This can be done in propose_new_parameters() by never assigning a new
  * value to a given parameter. */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -966,15 +965,18 @@ void assign_FOF_masses(const int snapshot_number_, const int tree_number_)
 #endif
 
 
-/**@brief marks halos that will be used in MCMC sampling
+/**@brief marks halos that will be used in MCMC sampling 
+ *         and (if halo model is used) copies FOF masses 
+ *         (because then we need halo masses even for FOFs
+ *          with no galaxies)
  *
  * - requires MCMC_FOF[].FoFID[], NFofsInSample[] to be up to date, 
  *   which is currently read from file in read_sample_info().
  * - requires MCMC_FOF[].FoFID[] ordered for binary search.
- * - requires HaloIDs, HaloAux, TreeNHalos to be upto date,
+ * - requires Halo, HaloIDs, HaloAux, TreeNHalos to be up to date,
  *   which are currently allocated/read in load_tree(tree_number_).
  */
-void mark_halos_in_MCMC_sample(const int tree_number_)
+void link_halos_and_MCMC_FOF(const int tree_number_)
 {
   int halo_number_, output_number_, fof_number_ /*, fof_number_lower_bound_, fof_number_upper_bound_*/;
   
@@ -992,7 +994,7 @@ void mark_halos_in_MCMC_sample(const int tree_number_)
       HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output   [output_number_] = false;
 
       //binary search:
-      if((NFofsInSample[output_number_] > 0) && (MCMC_FOF[output_number_][0].FoFID <= fof_id_of_halo_) && (fof_id_of_halo_ <= MCMC_FOF[output_number_][NFofsInSample[output_number_] - 1].FoFID))
+      if((Halo[halo_number_].SnapNum == ListOutputSnaps[output_number_]) && (NFofsInSample[output_number_] > 0) && (MCMC_FOF[output_number_][0].FoFID <= fof_id_of_halo_) && (fof_id_of_halo_ <= MCMC_FOF[output_number_][NFofsInSample[output_number_] - 1].FoFID))
       {
         unsigned int fof_number_lower_bound_ = 0;
         unsigned int fof_number_upper_bound_ = NFofsInSample[output_number_] - 1;
@@ -1008,6 +1010,14 @@ void mark_halos_in_MCMC_sample(const int tree_number_)
           HaloAux[halo_number_].fof_number_in_MCMC_sample_for_output[output_number_] = fof_number_;
           HaloAux[halo_number_].halo_is_in_MCMC_sample_for_output   [output_number_] = true;
           HaloAux[halo_number_].halo_is_in_MCMC_sample_for_any_output                = true;
+          
+#ifdef HALOMODEL
+          MCMC_FOF[output_number_][fof_number_].M_Crit200 = log10(Halo[halo_number_].M_Crit200*1.e10);
+          MCMC_FOF[output_number_][fof_number_].M_Mean200 = log10(Halo[halo_number_].M_Mean200*1.e10);
+#ifdef MCRIT
+          MCMC_FOF[output_number_][fof_number_].M_Mean200 = log10(Halo[halo_number_].M_Crit200*1.e10);
+#endif /* defined MCRIT */
+#endif /* defined HALOMODEL */
         }
       }
     }

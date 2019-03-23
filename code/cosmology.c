@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016+>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,15 +13,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/** @file cosmology.c
- *  @brief   code for cosmological distances etc.
- * 
- *  @author  Stefan Hilbert
- *  @author  Rachel Asquith
- *  @author  auhtor of time_to_present from age.c
- * 
- *  @date    2018
+/** @file   cosmology.c
+ *  @date   2018-2019
+ *  @author Stefan Hilbert
+ *  @author Rachel Asquith
+ *  @author auhtor of time_to_present from age.c
+ *          
+ *  @brief  code for cosmological distances etc.
  */
+
 
 #include <stdio.h>
 #include <stdlib.h>

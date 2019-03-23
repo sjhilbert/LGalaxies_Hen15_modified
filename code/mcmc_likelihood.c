@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,9 +13,13 @@
  *  You should have received a_ copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-/*
- *  Created in: 2008
- *      Author: Bruno Henriques
+/** @file   mcmc_likelihood.c
+ *  @date   2008-2019
+ *  @author Bruno Henriques
+ *  @author Stefan Hilbert
+ *
+ *  @brief  functionality to compute the likelihood of certain sets
+            of observations for the SAM
  */
 
 #include <stdio.h>
@@ -36,15 +40,12 @@
 #include "mcmc_halomodel.h"
 #endif
 
-
+#ifdef MCMC
 //////////////
 //LIKELIHOOD//
 //////////////
-
-
-/** @file mcmc_likelihood.c
- *  @brief This function computes the likelihhod of SAM galaxies in respect
- *         to a_ number of observational constraints (Henriques2009)
+/** @brief computes the likelihood of SAM galaxies for
+ *         a number of observational constraints (see e.g. Henriques2009)
  *
  *  This function computes the likelihood between the SAM and a_ set of observational
  *  data sets. The galaxy properties for the SAM are computed using a_ given set
@@ -80,8 +81,6 @@
  * MCMC_GAL[].Bulge & MCMC_GAL[].BlackHoleMass - masses from SAM
  * bin_black_hole_up_ - numbers of galaxies in the two upper bins on the bulge-blackhole mass relation
  * bin_black_hole_down_ - numbers of galaxies in the two lower bins on the bulge-blackhole mass relation */
-
-#ifdef MCMC
 double get_likelihood()
 {
   //Variables for all the LF/SM function like tests
@@ -895,18 +894,19 @@ void compute_correlation_func(const int output_number_, const int observation_nu
   gsl_spline *Proj_Spline_;
   gsl_interp_accel *Proj_SplineAcc_;
 
-  NR=60;
-  r_=malloc(NR*sizeof(double));
-  proj_=malloc(NR*sizeof(double));
+  const int number_of_r = 60;
+  
+  r_    = malloc(number_of_r * sizeof(double));
+  proj_ = malloc(number_of_r * sizeof(double));
 
-  halomodel(r_,proj_,min_galaxy_mass_,max_galaxy_mass_,output_number_);
+  halomodel(output_number_, min_galaxy_mass_, max_galaxy_mass_, number_of_r, r_, proj_);
 
-  Proj_Spline_    = gsl_spline_alloc(gsl_interp_cspline,NR);
+  Proj_Spline_    = gsl_spline_alloc(gsl_interp_cspline, number_of_r);
   Proj_SplineAcc_ = gsl_interp_accel_alloc();
-  gsl_spline_init(Proj_Spline_,r_,proj_,NR);
+  gsl_spline_init(Proj_Spline_,r_,proj_, number_of_r);
 
   for(bin_number_=0;bin_number_<Nbins[output_number_][observation_number_]-1;bin_number_++)
-    binned_sam_data_[bin_number_]=gsl_spline_eval(Proj_Spline_,MCMC_Obs[observation_number_].Bin_low[output_number_][bin_number_]+(MCMC_Obs[observation_number_].Bin_high[output_number_][bin_number_]-MCMC_Obs[observation_number_].Bin_low[output_number_][bin_number_])/2.,Proj_SplineAcc);
+    binned_sam_data_[bin_number_]=gsl_spline_eval(Proj_Spline_,MCMC_Obs[observation_number_].Bin_low[output_number_][bin_number_]+(MCMC_Obs[observation_number_].Bin_high[output_number_][bin_number_]-MCMC_Obs[observation_number_].Bin_low[output_number_][bin_number_])/2.,Proj_SplineAcc_);
 
 #ifndef PARALLEL
   //full3 - full PLANCK

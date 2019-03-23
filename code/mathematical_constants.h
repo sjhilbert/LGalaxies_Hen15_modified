@@ -17,18 +17,18 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
 
-
- /** @file mathematical_constants.h
-  *         ensures that the macros for GNU mathematical constants 
-  *         are available 
-  * 
-  * @author Gerard Jungman, Brian Gough, Stefan Hilbert
-  * 
-  *         ensures that the macros for GNU mathematical constants 
-  *         are available. This header may be needed, when those 
-  *         constants don't come already with the choice of
-  *         compiler / standard libs (e.g. when asking for stricter
-  *         ANSI/ISO standard adherence).
+ /** @file   mathematical_constants.h
+  *  @date   1996-2019
+  *  @author Gerard Jungman, Brian Gough, Stefan Hilbert
+  *
+  *  @brief  ensures that the macros for GNU mathematical constants 
+  *          are available 
+  *          
+  *          ensures that the macros for GNU mathematical constants 
+  *          are available. This header may be needed, when those 
+  *          constants don't come already with the choice of
+  *          compiler / standard libs (e.g. when asking for stricter
+  *          ANSI/ISO standard adherence).
   **/
 
 #ifndef MATHEMATICAL_CONSTANTS_H /* header guard */

@@ -1,4 +1,4 @@
-/*  Copyright (C) <2016>  <L-Galaxies>
+/*  Copyright (C) <2016-2019>  <L-Galaxies>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,30 +12,21 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/> */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
-#include <time.h>
-
-#include "allvars.h"
-#include "proto.h"
-
-/** @file model_mergers.c
- *  @brief Calculates the merging time_, the central galaxy (for type 1's),
- *         adds galaxies together, calculates SF from bursts and grows
- *         black holes.
+ 
+/** @file   model_mergers.c
+ *  @date   2016-2019
+ *  @author ?
+ *  @author Stefan Hilbert
  *
+ *  @brief  Calculates the merging time, the central galaxy (for type 1's),
+ *          adds galaxies together, calculates SF from bursts and grows
+ *          black holes.
  *
  *       <B>set_merger_center</B> - calculates the central galaxy for type 1's,
  *       since type 1's can also merge. Therefore,
  *       they need a merger central galaxy and will also have a merger clock
  *       (needed for millennium two, since due to the high resolution, haloes
  *       are very difficult to disrupt and orbit around forever).
- *
- *
  *
  *       <B>estimate_merging_time</B> sets up a merger clock. Originally this
  *       was done only for type 2 galaxies. The positions of galaxies in the
@@ -66,8 +57,6 @@
  *       that is afterwards multiplied by 2 (after Delucia2007 to fit the
  *       data). When the merging time_ reaches zero, the satellite is assumed to
  *       merge with the central galaxy.
- *
- *
  *
  *       <B>deal_with_galaxy_merger</B> deals with the process, according to
  *       the mass fraction of the merger. Major if
@@ -101,25 +90,38 @@
  *       bulge size is updated using Eq. 33 in Guo2010:
  *       \f$C\frac{GM^2_{\rm{new,bulge}}}{R_{\rm{new,bulge}}}=
  *          C\frac{GM^2_1}{R_1}+C\frac{GM^2_2}{R_2}+\alpha_{\rm{inter}}
- *          \frac{GM_1M_2}{R_1+R_2}\f$*/
+ *          \frac{GM_1M_2}{R_1+R_2}\f$
+ **/
+ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <math.h>
+#include <time.h>
 
-/** @brief Calculates the central galaxies for type_ 1's. */
+#include "allvars.h"
+#include "proto.h"
 
+
+/** @brief Calculates the central galaxies for type_ 1's.
+ *
+ *         Get id of central galaxy, since type 1's
+ *         can have their merger clock started before they become type 2's
+ *         if M_star>M_vir. Introduced for millennium 2, where they can have
+ *         very small masses, still be followed and never merge. At this
+ *         moment the centre is still not known, reason why this function is
+ *         needed. Also, if the type 1 merges, all the type 2's associated with
+ *         it will need to know the "new" central galaxy they are merging into.
+ *
+ * @note   now assumes that halos with at least one galaxy also have at least one
+ *         type-0 or type-1 galaxy
+ *
+ * @bug    possible bug: the branch returning 0 seems wrong to depend on i_ == 0
+ **/
 int get_merger_center(const int halo_number_)
 {
-  /** @brief Get id of central galaxy, since type 1's
-   *         can have their merger clock started before they become type 2's
-   *         if M_star>M_vir. Introduced for millennium 2, where they can have
-   *         very small masses, still be followed and never merge. At this
-   *         moment the centre is still not known, reason why this function is
-   *         needed. Also, if the type 1 merges, all the type 2's associated with
-   *         it will need to know the "new" central galaxy they are merging into.
-   *
-   * @note now assumes that halos with at least one galaxy also have at least one
-   *       type-0 or type-1 galaxy
-   *
-   * @bug  possible bug: the branch returning 0 seems wrong to depend on i_ == 0
-   */
+
 
   int same_fof_halo_number_, progenitor_halo_number_, first_occupied_progenitor_halo_number_;
   double most_massive_halo_length_;
