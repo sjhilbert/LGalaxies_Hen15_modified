@@ -79,7 +79,7 @@
 int main(int argc_, char **argv_)
 {
 #ifndef MCMC
-  char buffer_[1000];
+  char buffer_[2048];
   time_t start_time_, current_time_;
 #endif /* not defined MCMC */
 
@@ -171,7 +171,7 @@ int main(int argc_, char **argv_)
 
   /* In MCMC mode only one file is loaded into memory
    * and the sampling for all the steps is done on it */
-  sprintf(SimulationDir, "%s/", SimulationDir);
+  // sprintf(SimulationDir, "%s/", SimulationDir);
   // time(&start_time_);
   load_tree_table(MCMCTreeSampleFile);
   Senna(); // run the model in MCMC MODE

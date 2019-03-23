@@ -84,7 +84,7 @@
 void load_tree_table(const int file_number_)
 {
   int i_, n_, totNHalos, SnapShotInFileName;
-  char file_name_[1000];
+  char file_name_[1024];
 
 #ifdef UPDATETYPETWO
   load_all_auxdata(file_number_);
@@ -117,7 +117,7 @@ void load_tree_table(const int file_number_)
 #endif
     if(!(treedbids_file = fopen(file_name_, "r")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
@@ -131,7 +131,7 @@ void load_tree_table(const int file_number_)
 
     if(!(tree_file = fopen(file_name_, "r")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file place `%s'\n", file_name_);
       terminate(error_message_);
     }

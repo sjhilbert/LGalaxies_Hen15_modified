@@ -95,13 +95,13 @@ double get_likelihood()
   //BEST FIT TO MODEL CUT
 #ifndef HALOMODEL
   const double offset_color_cut_[NOUT]={0.00, 1.085, 1.1, 1.0, 1.15}; //not used at z=0
-  const double slope_color_cut_[NOUT]={0.00, 0.5, 0.48, 0.38, 0.18};
+  const double slope_color_cut_ [NOUT]={0.00, 0.5, 0.48, 0.38, 0.18};
 #else
   const double offset_color_cut_[NOUT]={0.00}; //not used at z=0
-  const double slope_color_cut_[NOUT]={0.00};
+  const double slope_color_cut_ [NOUT]={0.00};
 #endif
   FILE *file_;
-  char file_name_[1000];
+  char file_name_[1024];
 
   /* Bin sam_data_ into binned_sam_data_ according to observational constraints.
    * The first argument of the bin functions and of the likelihood
@@ -246,7 +246,7 @@ double get_likelihood()
           sprintf(file_name_, "%s/mcmc_plus_obs%dz%1.2f.txt",OutputDir,observation_number_,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
           if(!(file_ = fopen(file_name_, "w_")))
           {
-            char error_message_[1000];
+            char error_message_[2048];
             sprintf(error_message_, "can't_ open file `%s'\n", file_name_);
             terminate(error_message_);
           }
@@ -429,20 +429,20 @@ void bin_red_fraction(const int output_number_, const int observation_number_, d
   //BEST FIT TO MODEL CUT
 #ifndef HALOMODEL
   const double offset_color_cut_[NOUT]={0.00, 1.085, 1.1, 1.0, 1.15}; //not used at z=0
-  const double slope_color_cut_[NOUT]={0.00, 0.5, 0.48, 0.38, 0.18};
+  const double slope_color_cut_ [NOUT]={0.00, 0.5, 0.48, 0.38, 0.18};
 #else
   const double offset_color_cut_[NOUT]={0.00}; //not used at z=0
-  const double slope_color_cut_[NOUT]={0.00};
+  const double slope_color_cut_ [NOUT]={0.00};
 #endif
 
   FILE *file_;
-  char file_name_[1000];
+  char file_name_[1024];
 
 #ifndef PARALLEL
   sprintf(file_name_, "%s/mcmc_plus_obs%dz%1.2f.txt",OutputDir,observation_number_,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
   if(!(file_ = fopen(file_name_, "w_")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't_ open file `%s'\n", file_name_);
     terminate(error_message_);
   }
@@ -559,13 +559,13 @@ void bin_bulge_fraction(const int output_number_, const int observation_number_,
   double all_  [MCMCMaxObsBins];
 
   FILE *file_;
-  char file_name_[1000];
+  char file_name_[1024];
 
 #ifndef PARALLEL
   sprintf(file_name_, "%s/mcmc_plus_obs%dz%1.2f.txt",OutputDir,observation_number_,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
   if(!(file_ = fopen(file_name_, "w_")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't_ open file `%s'\n", file_name_);
     terminate(error_message_);
   }
@@ -622,13 +622,13 @@ void bin_ColdGasFractionvsStellarMass(const int output_number_, const int observ
   double all_[MCMCMaxObsBins];
 
   FILE *file_;
-  char file_name_[1000];
+  char file_name_[1024];
 
 #ifndef PARALLEL
   sprintf(file_name_, "%s/mcmc_plus_obs%dz%1.2f.txt",OutputDir,observation_number_,(double)((int)((MCMCConstraintsZZ[output_number_]*10)+0.5)/10.));
   if(!(file_ = fopen(file_name_, "w_")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't_ open file `%s'\n", file_name_);
     terminate(error_message_);
   }
@@ -888,7 +888,7 @@ void compute_correlation_func(const int output_number_, const int observation_nu
   double *r_, *proj_;
   int bin_number_;
 #ifndef PARALLEL
-  char file_name_[1000];
+  char file_name_[1024];
   FILE *file_;
 #endif
   gsl_spline *Proj_Spline_;
@@ -913,7 +913,7 @@ void compute_correlation_func(const int output_number_, const int observation_nu
   sprintf(file_name_, "%s/correlation_guo10_bug_fix_Mmean_z0.00_%0.2f_%0.2f.txt",OutputDir, min_galaxy_mass_,max_galaxy_mass_);
   if(!(file_ = fopen(file_name_, "w_")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't_ open file `%s'\n", file_name_);
     terminate(error_message_);
   }

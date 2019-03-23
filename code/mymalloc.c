@@ -237,21 +237,21 @@ void myfree_fullinfo(void *ptr_, const char *func_, const char *file_, const int
 
 void myfree_movable_fullinfo(void *ptr_, const char *func_, const char *file_, const int line_)
 {
-  unsigned int i, nr;
+  unsigned int i_, nr_;
 
   if(Nblocks == 0)
     terminate("no allocated blocks that could be freed");
 
   /* first, let's find the block */
-  bool found = false;
-  for(nr = Nblocks; nr--;)
-    if(ptr_ == Table[nr])
+  bool found_ = false;
+  for(nr_ = Nblocks; nr_--;)
+    if(ptr_ == Table[nr_])
     {
-      found = true;
+      found_ = true;
       break;
     }
     
-  if(!found)
+  if(!found_)
   {
     dump_memory_table();
     char error_message_[1000];
@@ -261,49 +261,49 @@ void myfree_movable_fullinfo(void *ptr_, const char *func_, const char *file_, c
     terminate(error_message_);
   }
 
-  if(nr < Nblocks - 1)                /* the block is not the last allocated block */
+  if(nr_ < Nblocks - 1)                /* the block is not the last allocated block */
   {
     /* check that all subsequent blocks are actually movable */
-    for(i = nr + 1; i < Nblocks; i++)
-      if(MovableFlag[i] == 0)
+    for(i_ = nr_ + 1; i_ < Nblocks; i_++)
+      if(MovableFlag[i_] == 0)
       {
         dump_memory_table();
         char error_message_[1000];
         sprintf(error_message_,"Task=%d: Wrong call of myfree_movable() from %s()/%s/line_ %d - behind block=%d there are subsequent non-movable allocated blocks\n",
-                ThisTask, func_, file_, line_, nr);
+                ThisTask, func_, file_, line_, nr_);
         terminate(error_message_);
       }
   }
 
-  AllocatedBytes -= BlockSize[nr];
-  FreeBytes += BlockSize[nr];
+  AllocatedBytes -= BlockSize[nr_];
+  FreeBytes += BlockSize[nr_];
 
-  size_t offset = -BlockSize[nr];
+  size_t offset = -BlockSize[nr_];
   size_t length = 0;
 
-  for(i = nr + 1; i < Nblocks; i++)
-    length += BlockSize[i];
+  for(i_ = nr_ + 1; i_ < Nblocks; i_++)
+    length += BlockSize[i_];
 
-  if(nr < Nblocks - 1)
-    memmove(Table[nr + 1] + offset, Table[nr + 1], length);
+  if(nr_ < Nblocks - 1)
+    memmove(Table[nr_ + 1] + offset, Table[nr_ + 1], length);
 
-  for(i = nr + 1; i < Nblocks; i++)
+  for(i_ = nr_ + 1; i_ < Nblocks; i_++)
   {
-    Table[i] += offset;
-    *BasePointers[i] = *BasePointers[i] + offset;
+    Table[i_] += offset;
+    *BasePointers[i_] = *BasePointers[i_] + offset;
   }
-
-  for(i = nr + 1; i < Nblocks; i++)
+  
+  for(i_ = nr_; i_ < Nblocks - 1; i_++)
   {
-    Table[i - 1] = Table[i];
-    BasePointers[i - 1] = BasePointers[i];
-    BlockSize[i - 1] = BlockSize[i];
-    MovableFlag[i - 1] = MovableFlag[i];
+    Table       [i_] = Table       [i_ + 1];
+    BasePointers[i_] = BasePointers[i_ + 1];
+    BlockSize   [i_] = BlockSize   [i_ + 1];
+    MovableFlag [i_] = MovableFlag [i_ + 1];
+    LineNumber  [i_] = LineNumber  [i_ + 1];
 
-    strncpy(VarName + (i - 1) * MAXCHARS, VarName + i * MAXCHARS, MAXCHARS - 1);
-    strncpy(FunctionName + (i - 1) * MAXCHARS, FunctionName + i * MAXCHARS, MAXCHARS - 1);
-    strncpy(FileName + (i - 1) * MAXCHARS, FileName + i * MAXCHARS, MAXCHARS - 1);
-    LineNumber[i - 1] = LineNumber[i];
+    strncpy(VarName      + i_ * MAXCHARS, VarName      + i_ * MAXCHARS + MAXCHARS, MAXCHARS - 1);
+    strncpy(FunctionName + i_ * MAXCHARS, FunctionName + i_ * MAXCHARS + MAXCHARS, MAXCHARS - 1);
+    strncpy(FileName     + i_ * MAXCHARS, FileName     + i_ * MAXCHARS + MAXCHARS, MAXCHARS - 1);
   }
 
   Nblocks -= 1;
@@ -357,7 +357,7 @@ void *myrealloc_fullinfo(void *ptr_, size_t n_, const char *func_, const char *f
 
 void *myrealloc_movable_fullinfo(void *ptr_, size_t n_, const char *func_, const char *file_, const int line_)
 {
-  unsigned int i, nr;
+  unsigned int i_, nr_;
 
   if((n_ % 8) > 0)
     n_ = (n_ / 8 + 1) * 8;
@@ -369,15 +369,15 @@ void *myrealloc_movable_fullinfo(void *ptr_, size_t n_, const char *func_, const
     terminate("no allocated blocks that could be reallocated");
 
   /* first, let's find the block */
-  bool found = false;
-  for(nr = Nblocks; nr--; )
-    if(ptr_ == Table[nr])
+  bool found_ = false;
+  for(nr_ = Nblocks; nr_--; )
+    if(ptr_ == Table[nr_])
     {
-      found = true;
+      found_ = true;
       break;
     }
  
-  if(!found)
+  if(!found_)
   {
     dump_memory_table();
     char error_message_[1000];
@@ -386,57 +386,57 @@ void *myrealloc_movable_fullinfo(void *ptr_, size_t n_, const char *func_, const
     terminate(error_message_);
   }
  
-  if(nr < Nblocks - 1)                /* the block is not the last allocated block */
+  if(nr_ < Nblocks - 1)                /* the block is not the last allocated block */
   {
     /* check that all subsequent blocks are actually movable */
-    for(i = nr + 1; i < Nblocks; i++)
-      if(MovableFlag[i] == 0)
+    for(i_ = nr_ + 1; i_ < Nblocks; i_++)
+      if(MovableFlag[i_] == 0)
         {
         dump_memory_table();
         char error_message_[1000];
         sprintf(error_message_, "Task=%d: Wrong call of myrealloc_movable() from %s()/%s/line_ %d - behind block=%d there are subsequent non-movable allocated blocks\n",
-                ThisTask, func_, file_, line_, nr);
+                ThisTask, func_, file_, line_, nr_);
         terminate(error_message_);
       }
   }
 
-  AllocatedBytes -= BlockSize[nr];
-  FreeBytes += BlockSize[nr];
+  AllocatedBytes -= BlockSize[nr_];
+  FreeBytes += BlockSize[nr_];
 
   if(n_ > FreeBytes)
   {
     dump_memory_table();
     char error_message_[1000];
     sprintf(error_message_, "Task=%d: at %s()/%s/line_ %d: Not enough memory in myremalloc_movable(n_=%g MB). previous=%g FreeBytes=%g MB\n",
-            ThisTask, func_, file_, line_, n_ / (1024.0 * 1024.0), BlockSize[nr] / (1024.0 * 1024.0),
+            ThisTask, func_, file_, line_, n_ / (1024.0 * 1024.0), BlockSize[nr_] / (1024.0 * 1024.0),
             FreeBytes / (1024.0 * 1024.0));
     terminate(error_message_);
   }
 
-  size_t offset = n_ - BlockSize[nr];
+  size_t offset = n_ - BlockSize[nr_];
   size_t length = 0;
 
-  for(i = nr + 1; i < Nblocks; i++)
-    length += BlockSize[i];
+  for(i_ = nr_ + 1; i_ < Nblocks; i_++)
+    length += BlockSize[i_];
 
-  if(nr < Nblocks - 1)
-    memmove(Table[nr + 1] + offset, Table[nr + 1], length);
+  if(nr_ < Nblocks - 1)
+    memmove(Table[nr_ + 1] + offset, Table[nr_ + 1], length);
 
-  for(i = nr + 1; i < Nblocks; i++)
+  for(i_ = nr_ + 1; i_ < Nblocks; i_++)
   {
-    Table[i] += offset;
+    Table[i_] += offset;
 
-    *BasePointers[i] = *BasePointers[i] + offset;
+    *BasePointers[i_] = *BasePointers[i_] + offset;
   }
 
   FreeBytes -= n_;
   AllocatedBytes += n_;
-  BlockSize[nr] = n_;
+  BlockSize[nr_] = n_;
 
   if(AllocatedBytes > HighMarkBytes)
     HighMarkBytes = AllocatedBytes;
 
-  return Table[nr];
+  return Table[nr_];
 }
 
 

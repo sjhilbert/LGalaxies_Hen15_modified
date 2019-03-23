@@ -177,20 +177,20 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
   NewpowSpline=gsl_spline_alloc(gsl_interp_cspline,(NK+extralin));
   gsl_spline_init(NewpowSpline,kPowerTable,PowerTable,(NK+extralin));
 #if defined(OUTPUTCORR) || defined(OUTPUTPOW)
-  FILE *fd;
-  char buf[500];
+  FILE *file_;
+  char file_name_[500];
   float mingalmass,maxgalmass;
   mingalmass=8.77+(ThisTask%6)*0.5;
   maxgalmass=8.77+(ThisTask%6+1)*0.5;
 #endif
 #ifdef OUTPUTPOW
-  sprintf(buf,"pow_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
-  fd=fopen(buf,"w");
+  sprintf(file_name_,"pow_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
+  file_=fopen(file_name_,"w");
   for (i=0; i<1000; ++i)
   {
-    fprintf(fd,"%g %g\n",pow(10.,0.001*i*5-2),pow(10.,gsl_spline_eval(NewpowSpline,0.001*i*5-2,NewpowAcc))-gsl_spline_eval(TwopcorrSpline,0.001*i*5-2,TwopcorrAcc));
+    fprintf(file_,"%g %g\n",pow(10.,0.001*i*5-2),pow(10.,gsl_spline_eval(NewpowSpline,0.001*i*5-2,NewpowAcc))-gsl_spline_eval(TwopcorrSpline,0.001*i*5-2,TwopcorrAcc));
   } //for
-  fclose(fd);
+  fclose(file_);
 #endif
   CorrTable=malloc(NR*10*sizeof(double));
   rCorrTable=malloc(NR*10*sizeof(double));
@@ -203,13 +203,13 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
   CorrSpline=gsl_spline_alloc(gsl_interp_cspline,NR*10);
   gsl_spline_init(CorrSpline,rCorrTable,CorrTable,NR*10);
 #ifdef OUTPUTCORR
-  sprintf(buf,"corr_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
-  fd=fopen(buf,"w");
+  sprintf(file_name_,"corr_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
+  file_=fopen(file_name_,"w");
   for (i=0; i<1000; ++i)
   {
-    fprintf(fd,"%g %g\n",pow(10.,0.001*i*5.785-3),gsl_spline_eval(CorrSpline,pow(10.,0.001*i*5.785-3),CorrAcc));
+    fprintf(file_,"%g %g\n",pow(10.,0.001*i*5.785-3),gsl_spline_eval(CorrSpline,pow(10.,0.001*i*5.785-3),CorrAcc));
   } //for
-  fclose(fd);
+  fclose(file_);
 #endif
   for (i=0; i<NR; ++i)
   {
@@ -219,13 +219,13 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
     proj_arr[i]=corrtmp * inv_Hubble_h;
   } //for
 #ifdef OUTPUTPROJ
-  sprintf(buf,"proj_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
-  fd=fopen(buf,"w");
+  sprintf(file_name_,"proj_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
+  file_=fopen(file_name_,"w");
   for (i=0; i<NR; ++i)
   {
-    fprintf(fd,"%g   %g\n",r_arr[i],proj_arr[i]);
+    fprintf(file_,"%g   %g\n",r_arr[i],proj_arr[i]);
   } //for
-  fclose(fd);
+  fclose(file_);
 #endif
   gsl_spline_free(CorrSpline);
   gsl_interp_accel_free(CorrAcc);
@@ -712,32 +712,32 @@ double ngal_mean_calc(int j)
 
 void init_power()
 {
-  FILE *fd;
-  char buf[500];
+  FILE *file_;
+  char file_name_[1024];
   double k,p;
   int NPowerTable=0;
-  sprintf(buf,"%s/powrealized_rebin_corrected.dat",MCMCHaloModelDir);
-  if (!(fd=fopen(buf,"r"))) 
+  sprintf(file_name_,"%s/powrealized_rebin_corrected.dat",MCMCHaloModelDir);
+  if (!(file_=fopen(file_name_,"r"))) 
   {
-    char sbuf[1000];
-    sprintf(sbuf,"Can't read input spectrum in file '%s'.\n",buf);
-    terminate(sbuf);
+    char error_message_[2048];
+    sprintf(error_message_,"Can't read input spectrum in file '%s'.\n",file_name_);
+    terminate(error_message_);
   } //if
   do 
   {
-    if (fscanf(fd," %lg %lg ",&k,&p)==2)
+    if (fscanf(file_," %lg %lg ",&k,&p)==2)
       NPowerTable++;
     else break;
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   PowerTable=malloc(NPowerTable*sizeof(double));
   kPowerTable=malloc(NPowerTable*sizeof(double));
-  fd=fopen(buf,"r");
+  file_=fopen(file_name_,"r");
   NPowerTable=0;
   do
   { //k and Delta
-    if (fscanf(fd," %lg %lg ",&k,&p)==2) 
+    if (fscanf(file_," %lg %lg ",&k,&p)==2) 
     {
       kPowerTable[NPowerTable]=k-log10(ScalePos);
       PowerTable[NPowerTable]=p;
@@ -746,35 +746,35 @@ void init_power()
     else break;
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   PowAcc=gsl_interp_accel_alloc();
   PowSpline=gsl_spline_alloc(gsl_interp_cspline,NPowerTable);
   gsl_spline_init(PowSpline,kPowerTable,PowerTable,NPowerTable);
   free(kPowerTable);
   free(PowerTable);
   NPowerTable=0;
-  sprintf(buf,"%s/ellip_corr.dat",MCMCHaloModelDir);
-  if (!(fd=fopen(buf,"r"))) 
+  sprintf(file_name_,"%s/ellip_corr.dat",MCMCHaloModelDir);
+  if (!(file_=fopen(file_name_,"r"))) 
   {
-    char sbuf[1000];
-    sprintf(sbuf,"Can't read correction spectrum in file '%s'.\n",buf);
-    terminate(sbuf);
+    char error_message_[2048];
+    sprintf(error_message_,"Can't read correction spectrum in file '%s'.\n",file_name_);
+    terminate(error_message_);
   } //if
   do 
   {
-    if (fscanf(fd," %lg %lg ",&k,&p)==2)
+    if (fscanf(file_," %lg %lg ",&k,&p)==2)
       NPowerTable++;
     else break;
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   PowerTable=malloc(NPowerTable*sizeof(double));
   kPowerTable=malloc(NPowerTable*sizeof(double));
-  fd=fopen(buf,"r");
+  file_=fopen(file_name_,"r");
   NPowerTable=0;
   do 
   { //k and Delta
-    if (fscanf(fd," %lg %lg ",&k,&p)==2)
+    if (fscanf(file_," %lg %lg ",&k,&p)==2)
     {
       kPowerTable[NPowerTable]=k-log10(ScalePos);
       PowerTable[NPowerTable]=p;
@@ -783,34 +783,34 @@ void init_power()
     else break;
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   ellipAcc=gsl_interp_accel_alloc();
   ellipSpline=gsl_spline_alloc(gsl_interp_cspline,NPowerTable);
   gsl_spline_init(ellipSpline,kPowerTable,PowerTable,NPowerTable);
   free(kPowerTable);
   free(PowerTable);
   NPowerTable=0;
-  sprintf(buf,"%s/align_corr.dat",MCMCHaloModelDir);
-  if(!(fd=fopen(buf,"r"))) 
+  sprintf(file_name_,"%s/align_corr.dat",MCMCHaloModelDir);
+  if(!(file_=fopen(file_name_,"r"))) 
   {
-    printf("Can't read correction spectrum in file '%s'.\n",buf);
+    printf("Can't read correction spectrum in file '%s'.\n",file_name_);
     exit(0);
   } //if
   do
   {
-    if (fscanf(fd," %lg %lg ",&k,&p)==2) 
+    if (fscanf(file_," %lg %lg ",&k,&p)==2) 
       NPowerTable++;
     else break;
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   PowerTable=malloc(NPowerTable*sizeof(double));
   kPowerTable=malloc(NPowerTable*sizeof(double));
-  fd=fopen(buf,"r");
+  file_=fopen(file_name_,"r");
   NPowerTable=0;
   do 
   { //k and Delta
-    if (fscanf(fd," %lg %lg ",&k,&p)==2) 
+    if (fscanf(file_," %lg %lg ",&k,&p)==2) 
     {
       kPowerTable[NPowerTable]=k-log10(ScalePos);
       PowerTable[NPowerTable]=p;
@@ -819,7 +819,7 @@ void init_power()
     else break;
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   alignAcc=gsl_interp_accel_alloc();
   alignSpline=gsl_spline_alloc(gsl_interp_cspline,NPowerTable);
   gsl_spline_init(alignSpline,kPowerTable,PowerTable,NPowerTable);
@@ -932,9 +932,9 @@ void init_numgal(float masslimit_low, float masslimit_high, int snap)
   nsat=NgalTable[3][0];
   if (NgalTable[0][0]>0) 
   {
-    char sbuf[1000];
-    sprintf(sbuf,"First Ngal mass bin not equal to zero, divergence will ensue.\n");
-    terminate(sbuf);
+    char error_message_[2048];
+    sprintf(error_message_,"First Ngal mass bin not equal to zero, divergence will ensue.\n");
+    terminate(error_message_);
   } //if
   borders[0]=minfofmass;
   borders[NMassTable2]=maxfofmass;
@@ -1179,8 +1179,8 @@ void initialize_halomodel(void)
   int i,NnuTable=100;
   double res;
   double MnuTable[100],nuTable[100];
-  FILE *fd;
-  char buf[500];
+  FILE *file_;
+  char file_name_[1024];
   double m,h;
   double FofmassTable[massbins],FofnumTable[massbins];
   rho_c=RhoCrit*1e10;
@@ -1205,34 +1205,34 @@ void initialize_halomodel(void)
   gsl_spline_free(nuSpline);
   gsl_interp_accel_free(nuAcc);
   Rstar=Radius(Mstar);
-  //sprintf(buf,"%s/fofnum.dat",MCMCHaloModelDir);
+  //sprintf(file_name_,"%s/fofnum.dat",MCMCHaloModelDir);
 #ifdef MCRIT
-  sprintf(buf,"%s/fofnum_m200_z0.02.dat",MCMCHaloModelDir);
+  sprintf(file_name_,"%s/fofnum_m200_z0.02.dat",MCMCHaloModelDir);
 #else
-  sprintf(buf,"%s/fofnum_m200mean.dat",MCMCHaloModelDir);
+  sprintf(file_name_,"%s/fofnum_m200mean.dat",MCMCHaloModelDir);
 #endif
-  if (!(fd=fopen(buf,"r"))) 
+  if (!(file_=fopen(file_name_,"r"))) 
   {
-    char sbuf[1000];
-    sprintf(sbuf,"Can't read input FoF mass function in file '%s'.\n",buf);
-    terminate(sbuf);
+    char error_message_[2048];
+    sprintf(error_message_,"Can't read input FoF mass function in file '%s'.\n",file_name_);
+    terminate(error_message_);
   } //if
   i=0;
   do
   {
-    if (fscanf(fd," %lg %lg ",&m,&h)==2)
+    if (fscanf(file_," %lg %lg ",&m,&h)==2)
       i++;
     else break;
     FofmassTable[i-1]=m+log10(ScaleMass);
     FofnumTable[i-1]=h/pow(ScalePos,3);
   } //do
   while(1);
-  fclose(fd);
+  fclose(file_);
   if (FofnumTable[0]>0) 
   {
-    char sbuf[1000];
-    sprintf(sbuf,"First FoF mass bin not equal to zero, divergence will ensue.\n");
-    terminate(sbuf);
+    char error_message_[2048];
+    sprintf(error_message_,"First FoF mass bin not equal to zero, divergence will ensue.\n");
+    terminate(error_message_);
   } //if
   cutoff_fof_low=0.;
   cutoff_fof_high=0.;

@@ -100,9 +100,9 @@ ifeq (COMPUTE_SPECPHOT_PROPERTIES,$(findstring COMPUTE_SPECPHOT_PROPERTIES,$(OPT
 SRCS  += model_spectro_photometric.c
 
 ### Options controlling which magnitudes are computed
-# OPT += -DOUTPUT_REST_MAGS                       # output rest-frame magnitudes
+OPT += -DOUTPUT_REST_MAGS                       # output rest-frame magnitudes
 OPT += -DOUTPUT_OBS_MAGS                        # output observer-frame magnitudes
-# OPT += -DOUTPUT_FB_OBS_MAGS                     # adds fields containing forward/backwards k-corrections for observer-frame magnitudes 
+OPT += -DOUTPUT_FB_OBS_MAGS                     # adds fields containing forward/backwards k-corrections for observer-frame magnitudes 
 # OPT += -DICL                                    # output magnitudes for ICL
   
 # OPT += -DN_FINE_AGE_BINS=10                     # use finer age bins when computing luminosities (probably comp. expensive)

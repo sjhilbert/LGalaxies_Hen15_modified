@@ -53,7 +53,7 @@ void read_scaling_parameters(void)
   const int s8_n_bins_=(int)((0.589-s8_min_)/s8_binsize_);  
 
   double dummy_growth_, dummy_snap63_;
-  char file_name_[1000], buf_1_[1000];
+  char file_name_[1000], buffer_[1000];
   FILE *file_;
 
   sprintf(FileWithZList, "/galformod/scratch/bmh20/Workspace/CosmologyTables/zlist_%04d_%04d.txt", om_n_bins_, s8_n_bins_);
@@ -63,36 +63,36 @@ void read_scaling_parameters(void)
 
   sprintf(file_name_, "/galformod/scratch/bmh20/Workspace/CosmologyTables/fit_%04d_%04d.txt", om_n_bins_, s8_n_bins_);
   if(!(file_ = fopen(file_name_, "r")))
-    {
-      char error_message_[1000];
-      sprintf(error_message_, "file `%s' not found.\n", file_name_);
-      terminate(error_message_);
-    }
+  {
+    char error_message_[2048];
+    sprintf(error_message_, "file `%s' not found.\n", file_name_);
+    terminate(error_message_);
+  }
 
-  fgets(buf_1_, 300, file_);
-  fgets(buf_1_, 300, file_);
-  fgets(buf_1_, 300, file_);
+  fgets(buffer_, 300, file_);
+  fgets(buffer_, 300, file_);
+  fgets(buffer_, 300, file_);
 
   if(fscanf(file_, "%lf %lf %lf %lf", &ScaleMass, &dummy_growth_, &ScalePos, &dummy_snap63_)!=4)
-    {
-      char error_message_[1000];
-      sprintf(error_message_, "Wrong format of values in %s.\n", file_name_);
-      terminate(error_message_);
-    }
+  {
+    char error_message_[2048];
+    sprintf(error_message_, "Wrong format of values in %s.\n", file_name_);
+    terminate(error_message_);
+  }
 
   fclose(file_);
 
-  ScaleMass=1./ScaleMass;
-  ScalePos=1./ScalePos;
+  ScaleMass = 1./ScaleMass;
+  ScalePos  = 1./ScalePos;
 
-  PartMass = PartMass_OriginalCosm * ScaleMass;
-  BoxSize  =  BoxSize_OriginalCosm * ScalePos;
+  PartMass  = PartMass_OriginalCosm * ScaleMass;
+  BoxSize   = BoxSize_OriginalCosm  * ScalePos;
 
   printf("Boxsize=%f\n",BoxSize);
 }
 
 
- /** @brief scales all halos to new cosmology */
+/** @brief scales all halos to new cosmology */
 void scale_cosmology(const int n_halos_)
 {
   int halo_number_, j_;
@@ -110,8 +110,8 @@ void scale_cosmology(const int n_halos_)
       HaloAux[halo_number_].Vmax_Unscaled = Halo[halo_number_].Vmax;
       for (j_ = 0; j_ < 3 ; j_++)
       {
-        HaloAux[halo_number_].Pos_Unscaled[j_] = Halo[halo_number_].Pos[j_];
-        HaloAux[halo_number_].Vel_Unscaled[j_] = Halo[halo_number_].Vel[j_];
+        HaloAux[halo_number_].Pos_Unscaled [j_] = Halo[halo_number_].Pos [j_];
+        HaloAux[halo_number_].Vel_Unscaled [j_] = Halo[halo_number_].Vel [j_];
         HaloAux[halo_number_].Spin_Unscaled[j_] = Halo[halo_number_].Spin[j_];
       }
     }
@@ -167,8 +167,8 @@ void un_scale_cosmology(const int n_halos_)
 
       for (j_ = 0; j_ < 3 ; j_++)
       {
-        Halo[halo_number_].Pos[j_] = HaloAux[halo_number_].Pos_Unscaled[j_];
-        Halo[halo_number_].Vel[j_] = HaloAux[halo_number_].Vel_Unscaled[j_];
+        Halo[halo_number_].Pos [j_] = HaloAux[halo_number_].Pos_Unscaled [j_];
+        Halo[halo_number_].Vel [j_] = HaloAux[halo_number_].Vel_Unscaled [j_];
         Halo[halo_number_].Spin[j_] = HaloAux[halo_number_].Spin_Unscaled[j_];
       }
     }
@@ -285,8 +285,8 @@ double dgrowth_factor_dt(const double a_, const double omega_m_, const double om
   
   const double pow_o_m_4_7_ = pow(o_m_, 4./7.);
   const double den_         = 1. / (pow_o_m_4_7_ - o_l_ + (1.0 + 0.5 * o_m_) * (1.0 + (1./70.) * o_l_));
-  const double g_            =  2.5 * o_m_ * den_ ;
-  const double dg_a_         = -7.5 * o_m_ * den_ * o_l_ * ( 1. - den_ * ((4./7.) * pow_o_m_4_7_ + o_m_ +  ((0.5 + (1./70.)) + (0.5/70.) * (o_l_ + o_m_)) * o_m_ / pow2(1.0 + (1./70.) * o_l_)));
+  const double g_           =  2.5 * o_m_ * den_ ;
+  const double dg_a_        = -7.5 * o_m_ * den_ * o_l_ * ( 1. - den_ * ((4./7.) * pow_o_m_4_7_ + o_m_ +  ((0.5 + (1./70.)) + (0.5/70.) * (o_l_ + o_m_)) * o_m_ / pow2(1.0 + (1./70.) * o_l_)));
   
   //  const double dD_dt_ = hubble_a * a_ * (dg * a_ +  g_ ) / g0;
   const double dD_dt_ = sqrt(omega_m_ / pow3(a_) + omega_l_) * a_ * inv_g0_ * (dg_a_ + g_);

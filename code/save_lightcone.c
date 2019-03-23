@@ -254,11 +254,11 @@ create_lightcone_galaxy_files(int file_number_)
 {
   // create output files 
 #ifdef GALAXYTREE
-  char file_name_[1000];
+  char file_name_[1024];
   sprintf(file_name_, "%s/lightcone_%s_galtree_%d", OutputDir, FileNameGalaxies, file_number_);
   if(!(FdLightconeGalTree = fopen(file_name_, "wb+")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
@@ -272,14 +272,14 @@ create_lightcone_galaxy_files(int file_number_)
 #endif /* defined OUTPUT_BUFFERING */
 
 #else /* not defined GALAXYTREE */
-  char file_name_[1000];
+  char file_name_[1536];
   int output_number_;
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
     sprintf(file_name_, "%s/lightcone_%s_z%1.2f_%d", OutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[output_number_]], file_number_);
     if(!(FdLightconeGalDumps[output_number_] = fopen(file_name_, "wb+")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }

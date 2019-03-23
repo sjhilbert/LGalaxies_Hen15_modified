@@ -191,7 +191,7 @@ void get_coordinates(float *pos_, float *vel_, const long long ID_, const int tr
 
 void load_all_auxdata(const int file_number_)
 {
-  char file_name_[1000];
+  char file_name_[1024];
   FILE *file_;
   struct stat file_status_;
   int SnapShotInFileName_;
@@ -222,14 +222,14 @@ void load_all_auxdata(const int file_number_)
 
   if(stat(file_name_, &file_status_) != 0)                  /* seems not to exist */
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "Can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
 
   if(!(file_ = fopen(file_name_, "r")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "Can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }

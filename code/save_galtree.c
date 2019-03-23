@@ -74,12 +74,12 @@ void save_galaxy_tree_show_output_buffer_statistics(void)
 /** @brief create galaxy output files for galaxy trees */
 void create_galaxy_tree_file(const int file_number_)
 {
-  char file_name_[1000];
+  char file_name_[1536];
 
   sprintf(file_name_, "%s/%s_galtree_%d", OutputDir, FileNameGalaxies, file_number_);
   if(!(FdGalTree = fopen(file_name_, "wb+")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't open file `%s'\n", file_name_);
     terminate(error_message_);
   }

@@ -25,9 +25,9 @@ SYSTYPE = "PASCAL"
 CC       = gcc                  # sets the C-compiler
 CC_MD    = gcc                  # for the metadata
 ifeq (DEBUG,$(findstring DEBUG,$(OPT)))
-OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wswitch-default -Wdisabled-optimization -Wstrict-aliasing -Wredundant-decls -Wlogical-op -Wformat -Wfatal-errors
+OPTIMIZE =   -g -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wswitch-default -Wdisabled-optimization -Wstrict-aliasing -Wredundant-decls -Wlogical-op -Wformat -Wfatal-errors
 else
-OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wswitch-default -Wdisabled-optimization -Wstrict-aliasing -Wredundant-decls -Wlogical-op -Wformat -Wfatal-errors
+OPTIMIZE =   -g -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wswitch-default -Wdisabled-optimization -Wstrict-aliasing -Wredundant-decls -Wlogical-op -Wformat -Wfatal-errors
 # OPTIMIZE = -O3                  # optimization
 endif
 
@@ -48,12 +48,12 @@ endif
 ifeq ($(SYSTYPE),"PASCAL Intel")
 ifeq (PARALLEL,$(findstring PARALLEL,$(OPT)))
 CC       =  mpicc
-OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wdisabled-optimization -Wstrict-aliasing -Wformat -Wfatal-errors -diag-disable=1338
+OPTIMIZE =   -g -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wdisabled-optimization -Wstrict-aliasing -Wformat -Wfatal-errors -diag-disable=1338
 # GSL_INCL = -I/usr/local/Cellar/open-mpi/1.10.1/include
 # GSL_LIBS = -L/usr/local/opt/libevent/lib -L/usr/local/Cellar/open-mpi/1.10.1/lib
 else
 CC       =   icc
-OPTIMIZE =   -g -pg -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wdisabled-optimization -Wstrict-aliasing -Wformat -Wfatal-errors -diag-disable=1338
+OPTIMIZE =   -g -O3 -march=native -Wall -Wextra -Wunused -Wshadow -Winit-self -Wdisabled-optimization -Wstrict-aliasing -Wformat -Wfatal-errors -diag-disable=1338
 # GSL_INCL = -I/usr/local/include
 # GSL_LIBS = -L/usr/local/lib
 endif

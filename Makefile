@@ -131,10 +131,10 @@ include $(DEPS)
 .PHONY: clean tidy metadata metadata_db
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJDIR)/*.o $(DEPDIR)/*.dep
 
 tidy:
-	rm -f $(OBJS) .$(EXEC)
+	rm -f $(OBJS) $(DEPS) .$(EXEC)
 
 # use next target to generate metadata about the result files
 # uses -E compiler option to preprocess the allvars.h file, stores result in allvars.i

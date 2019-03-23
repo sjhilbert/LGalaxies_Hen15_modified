@@ -87,7 +87,7 @@ void Senna(void)
 {
   int parameter_number_, output_number_, N_MCMC_steps_accepted_ = 0;
   FILE *mcmc_file_;
-  char buf_[1000];
+  char buf_[1024];
   char dir_num_;
   time_t local_initial_time_, local_final_time_;
   double proposed_likelihood_, q_ratio_, a_ratio_;
@@ -125,7 +125,7 @@ void Senna(void)
   if((mcmc_file_ = fopen(buf_, "r+")) == NULL)
     if((mcmc_file_ = fopen(buf_, "w")) == NULL)
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", buf_);
       terminate(error_message_);
     }
@@ -301,13 +301,13 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
 {
   int parameter_number_, output_number_, dumb_weight_;
   double aux_p_;
-  char buf_[1000];
+  char buf_[1024];
   FILE *file_;
 
   sprintf(buf_, "%s", MCMCParPriorsAndSwitchesFile);
   if(!(file_ = fopen(buf_, "r")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't open file `%s'\n", buf_);
     terminate(error_message_);
   }
@@ -349,7 +349,7 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
     sprintf(buf_, "%s", MCMCStartingParFile);
     if((file_ = fopen(buf_, "r")) == NULL)
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", buf_);
       terminate(error_message_);
     }
@@ -376,7 +376,7 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
          MCMC_PAR[parameter_number_].Value[0]>MCMC_PAR[parameter_number_].PriorMax)
       {
         printf("value=%0.6f priormin=%0.4f priormax=%0.4f\n",MCMC_PAR[parameter_number_].Value[0],MCMC_PAR[parameter_number_].PriorMin,MCMC_PAR[parameter_number_].PriorMax);
-        char error_message_[1000];
+        char error_message_[2048];
         sprintf(error_message_, "parameter '%s' outside prior range \n", MCMC_PAR[parameter_number_].Name);
         terminate(error_message_);
       }
@@ -439,7 +439,7 @@ void initialize_mcmc_par_and_lhood (FILE *mcmc_file_)
     sprintf(buf_, "./input/mcmc_allz_par.txt");
     if(!(file_ = fopen(buf_, "r")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", buf_);
       terminate(error_message_);
     }
@@ -596,8 +596,8 @@ void read_sample_info (void)
   int DumbTreeNrColector_, DumbFileNrColector_;
   int fof_number_, output_number_;
   FILE *file_;
-  char file_name_[1000];
-  char error_message_[1000];
+  char file_name_[1536];
+  char error_message_[2048];
 
 #ifdef MR_PLUS_MRII
   if(Switch_MR_MRII==1)
@@ -665,7 +665,7 @@ void read_observations (void)
   //FILE *f[MCMCNConstraints];
   FILE *file_;
   float BinValueColector_;
-  char buf_[1000], error_message_[1000], aux_test_name_[1000], aux_test_type_[1000];
+  char buf_[1024], error_message_[2048], aux_test_name_[1000], aux_test_type_[1000];
   bool match_found_;
 
   //allocate structure to contain observational data
@@ -816,7 +816,7 @@ void read_observations (void)
 void open_files_with_comparison_to_observations()
 {
   int constraint_number_, snapshot_number_;
-  char file_name_[1000], error_message_[1000];
+  char file_name_[1024], error_message_[2048];
 
   sprintf(file_name_, "%sMCMC_LIKELIHOOD_%d.txt", OutputDir, ThisTask+FirstChainNumber);
   if((FILE_MCMC_LIKELIHOOD = fopen(file_name_, "w")) == NULL)

@@ -128,7 +128,7 @@ static double cooling_function_table_[COOLING_FUNC_N_METALS_][COOLING_FUNC_N_TEM
 void read_cooling_functions(void)
 {
   FILE *cooling_function_file_;
-  char full_cooling_function_file_name_[200];
+  char full_cooling_function_file_name_[1024];
   int i_metal_, i_temp_;
   float sd_logT_, sd_ne_, sd_nh_, sd_nt_, sd_logLnet_, sd_logLnorm_, sd_logU_, sd_logTau_, sd_logP12_, sd_logRho24_, sd_ci_, sd_mubar_;
 
@@ -138,9 +138,9 @@ void read_cooling_functions(void)
 
     if(!(cooling_function_file_ = fopen(full_cooling_function_file_name_, "r")))
     {
-      char sbuf[1000];
-      sprintf(sbuf, "file `%s' not found.\n", full_cooling_function_file_name_);
-      terminate(sbuf);
+      char error_message_[2048];
+      sprintf(error_message_, "file `%s' not found.\n", full_cooling_function_file_name_);
+      terminate(error_message_);
     }
     for(i_temp_ = 0; i_temp_ < COOLING_FUNC_N_TEMPRS_; i_temp_++)
     {

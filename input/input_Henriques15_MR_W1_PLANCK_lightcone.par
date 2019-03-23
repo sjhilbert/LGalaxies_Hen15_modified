@@ -13,7 +13,7 @@ CoolFunctionsDir          ./CoolFunctions/
 SpecPhotDir               ./SpecPhotTables/
 PhotPrefix                PLANCK_M05 ; WMAP7_BC03 ;WMAP7_CB07
 SpecPhotIMF               Chabrier ; Salpeter ; Kroupa 
-FileWithFilterNames       ./input/My_Filter_Names.txt
+FileWithFilterNames       ./input/Filter_Names.txt
 
 
 %-------------------------------------------------

@@ -63,7 +63,7 @@ void setup_LumTables_precomputed(const char sim_name_[])
   
   FILE *metallicity_list_file_, *filter_file_;
   int met_index_, age_index_, filter_number_, snapshot_number_;
-  char file_name_[1000], filter_name_[100], dummy_[100], SSP_name_[1000];
+  char file_name_[1000], filter_name_[100], dummy_[100], SSP_name_[100];
   char dumb_filter_file_[100];
   float dumb_filter_lambda_;
   int dumb_ssp_n_snapshots_, dumb_ssp_n_ages_, dumb_ssp_n_metallicites_, dumb_n_mags_;
@@ -82,9 +82,9 @@ void setup_LumTables_precomputed(const char sim_name_[])
   sprintf(file_name_, "%s/PhotTables/%s_%s_Metallicity_list.dat", SpecPhotDir, SSP_name_, SpecPhotIMF);
   if(!(metallicity_list_file_ = fopen(file_name_, "r")))
   {
-    char sbuf[1000];
-    sprintf(sbuf, "file `%s' not found.\n", file_name_);
-    terminate(sbuf);
+    char error_message_[2048];
+    sprintf(error_message_, "file `%s' not found.\n", file_name_);
+    terminate(error_message_);
   }
 
   fscanf(metallicity_list_file_, "%d", &dumb_ssp_n_metallicites_);
@@ -107,17 +107,17 @@ void setup_LumTables_precomputed(const char sim_name_[])
     if((metallicity_list_file_ = fopen(file_name_, "r")) == NULL)
     {
       printf("\n**Can't open file \"%s\" **\n", file_name_);
-      char sbuf[1000];
-      sprintf(sbuf, "Can't open file %s\n", file_name_);
-      terminate(sbuf);
+      char error_message_[2048];
+      sprintf(error_message_, "Can't open file %s\n", file_name_);
+      terminate(error_message_);
     }
 
     fscanf(metallicity_list_file_, "%d", &dumb_n_mags_);
     if(dumb_n_mags_ != NMAG)
     {
-      char sbuf[1000];
-      sprintf(sbuf,"nmag = %d on file %s not equal to NMAG = %d",dumb_n_mags_, file_name_, NMAG);
-      terminate(sbuf);
+      char error_message_[2048];
+      sprintf(error_message_,"nmag = %d on file %s not equal to NMAG = %d",dumb_n_mags_, file_name_, NMAG);
+      terminate(error_message_);
     }
 
     //There is a different file for each filter_number_
@@ -129,9 +129,9 @@ void setup_LumTables_precomputed(const char sim_name_[])
               pow(10,SSP_logMetalTab[met_index_]));
       if(!(filter_file_ = fopen(file_name_, "r")))
       {
-        char sbuf[1000];
-        sprintf(sbuf, "file `%s' not found.\n", file_name_);
-        terminate(sbuf);
+        char error_message_[2048];
+        sprintf(error_message_, "file `%s' not found.\n", file_name_);
+        terminate(error_message_);
       }
 
       if(ThisTask == 0)

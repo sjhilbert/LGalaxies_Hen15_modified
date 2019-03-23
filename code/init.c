@@ -205,8 +205,8 @@ void read_zlist(void)
 {
 	int i_;
   FILE *file_;
-  char file_name_[1000];
-  char error_message_[1000];
+  char file_name_[1024];
+  char error_message_[2048];
   //double dumb2_, dumb_;
 
   sprintf(file_name_, "%s", FileWithZList);
@@ -258,12 +258,12 @@ void read_zlist_new(void)
   int i_, dummy_snap_;
   double dummy_a_;
   FILE *file_;
-  char file_name_[1000];
+  char file_name_[1024];
 
   sprintf(file_name_, "%s", FileWithZList);
   if(!(file_ = fopen(file_name_, "r")))
   {
-  	char error_message_[1000];
+  	char error_message_[2048];
   	sprintf(error_message_, "can't open file `%s'\n", file_name_);
   	terminate(error_message_);
   }
@@ -308,7 +308,7 @@ void read_zlist_new(void)
 void read_zlist_original_cosm(void)
 {
   FILE *file_;
-  char file_name_[1000];
+  char file_name_[1024];
 
   sprintf(file_name_, "%s", FileWithZList_OriginalCosm);
   if(!(file_ = fopen(file_name_, "r")))
@@ -351,7 +351,7 @@ void read_output_snaps(void)
 {
 #ifndef GALAXYTREE
   int output_number_, snapshot_number_;
-  char file_name_[1000];
+  char file_name_[1024];
   FILE *file_;
 
   LastSnapShotNr=0;
@@ -360,7 +360,7 @@ void read_output_snaps(void)
 
   if(!(file_ = fopen(file_name_, "r")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "file `%s' not found.\n", file_name_);
     terminate(error_message_);
   }
@@ -369,7 +369,7 @@ void read_output_snaps(void)
   {
     if(fscanf(file_, " %f ", &ListOutputRedshifts[output_number_]) != 1)
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "I/O error in file '%s'\n", file_name_);
       terminate(error_message_);
     }
@@ -437,12 +437,12 @@ void read_output_snaps(void)
 void read_file_nrs(void)
 {
   int i_;
-  char file_name_[1000];
+  char file_name_[1024];
   FILE *file_;
   sprintf(file_name_, "%s", FileNrDir);
   if(!(file_ = fopen(file_name_, "r")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "file `%s' not found.\n", file_name_);
     terminate(error_message_);
   }
@@ -451,7 +451,7 @@ void read_file_nrs(void)
   {
     if(fscanf(file_, " %d ", &ListInputFileNr[i_]) != 1)
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "I/O error in file '%s'\n", file_name_);
       terminate(error_message_);
     }
@@ -470,7 +470,7 @@ void read_reionization(void)
 
   if(!(file_ = fopen(McFile, "r")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "file `%s' not found.\n", McFile);
     terminate(error_message_);
   }
@@ -504,7 +504,7 @@ int get_nr_files_to_process()
       const int input_file_number_ = file_number_;
 #endif /* not defined SPECIFYFILENR */
 
-      char file_name_[1000];
+      char file_name_[1024];
 #ifdef GALAXYTREE
       sprintf(file_name_, "%s/%s_galtree_%d", FinalOutputDir, FileNameGalaxies, input_file_number_);
 #else /* not defined GALAXYTREE */
@@ -540,7 +540,7 @@ void assign_files_to_tasks(int *FileToProcess_, int *TaskToProcess_, int n_files
       input_file_number_ = file_number_;
 #endif
 #ifndef OVERWRITE_OUTPUT
-      char file_name_[1000];
+      char file_name_[1024];
 #ifdef GALAXYTREE
       sprintf(file_name_, "%s/%s_galtree_%d", FinalOutputDir, FileNameGalaxies, input_file_number_);
 #else
@@ -566,8 +566,8 @@ void assign_files_to_tasks(int *FileToProcess_, int *TaskToProcess_, int n_files
     }
   }
 #ifdef PARALLEL
-  MPI_Bcast(FileToProcess, sizeof(int) * n_files_, MPI_BYTE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(TaskToProcess, sizeof(int) * n_files_, MPI_BYTE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(FileToProcess_, sizeof(int) * n_files_, MPI_BYTE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(TaskToProcess_, sizeof(int) * n_files_, MPI_BYTE, 0, MPI_COMM_WORLD);
 #else /* not defined PARALLEL */
   (void)n_files_; /* avoid unused-parameter warning */
 #endif /* not defined PARALLEL */

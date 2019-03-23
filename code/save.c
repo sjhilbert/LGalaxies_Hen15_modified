@@ -90,7 +90,7 @@ void create_galaxy_files(const int file_number_)
 {
   // create output files - snapshot option
   int output_number_, tree_number_;
-  char file_name_[1000];
+  char file_name_[1536];
 
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
@@ -100,7 +100,7 @@ void create_galaxy_files(const int file_number_)
     sprintf(file_name_, "%s/%s_z%1.2f_%d", OutputDir, FileNameGalaxies, ZZ[ListOutputSnaps[output_number_]], file_number_);
     if(!(FdGalDumps[output_number_] = fopen(file_name_, "wb+")))
     {
-      char error_message_[1000];
+      char error_message_[2048];
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
@@ -679,11 +679,11 @@ void write_sfh_bins()
   }
 
   FILE* SFH_Bins_File_;
-  char file_name_[1000];
+  char file_name_[1024];
   sprintf(file_name_, "%s/SFH_Bins", FinalOutputDir);
   if(!(SFH_Bins_File_ = fopen(file_name_, "w")))
   {
-    char error_message_[1000];
+    char error_message_[2048];
     sprintf(error_message_, "can't open file `%s'\n", file_name_);
     terminate(error_message_);
   }
