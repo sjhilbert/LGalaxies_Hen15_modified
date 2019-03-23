@@ -143,8 +143,8 @@ ifeq (CB07,$(findstring CB07,$(OPT)))
 OPT += -DNMAG=1221
 endif
 else  # not defined FULL_SPECTRA -> **** STANDARD RUN ****
-OPT += -DNMAG=40
-# OPT += -DNMAG=20
+# OPT += -DNMAG=40
+OPT += -DNMAG=20
 # OPT += -DNMAG=7 #MCMC
 endif # not defined FULL_SPECTRA
 

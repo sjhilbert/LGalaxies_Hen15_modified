@@ -49,34 +49,38 @@
 #include "mcmc_mpfit.h"
 
 #define WORKSIZE 100000
-#define PI 3.14159
-#define xmin 0.0
+
+const double xmin    = 0.0        ;
 #ifdef MCRIT
-#define xmax 6
+const double xmax    = 6.         ;
 #else
-#define xmax 5.
+const double xmax    = 5.         ;
 #endif
-#define pow_ns 1.00
-#define kmax 1e4
+
+const double pow_ns  = 1.00       ;
+const double kmax    = 1e4        ;
+
 #ifdef PROJLIMITS
-#define pimin 0.0
-#define pimax 40.0
+const double pimin   =  0.0       ;
+const double pimax   = 40.0       ;
 #endif
-#define pa_low -2.0
-#define pa_high 0.47712125 //log10(3)
-#define pb_low -1.0
-#define pb_high 1.0
-#define pc_low -1.0
-#define pc_high 1.5
+
+const double pa_low  = -2.0       ;
+const double pa_high =  0.47712125;//log10(3)
+const double pb_low  = -1.0       ;
+const double pb_high =  1.0       ;
+const double pc_low  = -1.0       ;
+const double pc_high =  1.5       ;
 
 void halomodel(const int snap, const float masslimit_low, const float masslimit_high, const int NR, double* r_arr, double* proj_arr) 
 {
-  int i;
   const int NK=60;
   const int extralin=16;
-  double k,p1h,p2h,m10,m11;
   const double kbin=6./79.;
   const double kstart=-2;
+  
+  int    i;
+  double k,p1h,p2h,m10,m11;
   double r,corrtmp;
   double *rCorrTable,*CorrTable;
   double Rhalo_cc,Rhalo_cs,Rhalo_ss,pcorr_cc,pcorr_cs,pcorr_ss;
@@ -135,15 +139,15 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
     else k=pow(10.,i*0.5*kbin+kstart);
     if (i>0 && kPowerTable[i-1]>2) k=pow(10.,kPowerTable[i-1]+2.044/6.);
     kPcorrTable[i]=log10(k);
-    if (k<4*PI/Rhalo_cc) 
+    if (k<4*M_PI/Rhalo_cc) 
     {
-      pcorr_cc=min(4*PI/3.*pow(Rhalo_cc,3)*(pconv_W(k,Rhalo_cc,0)+TopHatWindow(k*Rhalo_cc)),TwoPowerSpec(k,0));
+      pcorr_cc=min(4*M_PI/3.*pow(Rhalo_cc,3)*(pconv_W(k,Rhalo_cc,0)+TopHatWindow(k*Rhalo_cc)),TwoPowerSpec(k,0));
       if (Rhalo_cs>0)
-        pcorr_cs=min((mugal_qawo(k,4*PI/3.*Delta*rho_mean*pow(Rhalo_cs,3))-TopHatWindow(k*Rhalo_cs/Delta_invth))*4*PI/3.*pow(Rhalo_cs,3)*(pconv_W(k,Rhalo_cs,1)+TopHatWindow(k*Rhalo_cs)),TwoPowerSpec(k,1));
+        pcorr_cs=min((mugal_qawo(k,4*M_PI/3.*Delta*rho_mean*pow(Rhalo_cs,3))-TopHatWindow(k*Rhalo_cs/Delta_invth))*4*M_PI/3.*pow(Rhalo_cs,3)*(pconv_W(k,Rhalo_cs,1)+TopHatWindow(k*Rhalo_cs)),TwoPowerSpec(k,1));
       else
         pcorr_cs=0;
       if (Rhalo_ss>0)
-        pcorr_ss=min((pow(mugal_qawo(k,4*PI/3.*Delta*rho_mean*pow(Rhalo_ss,3)),2)-pow(TopHatWindow(k*Rhalo_ss/Delta_invth),2))*4*PI/3.*pow(Rhalo_ss,3)*(pconv_W(k,Rhalo_ss,2)+TopHatWindow(k*Rhalo_ss)),TwoPowerSpec(k,2));
+        pcorr_ss=min((pow(mugal_qawo(k,4*M_PI/3.*Delta*rho_mean*pow(Rhalo_ss,3)),2)-pow(TopHatWindow(k*Rhalo_ss/Delta_invth),2))*4*M_PI/3.*pow(Rhalo_ss,3)*(pconv_W(k,Rhalo_ss,2)+TopHatWindow(k*Rhalo_ss)),TwoPowerSpec(k,2));
       else 
         pcorr_ss=0;
     } //if
@@ -178,10 +182,9 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
   gsl_spline_init(NewpowSpline,kPowerTable,PowerTable,(NK+extralin));
 #if defined(OUTPUTCORR) || defined(OUTPUTPOW)
   FILE *file_;
-  char file_name_[500];
-  float mingalmass,maxgalmass;
-  mingalmass=8.77+(ThisTask%6)*0.5;
-  maxgalmass=8.77+(ThisTask%6+1)*0.5;
+  char file_name_[512];
+  const float mingalmass = 8.77 + (ThisTask%6  ) * 0.5;
+  const float maxgalmass = 8.77 + (ThisTask%6+1) * 0.5;
 #endif
 #ifdef OUTPUTPOW
   sprintf(file_name_,"pow_%.2f-%.2f_%d.dat",mingalmass,maxgalmass,snap);
@@ -192,7 +195,7 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
   } //for
   fclose(file_);
 #endif
-  CorrTable=malloc(NR*10*sizeof(double));
+  CorrTable =malloc(NR*10*sizeof(double));
   rCorrTable=malloc(NR*10*sizeof(double));
   for (i=0; i<NR*10; ++i)
   {
@@ -251,7 +254,7 @@ void halomodel(const int snap, const float masslimit_low, const float masslimit_
 } //halomodel
 
 
-double TwoPowerSpec(double k,int censat)
+double TwoPowerSpec(const double k, const int censat)
 {
   if (censat==0)
   {
@@ -271,7 +274,7 @@ double TwoPowerSpec(double k,int censat)
     else 
       return pow(k,pow_ns)/pow(1e-4,pow_ns)*PowerSpec(1e-4)/PowerSpec(0.01)*pow(10.,gsl_spline_eval(Twopow_csSpline,-2.,Twopow_csAcc));
   } //else if
-  else
+  else /* if (censat == 2) */
   {
     if (k>0.01)
       return pow(10.,gsl_spline_eval(Twopow_ssSpline,log10(k),Twopow_ssAcc));
@@ -283,28 +286,31 @@ double TwoPowerSpec(double k,int censat)
 } //TwoPowerSpec
 
 
-double pconv_W_P_func(double theta,void *p)
+double pconv_W_P_func(const double theta_, void *p)
 {
-  struct conv_W_P_params *params=(struct conv_W_P_params *)p;
-  double k=(params->k);
-  double q=(params->q);
-  int censat=(params->censat);
-  return TwoPowerSpec(sqrt(k*k-2*q*k*cos(theta)+q*q),censat)*sin(theta);
+  const struct conv_W_P_params *params=(struct conv_W_P_params *)p;
+  const double k=(params->k);
+  const double q=(params->q);
+  const int censat=(params->censat);
+  return TwoPowerSpec(sqrt(k*k-2*q*k*cos(theta_)+q*q),censat)*sin(theta_);
 } //pconv_W_P_func
 
 
-double pconv_W_func(double lq,void *p)
+double pconv_W_func(const double lq, void *p)
 {
-  struct conv_W_params *params=(struct conv_W_params *)p;
-  double k=(params->k);
-  double R=(params->R);
-  int censat=(params->censat);
-  double q=exp(lq);
+  const struct conv_W_params *params=(struct conv_W_params *)p;
+  const double k=(params->k);
+  const double R=(params->R);
+  const int censat=(params->censat);
+  const double q=exp(lq);
+  const double arg=(k*k+q*q-kmax*kmax)/(2.*k*q);
+  
   double result=0,abserr,thetamax;
-  double arg=(k*k+q*q-kmax*kmax)/(2.*k*q);
+  
   if (arg>-1 && arg<1) thetamax=acos(arg);
-  else if (arg<=-1) thetamax=PI;
+  else if (arg<=-1) thetamax=M_PI;
   else thetamax=0.;
+  
   gsl_function F;
   // int status;
   struct conv_W_P_params params2={ k,q,censat };
@@ -317,7 +323,7 @@ double pconv_W_func(double lq,void *p)
 } //pconv_W_func
 
 
-double pconv_W(double k,double R,int censat)
+double pconv_W(const double k, const double R, const int censat)
 {
   double result=0,abserr;
   gsl_function F;
@@ -327,16 +333,17 @@ double pconv_W(double k,double R,int censat)
   F.params=&params;
   gsl_integration_qag(&F,log(pow(10.,-8.)),log(k+kmax),0,1.0e-3,WORKSIZE,GSL_INTEG_GAUSS41,w,&result,&abserr);
   gsl_integration_workspace_free(w);
-  return result/(4*PI*PI);
+  return result/(4*M_PI*M_PI);
 } //pconv_W
 
 
-double calc_mean_rhalo_simple_func(double lm,void *p)
+double calc_mean_rhalo_simple_func(const double lm, void *p)
 {
-  struct rhalo_params *params=(struct rhalo_params *)p;
-  int censat=(params->censat);
-  int norm=(params->norm);
-  double m=exp(lm);
+  const struct rhalo_params *params=(struct rhalo_params *)p;
+  const int censat=(params->censat);
+  const int norm=(params->norm);
+  const double m=exp(lm);
+  
   double rterm=1.;
   if (norm==0) 
   {
@@ -348,7 +355,7 @@ double calc_mean_rhalo_simple_func(double lm,void *p)
 } //calc_mean_rhalo_simple_func
 
 
-double calc_mean_rhalo_simple(int censat,int norm) 
+double calc_mean_rhalo_simple(const int censat, const int norm) 
 {
   double result=0,abserr;
   gsl_function F;
@@ -362,23 +369,30 @@ double calc_mean_rhalo_simple(int censat,int norm)
 } //calc_mean_rhalo_simple
 
 
-double calc_mean_rsat_func(double lr,void *p) 
+double calc_mean_rsat_func(const double lr, void *p) 
 {
-  struct rsat_params *params=(struct rsat_params *)p;
-  double lm=(params->lm);
-  double pa=pow(10.,pa_eval(lm));
-  double pb=pow(10.,pa_eval(lm));
-  double pc=pow(10.,pa_eval(lm));
-  int extrar=(params->extrar);
-  double r=pow(10.,lr);
-  double nm=pow(r/pb,pa)/r*exp(-pow(r/pb,pc));
+  const struct rsat_params *params=(struct rsat_params *)p;
+  const double lm=(params->lm);
+  const double pa=pow(10.,pa_eval(lm));
+  const double pb=pow(10.,pa_eval(lm));
+  const double pc=pow(10.,pa_eval(lm));
+  const int extrar=(params->extrar);
+  const double r=pow(10.,lr);
+  
+  // double nm= pow(r/pb,pa)/r * exp(-pow(r/pb, pc));
+  // if (extrar)
+  //   nm*=r;
+  // return r*nm;
+  
+  const double nmr = pow(r/pb,pa) * exp(-pow(r/pb, pc));
   if (extrar)
-    nm*=r;
-  return r*nm;
+    return nmr*r;
+  else
+    return nmr;
 } //calc_mean_rsat_func
 
 
-double calc_mean_rsat(double lm,int extrar)
+double calc_mean_rsat(const double lm, const int extrar)
 {
   struct rsat_params params={ lm,extrar };
   double result=0,abserr;
@@ -392,21 +406,21 @@ double calc_mean_rsat(double lm,int extrar)
 } //calc_mean_rsat
 
 
-double NewPowerSpec(double k)
+double NewPowerSpec(const double k)
 {
   //return pow(10.,gsl_spline_eval(NewpowSpline,log10(k),NewpowAcc));
   return pow(10.,gsl_spline_eval(NewpowSpline,log10(k),NewpowAcc))-gsl_spline_eval(TwopcorrSpline,log10(k),TwopcorrAcc);
 } //NewPowerSpec
 
 
-double corr_qawo_func(double k,void *params)
+double corr_qawo_func(const double k,void *params)
 {
   return k*NewPowerSpec(k)*exp(-k*k/1e7); //exponential needed for convergence
   (void)params; /* suppress unused-parameter warning */
 } //corr_qawo_func
 
 
-double corr_qawo(double r,double a,double L)
+double corr_qawo(const double r, const double a, const double L)
 {
   double result=0,abserr;
   gsl_function F;
@@ -418,13 +432,13 @@ double corr_qawo(double r,double a,double L)
   /* status = */ gsl_integration_qawo(&F,a,0,1.0e-3,WORKSIZE,w,t,&result,&abserr);
   gsl_integration_qawo_table_free(t);
   gsl_integration_workspace_free(w);
-  return result/(2.*PI*PI*r);
+  return result/(2.*M_PI*M_PI*r);
 } //corr_qawo
 
 
-double proj_corr_func(double r,void *params) 
+double proj_corr_func(const double r, void *params) 
 {
-  double sigma=*(double *) params;
+  const double sigma= *(double *) params;
   return 2*r*gsl_spline_eval(CorrSpline,r,CorrAcc)/sqrt(pow(r,2)-pow(sigma,2));
 } //proj_corr_func
 
@@ -446,42 +460,40 @@ double proj_corr(double sigma)
 } //proj_corr
 
 
-double Radius(double m)
+double Radius(const double m)
 {
-  return pow(m/rho_mean*3./4./PI,1./3.);
+  return pow(m/rho_mean*3./4./M_PI,1./3.);
 } //Radius
 
 
-double Sigma2(double m) 
+double Sigma2(const double m) 
 {
   return pow(10.,gsl_spline_eval(SigmaSpline,log10(m),SigmaAcc));
 } //Sigma2
 
 
-double PowerSpec(double k) 
+double PowerSpec(const double k) 
 {
-  double lk,lp;
-  lk=log10(k);
-  lp=gsl_spline_eval(PowSpline,lk,PowAcc);
-  return Norm*pow(10.,lp-3*lk)*2.*PI*PI;
+  const double lk=log10(k);
+  const double lp=gsl_spline_eval(PowSpline,lk,PowAcc);
+  return Norm*pow(10.,lp-3*lk)*2.*M_PI*M_PI;
 } //PowerSpec
 
 
-double TopHatWindow(double kr)
+double TopHatWindow(const double kr)
 {
-  double kr2,kr3;
-  kr2=kr*kr;
-  kr3=kr2*kr;
+  const double kr2=kr*kr;
+  const double kr3=kr2*kr;
   if (kr<1e-8) return 1.;
   return 3.*(sin(kr)/kr3-cos(kr)/kr2);
 } //TopHatWindow
 
 
-double sigma2_func(double k,void *params)
+double sigma2_func(const double k,void *params)
 {
-  double r_tophat=*(double *) params;
-  double W=TopHatWindow(r_tophat*k);
-  return 1./(2.*PI*PI)*k*k*W*W*PowerSpec(k);
+  const double r_tophat=*(double *) params;
+  const double W=TopHatWindow(r_tophat*k);
+  return 1./(2.*M_PI*M_PI)*k*k*W*W*PowerSpec(k);
 } //sigma2_func
 
 
@@ -492,27 +504,26 @@ double TopHatSigma2(double R)
   gsl_integration_workspace *w=gsl_integration_workspace_alloc(WORKSIZE);
   F.function=&sigma2_func;
   F.params=&R;
-  gsl_integration_qag(&F,2*PI/500.,500.,0,1.0e-5,WORKSIZE,GSL_INTEG_GAUSS41,w,&result,&abserr);
+  gsl_integration_qag(&F,2*M_PI/500.,500.,0,1.0e-5,WORKSIZE,GSL_INTEG_GAUSS41,w,&result,&abserr);
   gsl_integration_workspace_free(w);
   return result;
 } //TopHatSigma2
 
 
-double Mass(double R)
+double Mass(const double R)
 {
-  return 4.0*PI*R*R*R/3.0*Omega*rho_c;
+  return 4.0*M_PI*R*R*R/3.0*Omega*rho_c;
 } //Mass
 
 
-double nbargal(double m)
+double nbargal(const double m)
 {
-  double lm=log10(m);
-  double value;
+  const double lm=log10(m);
   if (lm<cutoff_fof_low || lm>cutoff_fof_high) 
     return 0.;
   else
   {
-    value=gsl_spline_eval(FofSpline,lm,FofAcc);
+    const double value=gsl_spline_eval(FofSpline,lm,FofAcc);
     if (value>0) 
       return value;
     else 
@@ -521,7 +532,7 @@ double nbargal(double m)
 } //nbargal
 
 
-double b(double m,int i)
+double b(const double m, const int i)
 {
   switch(i) 
   {
@@ -529,19 +540,17 @@ double b(double m,int i)
     // { return 1.0; }
     case 1:
     {
-      double nu2,delta_c2,b1;
-      delta_c2=delta_c*delta_c;
-      nu2=delta_c2/Sigma2(m);
+      const double delta_c2 = delta_c*delta_c;
+      const double nu2=delta_c2/Sigma2(m);
       //Tinker et al. (2010)
-      double AT,aT,BT,bT,CT,cT;
-      double y=log10(Delta);
-      AT=1.0+0.24*y*exp(-pow(4./y,4));
-      aT=0.44*y-0.88;
-      BT=0.183;
-      bT=1.5;
-      CT=0.019+0.107*y+0.19*exp(-pow(4./y,4));
-      cT=2.4;
-      b1=1-AT*pow(nu2,0.5*aT)/(pow(nu2,0.5*aT)+pow(delta_c2,0.5*aT))+BT*pow(nu2,0.5*bT)+CT*pow(nu2,0.5*cT);
+      const double y=log10(Delta);
+      const double AT=1.0+0.24*y*exp(-pow(4./y,4));
+      const double aT=0.44*y-0.88;
+      const double BT=0.183;
+      const double bT=1.5;
+      const double CT=0.019+0.107*y+0.19*exp(-pow(4./y,4));
+      const double cT=2.4;
+      const double b1=1-AT*pow(nu2,0.5*aT)/(pow(nu2,0.5*aT)+pow(delta_c2,0.5*aT))+BT*pow(nu2,0.5*bT)+CT*pow(nu2,0.5*cT);
       return b1;
     }
     default:
@@ -550,26 +559,25 @@ double b(double m,int i)
 } //b
 
 
-double mugal_qawo_func(double r,void *p)
+double mugal_qawo_func(const double r,void *p)
 {
-  struct mugal_qawo_params *params=(struct mugal_qawo_params *)p;
-  double pa=(params->pa);
-  double pb=(params->pb);
-  double pc=(params->pc);
-  double nm=pow(r/pb,pa)/pow(r,3)*exp(-pow(r/pb,pc));
+  const struct mugal_qawo_params *params=(struct mugal_qawo_params *)p;
+  const double pa=(params->pa);
+  const double pb=(params->pb);
+  const double pc=(params->pc);
+  const double nm=pow(r/pb,pa)/pow(r,3)*exp(-pow(r/pb,pc));
   return r*nm;
 } //mugal_qawo_func
 
 
-double mugal_qawo(double k,double m) 
+double mugal_qawo(const double k,double m) 
 {
-  double rvir=Radius(m)*Delta_invth;
-  double rvir3=rvir*rvir*rvir;
-  double pa=pow(10.,pa_eval(log10(m)));
-  double pb=pow(10.,pb_eval(log10(m)));
-  double pc=pow(10.,pc_eval(log10(m)));
-  double
-norm=pc/(rvir3*4*PI*exp(gsl_sf_lngamma(pa/pc)+log(gsl_sf_gamma_inc_P(pa/pc,pow(xmax/pb,pc)))));
+  const double rvir=Radius(m)*Delta_invth;
+  const double rvir3=rvir*rvir*rvir;
+  const double pa=pow(10.,pa_eval(log10(m)));
+  const double pb=pow(10.,pb_eval(log10(m)));
+  const double pc=pow(10.,pc_eval(log10(m)));
+  const double norm=pc/(rvir3*4*M_PI*exp(gsl_sf_lngamma(pa/pc)+log(gsl_sf_gamma_inc_P(pa/pc,pow(xmax/pb,pc)))));
   struct mugal_qawo_params params={ pa,pb,pc };
   double result=0,abserr;
   gsl_function F;
@@ -582,19 +590,18 @@ norm=pc/(rvir3*4*PI*exp(gsl_sf_lngamma(pa/pc)+log(gsl_sf_gamma_inc_P(pa/pc,pow(x
   /*status=*/ gsl_integration_qawo(&F,0.0,0,1.0e-3,WORKSIZE,w,t,&result,&abserr);
   gsl_integration_qawo_table_free(t);
   gsl_integration_workspace_free(w);
-  return norm*4*PI*rvir*rvir*result/k;
+  return norm*4*M_PI*rvir*rvir*result/k;
 } //mugal_qawo
 
 
-double NgalF(double m,int j)
+double NgalF(const double m, const int j)
 { //0: ngal, 1: ngal*(ngal-1), 2: ncen, 3: nsat, 4:ncen*nsat, 5: nsat*(nsat-1)
-  double lm=log10(m);
-  double value;
+  const double lm=log10(m);
   if (lm<cutoff_low[j] || lm>cutoff_high[j]) 
     return 0.;
   else
   {
-    value=gsl_spline_eval(NgalSpline[j],lm,NgalAcc[j]);
+    const double value=gsl_spline_eval(NgalSpline[j],lm,NgalAcc[j]);
     if (value>0) 
       return value;
     else
@@ -603,10 +610,9 @@ double NgalF(double m,int j)
 } //NgalF
 
 
-double pa_eval(double m) 
+double pa_eval(const double m) 
 {
-  double
-value=gsl_spline_eval(paSpline,min(max(m,parscutoff_low),parscutoff_high),paAcc);
+  const double value=gsl_spline_eval(paSpline,min(max(m,parscutoff_low),parscutoff_high),paAcc);
   if (value>=pa_low && value<=pa_high)
     return value;
   else if (value<pa_low) 
@@ -616,9 +622,9 @@ value=gsl_spline_eval(paSpline,min(max(m,parscutoff_low),parscutoff_high),paAcc)
 } //pa_eval
 
 
-double pb_eval(double m)
+double pb_eval(const double m)
 {
-  double value=gsl_spline_eval(pbSpline,min(max(m,parscutoff_low),parscutoff_high),pbAcc);
+  const double value=gsl_spline_eval(pbSpline,min(max(m,parscutoff_low),parscutoff_high),pbAcc);
   if (value>=pb_low && value<=pb_high)
     return value;
   else if (value<pb_low) 
@@ -628,9 +634,9 @@ double pb_eval(double m)
 } //pb_eval
 
 
-double pc_eval(double m)
+double pc_eval(const double m)
 {
-  double value=gsl_spline_eval(pcSpline,min(max(m,parscutoff_low),parscutoff_high),pcAcc);
+  const double value=gsl_spline_eval(pcSpline,min(max(m,parscutoff_low),parscutoff_high),pcAcc);
   if (value>=pc_low && value<=pc_high)
     return value;
   else if (value<pc_low) 
@@ -640,13 +646,13 @@ double pc_eval(double m)
 } //pc_eval
 
 
-double Mcensat_func(double lm,void *p)
+double Mcensat_func(const double lm,void *p)
 {
-  struct M_params *params=(struct M_params *) p;
-  double k=(params->k);
-  int i=(params->i);
-  int j=(params->j);
-  double m=exp(lm);
+  const struct M_params *params=(struct M_params *) p;
+  const double k=(params->k);
+  const int i=(params->i);
+  const int j=(params->j);
+  const double m=exp(lm);
   if (i==0) 
   { //counterterm due to Valageas & Nishimichi (2011)
     if (j==0)
@@ -673,7 +679,7 @@ double Mcensat_func(double lm,void *p)
 } //Mcensat_func
 
 
-double Mcensat(double k,int i,int j)
+double Mcensat(const double k, const int i, const int j)
 { //k=wavenumber, i=which haloterm [0/1], j=central/satellite [0/1/2]
   double result=0,abserr;
   struct M_params params={ k,i,j };
@@ -687,16 +693,16 @@ double Mcensat(double k,int i,int j)
 } //Mcensat
 
 
-double ngal_mean_func(double lm,void *p)
+double ngal_mean_func(const double lm,void *p)
 {
-  struct N_params *params=(struct N_params *) p;
-  int j=(params->j);
-  double m=exp(lm);
+  const struct N_params *params=(struct N_params *) p;
+  const int j=(params->j);
+  const double m=exp(lm);
   return nbargal(m)*NgalF(m,j)*m; //extra m for logarithmic integration
 } //ngal_mean_func
 
 
-double ngal_mean_calc(int j)
+double ngal_mean_calc(const int j)
 {
   double result=0,abserr;
   struct N_params params={ j };
@@ -845,12 +851,15 @@ void init_sigma()
 } //init_sigma
 
 
-void init_numgal(float masslimit_low, float masslimit_high, int snap)
+void init_numgal(const float masslimit_low, const float masslimit_high, const int snap)
 {
+  const int NMassTable2=6;
+  const double massoffset=log10(2*(Gravity/1e10)/(Delta*Omega*1e4));
+  
   int i,j,jj;
   int mbin,mbin2,k,found,ncen,nsat;
   int nsat_tot=0;
-  int NMassTable2=6;
+  
   int *NgalTotal,*NfofTotal,*NgalInRange,*usedbymass;
   int status;
   double *MassTable;
@@ -858,7 +867,6 @@ void init_numgal(float masslimit_low, float masslimit_high, int snap)
   double **NgalTable;
   double *borders,*radii,*p,*perror,*pberr,*paerr,*pcerr;
   double boxsize=BoxSize;
-  double massoffset=log10(2*(Gravity/1e10)/(Delta*Omega*1e4));
   double r,rvir,relx,rely,relz;
   double *MassTable2,*pa_m,*pb_m,*pc_m;
   const gsl_multimin_fdfminimizer_type *T;
@@ -1183,8 +1191,9 @@ void initialize_halomodel(void)
   char file_name_[1024];
   double m,h;
   double FofmassTable[massbins],FofnumTable[massbins];
+  
   rho_c=RhoCrit*1e10;
-  delta_c=(3./5.*pow(0.5*3*PI,2./3.))*(1-0.0123*log10(1+(1./Omega-1)));
+  delta_c=(3./5.*pow(0.5*3*M_PI,2./3.))*(1-0.0123*log10(1+(1./Omega-1)));
   Delta_invth=1./pow(Delta,1./3.);
   rho_mean=Omega*rho_c;
   Norm=1.0;
@@ -1320,13 +1329,13 @@ void paramerror(double *x,double *p,double *perror)
   
   double dblderiv=0;
   for (i=0; i<numrad; ++i) dblderiv+=pow(a/c*polygamma0-a*log(x[i]/b),2);
-  perror[0]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
+  perror[0]=pow(1./(sqrt(2*M_PI)*dblderiv),1./3.);
   dblderiv=0;
   for (i=0; i<numrad; ++i) dblderiv+=pow(a-c*pow(x[i]/b,c),2);
-  perror[1]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
+  perror[1]=pow(1./(sqrt(2*M_PI)*dblderiv),1./3.);
   dblderiv=0;
   for (i=0; i<numrad; ++i) dblderiv+=pow(1-c*log(x[i]/b)*pow(x[i]/b,c)+a/c*polygamma0,2);
-  perror[2]=pow(1./(sqrt(2*PI)*dblderiv),1./3.);
+  perror[2]=pow(1./(sqrt(2*M_PI)*dblderiv),1./3.);
 } //paramerror
 
 
@@ -1334,12 +1343,14 @@ int poissonfit(int m,int n,double *p,double *dy,double **dvec,void *vars)
  {
   (void) m; /* suppress unused-parameter warning */
   (void) dvec; /* suppress unused-parameter warning */
+  
+  const double a=pow(10.,p[0]);
+  const double b=pow(10.,p[1]);
+  const double c=pow(10.,p[2]);
+  const double *x=(double *) vars; //should be r/rvir for every satellite with xmin<r/rvir<xmax
+  const double digam=gsl_sf_psi(a/c)/c;
+  
   int i;
-  double a=pow(10.,p[0]);
-  double b=pow(10.,p[1]);
-  double c=pow(10.,p[2]);
-  double *x=(double *) vars; //should be r/rvir for every satellite with xmin<r/rvir<xmax
-  double digam=gsl_sf_psi(a/c)/c;
   for (i=0; i<n; ++i)
   {  dy[i]=0; }
   for (i=0; i<numrad; ++i)

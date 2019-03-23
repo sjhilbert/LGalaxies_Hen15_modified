@@ -43,8 +43,7 @@ void update_type_two_coordinate_and_velocity(const int tree_number_, const int g
 {
   int j_;
   float tmp_pos_;
-  double Scale_V_, dv_;
-  const int p = galaxy_number_;
+  double dv_;
 //printf("updating type 2 treenr =%d\n",tree_number_);
 #ifdef GUO10
   if(HaloGal[galaxy_number_].Type == 2)  /* Update positions of type 2's */
@@ -53,9 +52,9 @@ void update_type_two_coordinate_and_velocity(const int tree_number_, const int g
 #endif
   {
 #ifdef GUO10
-    int snapshot_number_ = HaloGal[galaxy_number_].SnapNum;
+    const int snapshot_number_ = HaloGal[galaxy_number_].SnapNum;
 #else
-    int snapshot_number_ = Gal[galaxy_number_].SnapNum;
+    const int snapshot_number_ = Gal[galaxy_number_].SnapNum;
 #endif
     Nids = CountIDs_snaptree[snapshot_number_ * Ntrees + tree_number_];
     OffsetIDs = OffsetIDs_snaptree[snapshot_number_ * Ntrees + tree_number_];
@@ -88,55 +87,53 @@ void update_type_two_coordinate_and_velocity(const int tree_number_, const int g
 #ifdef GUO10
     for(j_ = 0; j_ < 3; j_++)
     {
-      tmp_pos_ = wrap(-HaloGal[p].MergCentralPos[j_] + HaloGal[p].Pos[j_],BoxSize);
-      tmp_pos_ *=  sqrt(HaloGal[p].MergTime/HaloGal[p].OriMergTime);
+      tmp_pos_ = wrap(-HaloGal[galaxy_number_].MergCentralPos[j_] + HaloGal[galaxy_number_].Pos[j_],BoxSize);
+      tmp_pos_ *=  sqrt(HaloGal[galaxy_number_].MergTime/HaloGal[galaxy_number_].OriMergTime);
 
-      HaloGal[p].Pos[j_]=HaloGal[p].MergCentralPos[j_] + tmp_pos_;
+      HaloGal[galaxy_number_].Pos[j_]=HaloGal[galaxy_number_].MergCentralPos[j_] + tmp_pos_;
 
-      if(HaloGal[p].Pos[j_] < 0)
-        HaloGal[p].Pos[j_] = BoxSize + HaloGal[p].Pos[j_];
-      if(HaloGal[p].Pos[j_] > BoxSize)
-        HaloGal[p].Pos[j_] = HaloGal[p].Pos[j_] - BoxSize;
+      if(HaloGal[galaxy_number_].Pos[j_] < 0)
+        HaloGal[galaxy_number_].Pos[j_] = BoxSize + HaloGal[galaxy_number_].Pos[j_];
+      if(HaloGal[galaxy_number_].Pos[j_] > BoxSize)
+        HaloGal[galaxy_number_].Pos[j_] = HaloGal[galaxy_number_].Pos[j_] - BoxSize;
     }
 #else
     for(j_ = 0; j_ < 3; j_++)
     {
-      tmp_pos_ = wrap(-Gal[p].MergCentralPos[j_] + Gal[p].Pos[j_],BoxSize);
+      tmp_pos_ = wrap(-Gal[galaxy_number_].MergCentralPos[j_] + Gal[galaxy_number_].Pos[j_],BoxSize);
 #ifdef GUO13
-      tmp_pos_ *=  sqrt(Gal[p].MergTime/Gal[p].OriMergTime);
+      tmp_pos_ *=  sqrt(Gal[galaxy_number_].MergTime/Gal[galaxy_number_].OriMergTime);
 #else
-      tmp_pos_ *=  (Gal[p].MergTime/Gal[p].OriMergTime);
+      tmp_pos_ *=  (Gal[galaxy_number_].MergTime/Gal[galaxy_number_].OriMergTime);
 #endif
-      Gal[p].Pos[j_]=Gal[p].MergCentralPos[j_] + tmp_pos_;
+      Gal[galaxy_number_].Pos[j_]=Gal[galaxy_number_].MergCentralPos[j_] + tmp_pos_;
 
-      if(Gal[p].Pos[j_] < 0)
-        Gal[p].Pos[j_] = BoxSize + Gal[p].Pos[j_];
-      if(Gal[p].Pos[j_] > BoxSize)
-        Gal[p].Pos[j_] = Gal[p].Pos[j_] - BoxSize;
+      if(Gal[galaxy_number_].Pos[j_] < 0)
+        Gal[galaxy_number_].Pos[j_] = BoxSize + Gal[galaxy_number_].Pos[j_];
+      if(Gal[galaxy_number_].Pos[j_] > BoxSize)
+        Gal[galaxy_number_].Pos[j_] = Gal[galaxy_number_].Pos[j_] - BoxSize;
     }
 #endif
 
 #ifdef GUO10
     //#ifdef SCALE_COSMOLOGY
     //add by Qi. 06/04/2012 to account for the scale of velocity field
-    Scale_V_ = scale_v_cen(Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum);
-
+    const double Scale_V_ = scale_v_cen(Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum);
     for (j_ = 0; j_ < 3 ; j_++)
     {
-      dv_ = HaloGal[p].Vel[j_] - HaloGal[central_galaxy_number_].Vel[j_]/Scale_V_;
+      dv_ = HaloGal[galaxy_number_].Vel[j_] - HaloGal[central_galaxy_number_].Vel[j_]/Scale_V_;
       dv_ *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum]/AA[Halo[HaloGal[central_galaxy_number_].HaloNr].SnapNum]);
-      HaloGal[p].Vel[j_] = HaloGal[central_galaxy_number_].Vel[j_] + dv_;
+      HaloGal[galaxy_number_].Vel[j_] = HaloGal[central_galaxy_number_].Vel[j_] + dv_;
     }
 //#endif
 
 #else
-    Scale_V_ = scale_v_cen(Halo[Gal[central_galaxy_number_].HaloNr].SnapNum);
-
+    const double Scale_V_ = scale_v_cen(Halo[Gal[central_galaxy_number_].HaloNr].SnapNum);
     for (j_ = 0; j_ < 3 ; j_++)
     {
-      dv_ = Gal[p].Vel[j_] - Gal[central_galaxy_number_].Vel[j_]/Scale_V_;
+      dv_ = Gal[galaxy_number_].Vel[j_] - Gal[central_galaxy_number_].Vel[j_]/Scale_V_;
       dv_ *=sqrt(ScaleMass/ScalePos) * sqrt(AA_OriginalCosm[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]/AA[Halo[Gal[central_galaxy_number_].HaloNr].SnapNum]);
-      Gal[p].Vel[j_] = Gal[central_galaxy_number_].Vel[j_] + dv_;
+      Gal[galaxy_number_].Vel[j_] = Gal[central_galaxy_number_].Vel[j_] + dv_;
     }
 #endif
   }
@@ -258,18 +255,19 @@ void load_all_auxdata(const int file_number_)
           printf("broadcasting aux data\n", ThisTask);
 
   //MPI_BCast has a limit of 2Gb so everything needs to be passed in smaller chunks
-  int ii, Nmessages=10000;
-  long long  MsgSizeInBytes=10000000; //chunks of 10MsgSizeInBytes
-  for(ii=0;ii<Nmessages;ii++)
+  int message_number_;
+  const int n_messages_ = 10000;
+  const long long  max_message_size_in_bytes_ = 10000000; //chunks of 10MsgSizeInBytes
+  for(message_number_=0;message_number_<n_messages_;message_number_++)
     {
       //if next chunk is outside of array size, just pass whats left and then exit the loop
-      if((ii+1)*MsgSizeInBytes>bytes_)
-        {
-          MPI_Bcast(&TreeAuxData[ii*MsgSizeInBytes],bytes_-ii*MsgSizeInBytes, MPI_BYTE, 0, MPI_COMM_WORLD);
-          break;
-        }
+      if((message_number_+1)*max_message_size_in_bytes_>bytes_)
+      {
+        MPI_Bcast(&TreeAuxData[message_number_*max_message_size_in_bytes_],bytes_-message_number_*max_message_size_in_bytes_, MPI_BYTE, 0, MPI_COMM_WORLD);
+        break;
+      }
       else
-        MPI_Bcast(&TreeAuxData[ii*MsgSizeInBytes],MsgSizeInBytes, MPI_BYTE, 0, MPI_COMM_WORLD);
+      { MPI_Bcast(&TreeAuxData[message_number_*max_message_size_in_bytes_],max_message_size_in_bytes_, MPI_BYTE, 0, MPI_COMM_WORLD); }
   }
 
   if(ThisTask==0)
