@@ -14,6 +14,6 @@ This version **differs** in three main ways from the PublicRelease version:
 
 For a more **detailed account of the changes**, please read the [changes.md](changes.md) file.
 
-To report any **issues** or to ask **questions** regarding the challenge, you may send an email to:
+To report any **issues** or to ask **questions** regarding the code, you may send an email to:
 - <hilbert@mpa-garching.mpg.de>
       
