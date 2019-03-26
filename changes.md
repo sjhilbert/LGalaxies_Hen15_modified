@@ -1,8 +1,10 @@
+# Changes
+
 The following non-exhaustive list describes the changes made to the 2015 public-release version of L-Galaxies to create the current version:
 
-2019-03-26 (and before):
+## 2019-03-26 (and before):
 
-general:
+### general:
 
 - The directory layout of the code has been adjusted:
   - Object files are placed into their own ./obj/ subdirectory.
@@ -13,7 +15,7 @@ general:
   - The compile-time options are now all in one MakeFile_options file that should work for both standard and MCMC mode.
   - Source code dependencies are now deduced automatically by make (and gcc's C-preprocessor) and stored in ./dep/*.dep files created in that process (at least if GNU make and gcc are used).
   
-naming/style/coding conventions:
+### naming/style/coding conventions:
 
 - Functions, e.g., for the galaxy model have been regrouped into several source files.
 
@@ -37,7 +39,7 @@ naming/style/coding conventions:
 
 - Code parts causing warnings about unused variables, uninitialized use, set-but-not-used variables, etc. have been adjusted (e.g. by elimination unused variables) to not cause such warnings. Now turning on such warning for compilation should help catching bugs in the code.
 
-regressions, optimizations, and new features:
+### regressions, optimizations, and new features:
 
 - The mutual compatibility of compile-time options is now checked at compile-time.
 
@@ -85,7 +87,7 @@ regressions, optimizations, and new features:
   - Certain physics calculations (that often employed multiple intermediate computations) have been simplified into mathematical equivalent, but faster calculations. In most cases, this produces exactly the same output as before, but there are few instances where outputs between the old and new version of the code differ slightly due to finite numerical accuracy.
   
   
-bug fixes:
+### bug fixes:
 
 - bugfix:
   - file: various files
@@ -142,12 +144,12 @@ bug fixes:
   - description: a variable 'dist' was used in a comparison to decide on the details of AGN heating for satellites, but never set. now it is set to the distance between galaxy and FOF central galaxy
  
  
-possible bugs (and fixes):
+### possible bugs (and fixes):
 
 - bugfix(?):
- - file: sam.c
- - function: evolve_galaxies
- - description: moved "int start = NGalTree;" back to before loop on finding central and satellite galaxies, thus fixing calculation of "GalTree[p].FOFCentralGal".
+  - file: sam.c
+  - function: evolve_galaxies
+  - description: moved "int start = NGalTree;" back to before loop on finding central and satellite galaxies, thus fixing calculation of "GalTree[p].FOFCentralGal".
 
 - bugfix (?):
   - file: model_misc.c
@@ -164,7 +166,7 @@ possible bugs (and fixes):
   - function: get_initial_disk_radius
   - description: code checks for zero gas spin, but perhaps should check for zero halo spin instead
  
- - bug (?):
+- bug (?):
   - file: proto.h
   - function: transfer_ICL
   - description: missing function definition (implementation)
