@@ -1,1 +1,1 @@
-../../code/star_formation_history.c
+../../../code/star_formation_history.c
