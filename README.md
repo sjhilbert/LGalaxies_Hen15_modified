@@ -9,7 +9,7 @@ There one can also find information about **additional data required** for using
 
 This version **differs** in three main ways from the PublicRelease version:
 - The code has been made **easier to read** (in most places).
-- The code has been optimized for speed (~3 times **faster** overall).
+- The code has been optimized for **speed** (~3 times faster overall).
 - Functionality for **lightcone outputs** has been added.
 
 For a more **detailed account of the changes**, please read the [changes.md](changes.md) file.
