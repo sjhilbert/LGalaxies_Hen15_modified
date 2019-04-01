@@ -257,8 +257,6 @@ int NLambdaFilter[NMAG];
 int SSP_log_age_jump_table[SSP_NJUMPTAB];
 double SSP_log_age_jump_factor;
 
-// dust
-long mu_seed;
 #endif
 
 void *TreeAuxData;
@@ -273,7 +271,7 @@ float *PosList, *VelList;
 
 int Hashbits;
 int NumWrittenInParallel;
-double ScaleFactor;
+double PeanoHilbertScaleFactor;
 
 
 #ifdef USE_MEMORY_TO_MINIMIZE_IO

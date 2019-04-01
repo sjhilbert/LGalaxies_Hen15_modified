@@ -1136,7 +1136,6 @@ extern int NLambdaFilter[NMAG];
 #define ExpTauBCBulge 0.5	// constant extinction for young stars in bulges.
 #define MUWIDTH  0.2
 #define MUCENTER 0.3
-extern long mu_seed;
 
 #endif //COMPUTE_SPECPHOT_PROPERTIES
 
@@ -1155,7 +1154,7 @@ extern float *PosList, *VelList;
 
 extern int Hashbits;
 extern int NumWrittenInParallel;
-extern double ScaleFactor;	// factor by which to multiply a position to get its ph index (after floring)
+extern double PeanoHilbertScaleFactor;	// factor by which to multiply a position to get its ph index (after floring)
 
 
 #ifdef USE_MEMORY_TO_MINIMIZE_IO

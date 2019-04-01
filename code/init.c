@@ -119,7 +119,7 @@ void init(void)
   gsl_rng_set(random_generator, 42);	/* start-up seed */
 
 #ifdef GALAXYTREE
-  ScaleFactor = pow(2, Hashbits) / BoxSize;
+  PeanoHilbertScaleFactor = pow(2, Hashbits) / BoxSize;
 #endif
 
   //reads in the redshifts for the used Cosmology
@@ -416,7 +416,6 @@ void read_output_snaps(void)
 //       printf("ListOutputNumberOfSnapshot[%d] = %d\n", snapshot_number_, ListOutputNumberOfSnapshot[snapshot_number_]);
 //     printf("----------------\n\n");
 //   }
-  
 
 #else /* defined GALAXYTREE */
   int output_number_, snapshot_number_;

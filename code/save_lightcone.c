@@ -26,7 +26,7 @@
  */
 
 #include <stdio.h>
-#include <stddef.h> 
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -101,7 +101,7 @@ void save_lightcone_galaxy_flush_output_buffer(void)
       myfwrite_large_data(galaxy_output_buffer[output_number_].data, 1, galaxy_output_buffer[output_number_].size, FdLightconeGalDumps[output_number_]);
       dynamic_array_clear(&galaxy_output_buffer[output_number_]);
     }
-#endif  /* not defined GALAXYTREE */  
+#endif  /* not defined GALAXYTREE */ 
 }
 
 
@@ -114,7 +114,7 @@ void save_lightcone_galaxy_show_output_buffer_statistics(void)
   int output_number_;
   for(output_number_ = 0; output_number_ < NOUT; ++output_number_)
   { printf("lightcone galaxy output buffer[%d]: capacity = %lu (%f MB)\n", output_number_, galaxy_output_buffer[output_number_].capacity, galaxy_output_buffer[output_number_].capacity / (1024. * 1024.)); }
-#endif  /* not defined GALAXYTREE */  
+#endif  /* not defined GALAXYTREE */ 
 }
 
 
@@ -123,7 +123,7 @@ static inline void
 push_back_lightcone_galaxy_from_galaxy_output(dynamic_array_type *galaxy_output_buffer_, struct GALAXY_OUTPUT *galaxy_)
 {
 #ifdef LIGHTCONE_CUSTOM_OUTPUT
-  lightcone_galaxy_output_type lightcone_galaxy_; 
+  lightcone_galaxy_output_type lightcone_galaxy_;
   galaxy_output_to_lightcone_galaxy_output_type(galaxy_, &lightcone_galaxy_);
   dynamic_array_push_back(galaxy_output_buffer_, &lightcone_galaxy_, sizeof(lightcone_galaxy_output_type));
 #else  /* not defined LIGHTCONE_CUSTOM_OUTPUT */
@@ -136,16 +136,16 @@ push_back_lightcone_galaxy_from_galaxy_output(dynamic_array_type *galaxy_output_
 
 /** @brief sets up global variables needed for lightcone geometry
  */
-void 
+void
 init_lightcone(void)
 {
   lightcone_observer_distance_from_origin = euclidian_norm_3d(lightcone_observer_position);
-  
+ 
   /* compute slice boundaries for lightcone */
   /* note: the output order is reversed between w/ and w/o GALAXYTREE */
   int output_number_;
   int snapshot_number_;
-  
+ 
 #ifdef GALAXYTREE
   for(output_number_ = 0; output_number_ < NOUT - 1; output_number_++)
   { lightcone_slice_lower_redshift[output_number_] = 0.5 * (ZZ[ListOutputSnaps[output_number_]] + ZZ[ListOutputSnaps[output_number_ + 1]]); };
@@ -163,15 +163,15 @@ init_lightcone(void)
   for(output_number_ = 0; output_number_ < NOUT - 1; output_number_++)
   { lightcone_slice_upper_redshift[output_number_] = 0.5 * (ZZ[ListOutputSnaps[output_number_]] + ZZ[ListOutputSnaps[output_number_ + 1]]); };
   lightcone_slice_upper_redshift[NOUT - 1] = ZZ[ListOutputSnaps[NOUT - 1]];
-  
+ 
 #endif /* not defined GALAXYTREE */
-  
+ 
   for(output_number_ = 0; output_number_ < NOUT; output_number_++)
   {
     lightcone_slice_lower_los_distance[output_number_] = comoving_los_distance_for_redshift(lightcone_slice_lower_redshift[output_number_]);
     lightcone_slice_upper_los_distance[output_number_] = comoving_los_distance_for_redshift(lightcone_slice_upper_redshift[output_number_]);
   };
-  
+ 
   printf("\n--- lightcone output slice parameters: --------------------------------------------------\n"
          "slice no.: \t snap no., \t     z_lo, \t   z_snap, \t     z_hi, \t   chi_lo, \t   chi_hi\n"
          "-----------------------------------------------------------------------------------------\n");
@@ -179,15 +179,15 @@ init_lightcone(void)
   { printf("slice %d: \t%d, \t%f, \t%f, \t%f, \t%f, \t%f\n", output_number_, ListOutputSnaps[output_number_], lightcone_slice_lower_redshift[output_number_],  ZZ[ListOutputSnaps[output_number_]], lightcone_slice_upper_redshift[output_number_], lightcone_slice_lower_los_distance[output_number_], lightcone_slice_upper_los_distance[output_number_]); }
   printf("------------------------------------------------------------------------------------------\n");
 
-#ifdef GALAXYTREE   
+#ifdef GALAXYTREE  
   for(snapshot_number_ = MAXSNAPS; snapshot_number_--; )
-  { 
+  {
     lightcone_radius_for_snapshot       [snapshot_number_] = lightcone_slice_upper_los_distance[snapshot_number_];
     is_outside_lightcone_for_snapshot   [snapshot_number_] = (lightcone_radius_for_snapshot[snapshot_number_] <= 0.);
     check_outside_lightcone_for_snapshot[snapshot_number_] = 0.866 * BoxSize > lightcone_radius_for_snapshot[snapshot_number_];
   }
 
-#else /* not defined GALAXYTREE */ 
+#else /* not defined GALAXYTREE */
   output_number_ = -1;
   for(snapshot_number_ = MAXSNAPS; snapshot_number_--; )
   {
@@ -198,7 +198,7 @@ init_lightcone(void)
     check_outside_lightcone_for_snapshot[snapshot_number_] = 0.866 * BoxSize > lightcone_radius_for_snapshot[snapshot_number_];
   }
  #endif /* not defined GALAXYTREE */
-  
+ 
   /*
   printf("\n--- lightcone output snapshot parameters: ------------------------------------------------\n"
          "snap no.: \t     l.c.r., \t   is_outide, \t     check_outside\n"
@@ -207,7 +207,7 @@ init_lightcone(void)
   { printf("snap %d: \t     %f, \t   %d, \t     %d\n", snapshot_number_, lightcone_radius_for_snapshot[snapshot_number_], is_outside_lightcone_for_snapshot[snapshot_number_], check_outside_lightcone_for_snapshot[snapshot_number_]); }
   printf("------------------------------------\n");
   */
-  
+ 
   lightcone_N_fof_groups_skipped_construction                       = 0;
   lightcone_N_galaxies_skipped_construction                         = 0;
   lightcone_N_galaxies_skipped_output_early                         = 0;
@@ -249,12 +249,12 @@ void show_lightcone_statistics(void)
 
 /** @brief creates and opens files for outputting galaxies on lightcone
  */
-void 
+void
 create_lightcone_galaxy_files(int file_number_)
 {
-  // create output files 
+  // create output files
 #ifdef GALAXYTREE
-  char file_name_[1024];
+  char file_name_[1536];
   sprintf(file_name_, "%s/lightcone_%s_galtree_%d", OutputDir, FileNameGalaxies, file_number_);
   if(!(FdLightconeGalTree = fopen(file_name_, "wb+")))
     {
@@ -266,7 +266,7 @@ create_lightcone_galaxy_files(int file_number_)
   char zero_ = 0;
   myffill(&zero_, 1, sizeof(lightcone_galaxy_output_type), FdLightconeGalTree);
   TotLightconeGalCount = 0;
-  
+ 
 #ifdef OUTPUT_BUFFERING
   dynamic_array_clear(&galaxy_output_buffer);
 #endif /* defined OUTPUT_BUFFERING */
@@ -283,14 +283,14 @@ create_lightcone_galaxy_files(int file_number_)
       sprintf(error_message_, "can't open file `%s'\n", file_name_);
       terminate(error_message_);
     }
-    
+   
     char zero_ = 0;
     myffill(&zero_, 1, sizeof(long long int), FdLightconeGalDumps[output_number_]);  /* space for the header */
     TotLightconeGalaxies[output_number_] = 0;
-    
+   
 #ifdef OUTPUT_BUFFERING
     dynamic_array_clear(&galaxy_output_buffer[output_number_]);
-#endif /* defined OUTPUT_BUFFERING */      
+#endif /* defined OUTPUT_BUFFERING */     
   }
 
 #endif /* not defined GALAXYTREE */
@@ -299,11 +299,11 @@ create_lightcone_galaxy_files(int file_number_)
 
 /** @brief writes header and closes files for outputting galaxies on lightcone
  */
-void 
+void
 close_lightcone_galaxy_files(void)
 {
 #ifdef GALAXYTREE
-  
+ 
   long long one_ = 1;
   long long size_of_struct_ = sizeof(lightcone_galaxy_output_type);
 
@@ -311,7 +311,7 @@ close_lightcone_galaxy_files(void)
   myfwrite(&one_, sizeof(long long), 1, FdLightconeGalTree);                   // write 1 (to determine endianess?)
   myfwrite(&size_of_struct_, sizeof(long long), 1, FdLightconeGalTree);        // size of an output structure (Galaxy_Output)
   myfwrite(&TotLightconeGalCount, sizeof(long long), 1, FdLightconeGalTree);   // the total number of galaxies
-  
+ 
 #if defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 2
   /* skip one block to make room for header */
   myfseek(FdLightconeGalTree, sizeof(lightcone_galaxy_output_type), SEEK_SET);
@@ -327,7 +327,7 @@ close_lightcone_galaxy_files(void)
   {
     fseek(FdLightconeGalDumps[output_number_], 0, SEEK_SET);
     myfwrite(&TotLightconeGalaxies[output_number_], sizeof(long long), 1, FdLightconeGalDumps[output_number_]);  // total number of galaxies
-  
+ 
 #if defined OUTPUT_BUFFERING && OUTPUT_BUFFERING == 2
     if(galaxy_output_buffer[output_number_].size > 0)
     {
@@ -340,11 +340,11 @@ close_lightcone_galaxy_files(void)
       myfwrite_large_data(galaxy_output_buffer[output_number_].data, 1, galaxy_output_buffer[output_number_].size, FdLightconeGalDumps[output_number_]);
       dynamic_array_clear(&galaxy_output_buffer[output_number_]);
     }
-#else  /* not defined OUTPUT_BUFFERING || OUTPUT_BUFFERING != 2*/   
+#else  /* not defined OUTPUT_BUFFERING || OUTPUT_BUFFERING != 2*/  
 #ifdef SORT_GALAXY_OUTPUT
     sort_lightcone_galaxy_in_file(FdLightconeGalDumps[output_number_]);
 #endif /* defined SORT_GALAXY_OUTPUT */
-#endif /* not defined OUTPUT_BUFFERING || OUTPUT_BUFFERING != 2*/      
+#endif /* not defined OUTPUT_BUFFERING || OUTPUT_BUFFERING != 2*/     
 
     fclose(FdLightconeGalDumps[output_number_]);
   }
@@ -373,57 +373,57 @@ myfread_lightcone_galaxy_number_of_entries(FILE* lightcone_galaxy_file_, long lo
 {
   *n_lightcone_galaxies_in_file_ = 0;
   fseek(lightcone_galaxy_file_, 0, SEEK_SET);
-  
+ 
 #ifdef GALAXYTREE
   long long one_;
   long long size_of_struct_;
 
   myfread(&one_, sizeof(long long), 1, lightcone_galaxy_file_);                   // 1 (to determine endianess?)
   myfread(&size_of_struct_, sizeof(long long), 1, lightcone_galaxy_file_);        // size of an output structure (Galaxy_Output)
-  myfread(n_lightcone_galaxies_in_file_, sizeof(long long), 1, lightcone_galaxy_file_); 
- 
+  myfread(n_lightcone_galaxies_in_file_, sizeof(long long), 1, lightcone_galaxy_file_);
+
   if(one_ != 1)
-  { 
+  {
     printf("\nerror: in get_number_of_lightcone_galaxies_in_file(FILE* ): error reading file header: one on disk = %llu != 1 (supposed value).\n", one_);
     terminate("error reading file header");
   }
   if(size_of_struct_ != sizeof(lightcone_galaxy_output_type))
-  { 
+  {
     printf("\nerror: in get_number_of_lightcone_galaxies_in_file(FILE* ): error reading file header: size of struct on disk = %llu != %lu (supposed value).\n", size_of_struct_, sizeof(lightcone_galaxy_output_type));
     terminate("error reading file header");
   }
-  
+ 
   return 3;
 #else /* not defined GALAXYTREE */
-  myfread(n_lightcone_galaxies_in_file_, sizeof(long long), 1, lightcone_galaxy_file_); 
+  myfread(n_lightcone_galaxies_in_file_, sizeof(long long), 1, lightcone_galaxy_file_);
   return 1;
 #endif /* not defined GALAXYTREE */
 }
 
 
 /** @brief adjusts galaxy properties for lightcone
- * 
- * Pos will be transformed from comoving cartesian to 
+ *
+ * Pos will be transformed from comoving cartesian to
  * spherical coordinates relative to lightcone_observer_position
  * and stored as
  * Pos[0] = right ascension [rad]
  * Pos[1] = declination [rad]
  * Pos[2] = comoving radial l.o.s. distance [Mpc/h]
- * 
+ *
  * Redshift will be adjusted to cosmological redshift for l.o.s. of galaxy
- * ObsRedshift will be redshift accounting for both cosmological and l.o.s. peculiar 
+ * ObsRedshift will be redshift accounting for both cosmological and l.o.s. peculiar
  * motion (transverse motion neglected)
  *
- * Vel, DistanceToCentralGal, GasSpin, StellarSpin will be rotated into local 
- * orthonormal coordinates defined by spherical coordinate unit tangent vectors 
+ * Vel, DistanceToCentralGal, GasSpin, StellarSpin will be rotated into local
+ * orthonormal coordinates defined by spherical coordinate unit tangent vectors
  * at galaxy position
- * 
+ *
  * CosInclination will be adjusted to cos(inclination) of stellar spin w.r.t. l.o.s.
  *
  * @warning dust extinction was computed using old CosInclination (relative to z axis),
- *          but MagDust, etc. are not updated to reflect extiction 
+ *          but MagDust, etc. are not updated to reflect extiction
  *          for actual inclination w.r.t. l.o.s.
- * 
+ *
  * if defined OUTPUT_FB_OBS_MAGS
  * ObsMag, etc. will be adjusted to absolute observer frame mags for galaxy
  * redshifted to ObsRedshift
@@ -431,13 +431,13 @@ myfread_lightcone_galaxy_number_of_entries(FILE* lightcone_galaxy_file_, long lo
 void
 adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3], const int shift_index_[3], const int output_number_)
 {
-#ifndef OUTPUT_FB_OBS_MAGS 
+#ifndef OUTPUT_FB_OBS_MAGS
   (void)output_number_;  /* suppress unused-parameter warning */
 #endif /* not defined OUTPUT_FB_OBS_MAGS */
- 
+
   apply_shift_3d(shift_, &(galaxy_->Pos));
   apply_cartesian_to_ra_dec_r(&(galaxy_->Pos));
-  
+ 
   /** @todo express sin(ra) etc. in terms of cartesian Pos?  */
   float rot_m_[3][3];
   get_cartesian_to_ra_dec_r_local_orthogonal_rotation_matrix_from_ra_dec(galaxy_->Pos[0], galaxy_->Pos[1], &rot_m_);
@@ -445,10 +445,10 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
   apply_rotation_3d(rot_m_, &(galaxy_->Vel));
   apply_rotation_3d(rot_m_, &(galaxy_->GasSpin));
   apply_rotation_3d(rot_m_, &(galaxy_->StellarSpin));
-   
+  
   galaxy_->Redshift    = redshift_for_comoving_los_distance(galaxy_->Pos[2]);
   galaxy_->ObsRedshift = combine_redshifts(galaxy_->Redshift, redshift_for_radial_velocity(galaxy_->Vel[2]));
-  
+ 
   galaxy_->CubeShiftIndex = convert_3d_index_to_1d_index(shift_index_[0], shift_index_[1], shift_index_[2], 1000);
 
   galaxy_->CosInclination = galaxy_->StellarSpin[2] / euclidian_norm_3d(galaxy_->StellarSpin);
@@ -457,8 +457,8 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 #ifdef HALOPROPERTIES
   apply_shift_3d(shift_, &(galaxy_->HaloPos));
   apply_cartesian_to_ra_dec_r(&(galaxy_->HaloPos));
-#endif  /* defined HALOPROPERTIES  */ 
-#endif /* not defined LIGHT_OUTPUT  */ 
+#endif  /* defined HALOPROPERTIES  */
+#endif /* not defined LIGHT_OUTPUT  */
 
 #ifdef COMPUTE_SPECPHOT_PROPERTIES
 #ifdef OUTPUT_OBS_MAGS
@@ -467,13 +467,12 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 
   const int   current_snapshot_number_   = ListOutputSnaps[output_number_];
   const float current_snapshot_redshift_ = ZZ[current_snapshot_number_];
-  
+ 
   const int   earlier_snapshot_number_   = current_snapshot_number_ > 0 ? current_snapshot_number_ - 1 : 0;
   const float earlier_snapshot_redshift_ = ZZ[earlier_snapshot_number_];
 
-
-  const int   later_snapshot_number_   = current_snapshot_number_ < LastDarkMatterSnapShot ? current_snapshot_number_ + 1 : LastDarkMatterSnapShot;
-  const float later_snapshot_redshift_ = ZZ[later_snapshot_number_];
+  const int   later_snapshot_number_     = current_snapshot_number_ < LastDarkMatterSnapShot ? current_snapshot_number_ + 1 : LastDarkMatterSnapShot;
+  const float later_snapshot_redshift_   = ZZ[later_snapshot_number_];
 
   if(galaxy_->ObsRedshift < current_snapshot_redshift_)
   {
@@ -481,11 +480,11 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagDust [filter_number_]; 
-      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMag     [filter_number_]; 
-      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagBulge[filter_number_]; 
+      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagDust [filter_number_];
+      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMag     [filter_number_];
+      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagBulge[filter_number_];
 #ifdef ICL
-      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagICL  [filter_number_]; 
+      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->forward_ObsMagICL  [filter_number_];
 #endif /* ICL */
     }
   }
@@ -494,11 +493,11 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
     const float obs_z_rel_dev_ = (galaxy_->ObsRedshift - current_snapshot_redshift_) / (earlier_snapshot_redshift_ - current_snapshot_redshift_);
     for(filter_number_ = 0; filter_number_ < NMAG; filter_number_++)
     {
-      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagDust [filter_number_]; 
-      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMag     [filter_number_]; 
-      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagBulge[filter_number_]; 
+      galaxy_->ObsMagDust [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagDust [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagDust [filter_number_];
+      galaxy_->ObsMag     [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMag     [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMag     [filter_number_];
+      galaxy_->ObsMagBulge[filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagBulge[filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagBulge[filter_number_];
 #ifdef ICL
-      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagICL  [filter_number_]; 
+      galaxy_->ObsMagICL  [filter_number_] = (1. - obs_z_rel_dev_) * galaxy_->ObsMagICL  [filter_number_] + obs_z_rel_dev_ * galaxy_->backward_ObsMagICL  [filter_number_];
 #endif /* ICL */
     }
   }
@@ -510,26 +509,26 @@ adjust_galaxy_for_lightcone(struct GALAXY_OUTPUT *galaxy_, const float shift_[3]
 
 
 /** @brief outputs galaxy on lightcone
- * 
+ *
  * checks if galaxy in_ any of the periodic copies of the simulation box
  * is on the lightcone,
  * then transforms those periodic copies of the galaxy on the lightcone
  * and writes them to file
  */
-void 
+void
 save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
 {
-  lightcone_N_galaxies_for_output++;      
-        
+  lightcone_N_galaxies_for_output++;     
+       
 // #ifndef LIGHTCONE_OUTPUT_ONLY
   /* if closest copy of galaxy is outside lightcone, return early */
   /* if defined LIGHTCONE_OUTPUT_ONLY, check may have already been done earlier */
   if(is_outside_lightcone_for_snapshot[HaloGal[galaxy_number_].SnapNum])
   {
     lightcone_N_galaxies_skipped_output_early++;
-    return;  
+    return; 
   }
-  
+ 
   if(check_outside_lightcone_for_snapshot[HaloGal[galaxy_number_].SnapNum])
   {
     float d_0_ = HaloGal[galaxy_number_].Pos[0] - lightcone_observer_position[0]; d_0_ = wrap(d_0_, BoxSize);
@@ -542,71 +541,114 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
       return;
     }
   }
-// #endif /* not defined LIGHTCONE_OUTPUT_ONLY */     
-  
+// #endif /* not defined LIGHTCONE_OUTPUT_ONLY */    
+ 
   /* ignore galaxy not fitting stellar mass selection */
   if(HaloGal[galaxy_number_].BulgeMass + HaloGal[galaxy_number_].DiskMass < lightcone_lower_stellar_mass)
-    return; 
-  
+    return;
+ 
   /** @note prepare_galaxy_for_output() is expensive, so seems worth avoiding multiple calls to this function
    *  by keeping a caopy after first required call for the same input galaxy */
   struct GALAXY_OUTPUT galaxy_output_, prepared_galaxy_output_;
   bool prepared_galaxy_output_is_valid_ = false;
   
+#ifdef LIGHTCONE_FOF_TOGETHER
+  const int halo_number_                 = HaloGal[galaxy_number_].HaloNr;
+  const int fof_first_halo_number_       = Halo[halo_number_].FirstHaloInFOFgroup;
+#ifdef GALAXYTREE 
+  /* if has a descendant, which is at the next snapshot, and that is not in the future */
+  const int later_fof_first_halo_number_ = ((output_number_ < NOUT - 1) &&
+                                            (Halo[halo_number_].Descendant >= 0) &&
+                                            (Halo[Halo[halo_number_].Descendant].SnapNum == (output_number_ + 1)) &&
+                                            (!is_outside_lightcone_for_snapshot[output_number_ + 1])) ? 
+                                           Halo[Halo[halo_number_].Descendant].FirstHaloInFOFgroup :
+                                           fof_first_halo_number_;
+#else  /* not defined GALAXYTREE */
+  const int later_snapshot_number_ = (output_number_ > 0) ? ListOutputSnaps[output_number_ - 1] : ListOutputSnaps[output_number_];
+  int current_halo_number_ = halo_number_;
+  while(Halo[current_halo_number_].SnapNum < later_snapshot_number_ && Halo[current_halo_number_].Descendant >= 0)
+  { current_halo_number_ = Halo[current_halo_number_].Descendant; }
+  const int later_fof_first_halo_number_ = (Halo[current_halo_number_].SnapNum == later_snapshot_number_) ? 
+                                           Halo[current_halo_number_].FirstHaloInFOFgroup :
+                                           fof_first_halo_number_;
+#endif /* not defined GALAXYTREE */
+#endif /* defined LIGHTCONE_FOF_TOGETHER */
+
   int box_shift_i_end_ = ceil((lightcone_slice_upper_los_distance[output_number_] + lightcone_observer_distance_from_origin) / BoxSize);
-  
+
   int box_shift_i_[3];
   for(box_shift_i_[0] = -box_shift_i_end_; box_shift_i_[0] < box_shift_i_end_; box_shift_i_[0]++)
   for(box_shift_i_[1] = -box_shift_i_end_; box_shift_i_[1] < box_shift_i_end_; box_shift_i_[1]++)
   for(box_shift_i_[2] = -box_shift_i_end_; box_shift_i_[2] < box_shift_i_end_; box_shift_i_[2]++)
-  {      
+  {     
     const float shift_[3] = {box_shift_i_[0] * BoxSize - lightcone_observer_position[0],
                              box_shift_i_[1] * BoxSize - lightcone_observer_position[1],
                              box_shift_i_[2] * BoxSize - lightcone_observer_position[2]};
+                             
+#ifdef LIGHTCONE_FOF_TOGETHER
+   /* make decision about inclusion/exclusion of galaxy near lightcone slice boundary between snapshots
+      depend on position of central halo and centra halo of its descendant */
+    float lightcone_fof_first_halo_position_[3];
+    lightcone_fof_first_halo_position_[0] = Halo[fof_first_halo_number_].Pos[0] + shift_[0];
+    lightcone_fof_first_halo_position_[1] = Halo[fof_first_halo_number_].Pos[1] + shift_[1];
+    lightcone_fof_first_halo_position_[2] = Halo[fof_first_halo_number_].Pos[2] + shift_[2];
+    const float los_distance_lightcone_observer_to_fof_first_halo_ = euclidian_norm_3d(lightcone_fof_first_halo_position_);
+   
+    float lightcone_later_fof_first_halo_position_[3];
+    lightcone_later_fof_first_halo_position_[0] = Halo[later_fof_first_halo_number_].Pos[0] + shift_[0];
+    lightcone_later_fof_first_halo_position_[1] = Halo[later_fof_first_halo_number_].Pos[1] + shift_[1];
+    lightcone_later_fof_first_halo_position_[2] = Halo[later_fof_first_halo_number_].Pos[2] + shift_[2];
+    const float los_distance_lightcone_observer_to_later_fof_first_halo_ = euclidian_norm_3d(lightcone_later_fof_first_halo_position_);
 
+    if(los_distance_lightcone_observer_to_later_fof_first_halo_ < lightcone_slice_lower_los_distance[output_number_] ||
+       los_distance_lightcone_observer_to_fof_first_halo_       > lightcone_slice_upper_los_distance[output_number_])
+      continue;
+#endif /* defined LIGHTCONE_FOF_TOGETHER */
+   
     /* even though testing for lightcone geometry as early as possible means
        possibly computing transformed positions and redshifts twice,
-       this may save us from a lot of other computations done in 
+       this may save us from a lot of other computations done in
        prepare_galaxy_for_output() and adjust_galaxy_for_lightcone().
-      
-       if this double computation becomes significant, 
-       one may think about passing the already computed values to 
+     
+       if this double computation becomes significant,
+       one may think about passing the already computed values to
        adjust_galaxy_for_lightcone()
     */
     float lightcone_galaxy_position_[3];
     lightcone_galaxy_position_[0] = HaloGal[galaxy_number_].Pos[0] + shift_[0];
     lightcone_galaxy_position_[1] = HaloGal[galaxy_number_].Pos[1] + shift_[1];
     lightcone_galaxy_position_[2] = HaloGal[galaxy_number_].Pos[2] + shift_[2];
-  
-    const float los_distance_to_lightcone_observer_ = euclidian_norm_3d(lightcone_galaxy_position_);
-    
-    if(los_distance_to_lightcone_observer_ < lightcone_slice_lower_los_distance[output_number_] ||
-       los_distance_to_lightcone_observer_ > lightcone_slice_upper_los_distance[output_number_])
-      continue;
+    const float los_distance_lightcone_observer_to_galaxy_ = euclidian_norm_3d(lightcone_galaxy_position_);
 
-    const float cosmological_redshift_ = redshift_for_comoving_los_distance(los_distance_to_lightcone_observer_);
+#ifndef LIGHTCONE_FOF_TOGETHER
+    if(los_distance_lightcone_observer_to_galaxy_ < lightcone_slice_lower_los_distance[output_number_] ||
+       los_distance_lightcone_observer_to_galaxy_ > lightcone_slice_upper_los_distance[output_number_])
+      continue;
+#endif /* not defined LIGHTCONE_FOF_TOGETHER */
+
+    const float cosmological_redshift_ = redshift_for_comoving_los_distance(los_distance_lightcone_observer_to_galaxy_);
     const float peculiar_redshift_     = redshift_for_radial_velocity(parallel_component_3d(HaloGal[galaxy_number_].Vel, lightcone_galaxy_position_));
     const float observed_redshift_     = combine_redshifts(cosmological_redshift_, peculiar_redshift_);
-    
+   
     if(observed_redshift_ < lightcone_lower_redshift ||
-       observed_redshift_ > lightcone_upper_redshift   ) 
+       observed_redshift_ > lightcone_upper_redshift   )
       continue;
-      
+     
     apply_cartesian_to_ra_dec_r(&lightcone_galaxy_position_);
-    
+   
     if(lightcone_galaxy_position_[0] < lightcone_lower_ra  ||
        lightcone_galaxy_position_[0] > lightcone_upper_ra  ||
        lightcone_galaxy_position_[1] < lightcone_lower_dec ||
        lightcone_galaxy_position_[1] > lightcone_upper_dec   )
-      continue;  
-      
+      continue; 
+     
     if(!prepared_galaxy_output_is_valid_)
-    { 
+    {
       prepare_galaxy_for_output(output_number_, &HaloGal[galaxy_number_], &prepared_galaxy_output_);
       prepared_galaxy_output_is_valid_ = true;
     }
     galaxy_output_ = prepared_galaxy_output_;
-    
+   
     /** @todo consider passing transformed position and redshifts to avoid recomputation */
     adjust_galaxy_for_lightcone(&galaxy_output_, shift_, box_shift_i_, output_number_);
 
@@ -616,25 +658,25 @@ save_lightcone_galaxy_append(int galaxy_number_, int output_number_)
     push_back_lightcone_galaxy_from_galaxy_output(&galaxy_output_buffer, &galaxy_output_);
 #else  /* not defined OUTPUT_BUFFERING */
     myfwrite_lightcone_galaxy_from_galaxy_output(&galaxy_output_, 1, FdLightconeGalTree);
-#endif /* not defined OUTPUT_BUFFERING */ 
+#endif /* not defined OUTPUT_BUFFERING */
 
     TotLightconeGalCount++; //this will be written later
-  
+ 
 #else /* not defined GALAXYTREE */
 
 #ifdef OUTPUT_BUFFERING
     push_back_lightcone_galaxy_from_galaxy_output(&galaxy_output_buffer[output_number_], &galaxy_output_);
 #else  /* not defined OUTPUT_BUFFERING */
     myfwrite_lightcone_galaxy_from_galaxy_output(&galaxy_output_, 1, FdLightconeGalDumps[output_number_]);
-#endif /* not defined OUTPUT_BUFFERING */ 
-    
+#endif /* not defined OUTPUT_BUFFERING */
+   
     TotLightconeGalaxies[output_number_]++;  //this will be written later
-    
+   
 #endif /* not defined GALAXYTREE */
   }
 }
 
-/** @brief all things to be done on output files before next tree arrives 
+/** @brief all things to be done on output files before next tree arrives
  *
  * updates galaxies in output file to contain proper tree info.
  * requires that all galaxies in tree have been constructed and that tree info in memory
@@ -652,7 +694,7 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
     const long long galaxy_in_file_number_end_   = GalTree[NGalTree - 1].lightcone_galaxy_number_in_file_end;
     const long long N_galaxies_                  = galaxy_in_file_number_end_ - galaxy_in_file_number_begin_;
 
-#ifdef OUTPUT_BUFFERING      
+#ifdef OUTPUT_BUFFERING     
     // //debugging:
     // if(galaxy_output_buffer.size < N_galaxies_ * sizeof(lightcone_galaxy_output_type))
     // {
@@ -664,7 +706,7 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
 
     lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) (galaxy_output_buffer.data + galaxy_output_buffer.size - N_galaxies_ * sizeof(lightcone_galaxy_output_type));
 
-#else  /* not defined OUTPUT_BUFFERING */ 
+#else  /* not defined OUTPUT_BUFFERING */
     lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
     myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
     myfread_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
@@ -675,12 +717,12 @@ void save_lightcone_galaxy_finalize(int file_number_, int tree_number_)
     for(galaxy_in_tree_number_ = 0; galaxy_in_tree_number_ < NGalTree; galaxy_in_tree_number_++)
       for(galaxy_in_file_number_ = GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_begin; galaxy_in_file_number_ < GalTree[galaxy_in_tree_number_].lightcone_galaxy_number_in_file_end; galaxy_in_file_number_++)
       { prepare_galaxy_tree_info_for_lightcone_output(file_number_, tree_number_, &GalTree[galaxy_in_tree_number_], &galaxy_output_[galaxy_in_file_number_ - galaxy_in_file_number_begin_]); }
-  
+ 
 #ifdef SORT_GALAXY_OUTPUT
     qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
-#endif /* not defined SORT_GALAXY_OUTPUT */  
+#endif /* not defined SORT_GALAXY_OUTPUT */ 
 
-#ifndef OUTPUT_BUFFERING 
+#ifndef OUTPUT_BUFFERING
     myfseek_lightcone_galaxy(FdLightconeGalTree, galaxy_in_file_number_begin_);
     myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, FdLightconeGalTree);
     myfree(galaxy_output_);
@@ -710,21 +752,21 @@ void sort_lightcone_galaxy_in_file(FILE * lightcone_galaxy_file_)
   myfread_lightcone_galaxy_number_of_entries(lightcone_galaxy_file_, &N_galaxies_);
 
   lightcone_galaxy_output_type *galaxy_output_ = (lightcone_galaxy_output_type*) mymalloc("lc_file_gal", sizeof(lightcone_galaxy_output_type) * N_galaxies_);
-  
+ 
   myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
   myfread_lightcone_galaxy(galaxy_output_, N_galaxies_, lightcone_galaxy_file_);
 
   qsort(galaxy_output_, N_galaxies_, sizeof(lightcone_galaxy_output_type), lightcone_galaxy_compare);
-  
+ 
   myfseek_lightcone_galaxy(lightcone_galaxy_file_, 0);
   myfwrite_lightcone_galaxy(galaxy_output_, N_galaxies_, lightcone_galaxy_file_);
-  
+ 
   myfree(galaxy_output_);
 }
 
 
 /** @brief compares galaxy_tree_data entries for sorting
- * 
+ *
  *  compares galaxy_tree_data entries for sorting for writing tree info data for lightcone output
  */
 int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const void *galaxy_tree_data_b_)
@@ -734,32 +776,32 @@ int save_lightcone_galaxy_tree_compare(const void *galaxy_tree_data_a_, const vo
 
   else if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_begin > ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_begin)
     return +1;
-  
+ 
   else if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_end < ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_end)
     return -1;
 
   else if(((struct galaxy_tree_data *) galaxy_tree_data_a_)->lightcone_galaxy_number_in_file_end > ((struct galaxy_tree_data *) galaxy_tree_data_b_)->lightcone_galaxy_number_in_file_end)
     return +1;
-  
+ 
   else
     return 0;
 }
 
 
 /** @brief compares lightcone galaxy entries for sorting
- * 
+ *
  *  compares lightcone_galaxy_output_type entries for sorting output on disk
  */
 int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightcone_galaxy_b_)
 {
-#ifdef GALAXYTREE 
+#ifdef GALAXYTREE
   /* if GalID available, use GalID for sorting */
        if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return -1;
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->GalID > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->GalID)
     return +1;
-  
+ 
   else
 #endif /* defined GALAXYTREE */
 
@@ -769,7 +811,7 @@ int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightc
 
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->CubeShiftIndex > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->CubeShiftIndex)
     return +1;
-  
+ 
   /* next, use SnapNum for sorting (reverse order) */
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->SnapNum > ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->SnapNum)
     return -1;
@@ -791,7 +833,7 @@ int lightcone_galaxy_compare(const void *lightcone_galaxy_a_, const void *lightc
   else if(((lightcone_galaxy_output_type*) lightcone_galaxy_a_)->StellarMass < ((lightcone_galaxy_output_type*) lightcone_galaxy_b_)->StellarMass)
     return +1;
 
-  else 
+  else
     return 0;
 }
 

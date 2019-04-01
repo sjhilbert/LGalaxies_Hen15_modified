@@ -276,7 +276,9 @@ void prepare_galaxy_for_output(const int output_number_, const struct GALAXY *ga
 //   output_galaxy_->TreeRootId                           = -1;
   output_galaxy_->SubID                                = calc_big_db_subid_index(galaxy_->SnapNum, Halo[galaxy_->HaloNr].FileNr, Halo[galaxy_->HaloNr].SubhaloIndex);
   output_galaxy_->MMSubID                              = calc_big_db_subid_index(galaxy_->SnapNum, Halo[tmpfirst_].FileNr, Halo[tmpfirst_].SubhaloIndex);
-  output_galaxy_->PeanoKey                             = peano_hilbert_key((int) floor(galaxy_->Pos[0] * ScaleFactor), (int) floor(galaxy_->Pos[1] * ScaleFactor), (int) floor(galaxy_->Pos[2] * ScaleFactor), Hashbits);
+  output_galaxy_->PeanoKey                             = peano_hilbert_key((int) floor(galaxy_->Pos[0] * PeanoHilbertScaleFactor), 
+                                                                           (int) floor(galaxy_->Pos[1] * PeanoHilbertScaleFactor), 
+                                                                           (int) floor(galaxy_->Pos[2] * PeanoHilbertScaleFactor), Hashbits);
 #endif /* defined GALAXYTREE */
 
   output_galaxy_->Redshift                             = ZZ[galaxy_->SnapNum];

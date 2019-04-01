@@ -15,6 +15,7 @@ OPT += -DGALAXYTREE                             # This will enable output of ful
 # OPT += -DLIGHTCONE_CUSTOM_OUTPUT                # use custom format for galaxies in lightcone output (see "lightcone_galaxy_output_type.h")
 # OPT += -DLIGHTCONE_OUTPUT_ONLY                  # only writes extra files with galaxies on lightcone
 # OPT += -DLIGHTCONE_MAY_SKIP_CONSTRUCT_GALAXY    # allows to skip construction of galaxies outside lightcone (may change galaxy ids)
+# OPT += -DLIGHTCONE_FOF_TOGETHER                 # near redshift slice boundaries of the lightcone, include/exclude fof groups of galaxies as a whole, and either include a galaxy or its descendant, but not both or none
 
 # OPT += -DLIGHT_OUTPUT                           # produces minimal output
 # OPT += -DMBPID                                  # writes out the most bound particle ID of the halo last occupied by this galaxy
@@ -83,7 +84,7 @@ endif
 
 ### Options predefining some alternative models (to be run with the corresponding input_***.par file):
 # OPT += -DGUO10
-OPT += -DGUO13 
+# sOPT += -DGUO13 
 # OPT += -DHENRIQUES13
 
 ### record star formation histories - used for post-process mags and detailed chemical enrichment
@@ -100,7 +101,7 @@ ifeq (COMPUTE_SPECPHOT_PROPERTIES,$(findstring COMPUTE_SPECPHOT_PROPERTIES,$(OPT
 SRCS  += model_spectro_photometric.c
 
 ### Options controlling which magnitudes are computed
-OPT += -DOUTPUT_REST_MAGS                       # output rest-frame magnitudes
+# OPT += -DOUTPUT_REST_MAGS                       # output rest-frame magnitudes
 OPT += -DOUTPUT_OBS_MAGS                        # output observer-frame magnitudes
 OPT += -DOUTPUT_FB_OBS_MAGS                     # adds fields containing forward/backwards k-corrections for observer-frame magnitudes 
 # OPT += -DICL                                    # output magnitudes for ICL
@@ -143,8 +144,8 @@ ifeq (CB07,$(findstring CB07,$(OPT)))
 OPT += -DNMAG=1221
 endif
 else  # not defined FULL_SPECTRA -> **** STANDARD RUN ****
-# OPT += -DNMAG=40
-OPT += -DNMAG=20
+OPT += -DNMAG=40
+# OPT += -DNMAG=20
 # OPT += -DNMAG=7 #MCMC
 endif # not defined FULL_SPECTRA
 

@@ -153,13 +153,6 @@ int main(int argc_, char **argv_)
   { FirstChainNumber=atoi(argv_[2]); }
 #endif /* defined MCMC */
 
-  //time(&start_time_);
-
-#ifdef COMPUTE_SPECPHOT_PROPERTIES
-  //for dust_model
-  mu_seed = -150;
-#endif /* defined COMPUTE_SPECPHOT_PROPERTIES */
-
   init();
 
 #ifdef STAR_FORMATION_HISTORY
@@ -171,8 +164,6 @@ int main(int argc_, char **argv_)
 
   /* In MCMC mode only one file is loaded into memory
    * and the sampling for all the steps is done on it */
-  // sprintf(SimulationDir, "%s/", SimulationDir);
-  // time(&start_time_);
   load_tree_table(MCMCTreeSampleFile);
   Senna(); // run the model in MCMC MODE
 

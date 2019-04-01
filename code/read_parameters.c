@@ -657,8 +657,6 @@ void read_parameter_file(char *file_name_)
 }
 
 
-
-
 /**
  * @brief checks some program parameters for valid values
  *
