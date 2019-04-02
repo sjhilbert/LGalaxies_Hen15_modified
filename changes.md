@@ -2,6 +2,13 @@
 
 The following non-exhaustive list describes the changes made to the 2015 public-release version of L-Galaxies to create the current version:
 
+## 2019-04-01:
+
+### regressions, optimizations, and new features:
+
+- A compile-time option LIGHTCONE_FOF_TOGETHER for Lightcone output has been added:
+  - When LIGHTCONE_FOF_TOGETHER is defined, fof groups of galaxies near the boundary between redshift slices of the lightcone are included or excluded as a whole (based on the position of the central galaxy). This avoids mutilated groups of galaxies near slice boundaries. Furthermore, only the galaxies of the fof or the galaxies of the descendant fof are included, but not both or none. This avoids missing fof groups or double inclusion of fof groups near scice boundaries when such groups have moved across the slice boundary between the corresponding outputs.
+
 ## 2019-03-26 (and before):
 
 ### general:
